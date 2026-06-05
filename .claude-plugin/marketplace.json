@@ -1,0 +1,17 @@
+{
+  "name": "gfargo-skills",
+  "owner": {
+    "name": "Griffen Fargo",
+    "email": "ghfargo@gmail.com"
+  },
+  "description": "Griffen Fargo's published Claude Code skills. Add this marketplace once, then install any plugin from it.",
+  "plugins": [
+    {
+      "name": "terminal",
+      "source": "./plugins/terminal",
+      "description": "Terminal tooling skills: design clean TUIs/CLIs (tui-design) and capture deterministic screenshots + demo GIFs of them with VHS (vhs-cli-demos).",
+      "version": "1.0.0",
+      "author": { "name": "Griffen Fargo" }
+    }
+  ]
+}

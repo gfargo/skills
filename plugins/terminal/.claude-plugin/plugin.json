@@ -1,0 +1,11 @@
+{
+  "name": "terminal",
+  "description": "Terminal tooling for the command line: design clean, professional TUIs and CLIs, then capture deterministic screenshots and demo GIFs of them with VHS. Bundles the tui-design and vhs-cli-demos skills.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Griffen Fargo",
+    "email": "ghfargo@gmail.com"
+  },
+  "homepage": "https://github.com/gfargo/skills",
+  "keywords": ["tui", "cli", "terminal", "vhs", "screenshots", "ratatui", "bubbletea", "ink", "textual"]
+}
