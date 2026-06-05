@@ -12,7 +12,7 @@ Comments start with `#`. Generate a starter with `vhs new demo.tape`, render wit
 - [Timing](#timing)
 - [Hiding setup (`Hide` / `Show`)](#hiding-setup-hide--show)
 - [Other commands](#other-commands)
-- [The pixel-dimension formula](#the-pixel-dimension-formula)
+- [Sizing the canvas (and the real trap: undersizing)](#sizing-the-canvas-and-the-real-trap-undersizing)
 - [Annotated example: a still PNG](#annotated-example-a-still-png)
 - [Annotated example: a motion GIF](#annotated-example-a-motion-gif)
 
@@ -38,11 +38,11 @@ Set these near the top, before the session starts.
 | Setting | Purpose | Notes |
 |---|---|---|
 | `Set Shell "bash"` | Shell to spawn. | `bash` is the most predictable for scripted setup. |
-| `Set FontSize 14` | Font size in px. | Drives the pixel cell size — see the formula. |
+| `Set FontSize 14` | Font size in px. | The main size lever — bump it to make the whole capture bigger. ≈18-22 reads well. |
 | `Set FontFamily "..."` | Font. | Pick one present on the render machine. |
-| `Set Width 1200` | Output width in **pixels**. | Compute from cols (see formula). |
-| `Set Height 700` | Output height in **pixels**. | Compute from rows. |
-| `Set Padding 30` | Window padding in px. | VHS default padding is large (~60px/side) and eats columns; set it explicitly and account for it in the size formula. |
+| `Set Width 1200` | Output width in **pixels**. | Usually omit it — VHS defaults to 1200. Extra width becomes right margin, not wider text. |
+| `Set Height 700` | Output height in **pixels**. | Usually omit it — VHS defaults to 600. |
+| `Set Padding 30` | Window padding in px. | VHS's default padding is generous (~60px/side); set it lower for a tighter frame. |
 | `Set Theme "Catppuccin Mocha"` | Terminal colour theme. | Use a named VHS theme, or a JSON palette object. Lock this for determinism. |
 | `Set CursorBlink false` | Stop cursor blink. | Removes frame-to-frame noise. |
 | `Set TypingSpeed 50ms` | Delay between typed chars. | Lower = faster typing. Set `0ms` for instant. |
@@ -101,44 +101,47 @@ Sleep 2s
 | `Require myapp` | Fail fast if `myapp` isn't on PATH before recording. |
 | `Env KEY value` | Set an environment variable for the session. |
 
-## Sizing the canvas (and the kerning trap)
+## Sizing the canvas (and the real trap: undersizing)
 
 VHS sizes output in *pixels* (`Set Width`/`Set Height`), but the terminal renders
-a *character grid* whose cell size is determined by the font at the chosen
-`FontSize`. These two don't automatically agree, and that mismatch is a real trap:
+its character grid at the font's natural cell width. Worth knowing exactly how
+those two interact, because it's easy to invent a problem that isn't there:
 
-> **The kerning trap.** If you pick a Width/Height that doesn't land on a whole
-> number of character cells for the font's *actual* advance width, the renderer
-> stretches the glyphs to fill the canvas. The capture comes out with loose,
-> spaced-out letters and broken-looking kerning. A `cols × some-multiplier`
-> formula feels precise but is exactly how you fall into this — the multiplier is
-> never quite the font's true cell width, so the grid is fractional and the
-> glyphs stretch.
+> **VHS does not stretch glyphs.** The grid is laid out at the font's real cell
+> width, top-left aligned, and any leftover canvas is just margin. A too-wide
+> `Width` gives you empty space on the right, not spread-out letters; a tight
+> `Width` gives you a smaller image, not broken kerning. So the pixel count
+> doesn't change how the text looks *at its own size* — you don't need to
+> pixel-fit a `cols × multiplier` target, and a "mismatched" canvas won't smear
+> the type.
+
+> **The real trap is undersizing.** A small capture renders perfectly crisp on
+> its own, but the moment a README or docs page scales it up to fill a content
+> column, bitmap upscaling makes the text soft and blurry. That blur is what
+> reads as "bad" — and it's a *scale* problem, not a rendering one.
 
 **The reliable approach: pick a `FontSize` and let VHS size the canvas.** Omit
-`Set Width`/`Set Height` entirely — VHS uses its known-good defaults (1200×600 at
-the default font), which render crisp, tight monospace. To make the capture
-bigger or smaller, change `FontSize` (≈18-22 reads well), not the pixel
-dimensions.
+`Set Width`/`Set Height` entirely. VHS uses its roomy defaults (1200×600 at the
+default font), which is large enough that pages rarely need to upscale it, so it
+stays sharp. To make the capture bigger or smaller, change `FontSize` (≈18-22
+reads well).
 
 Only set explicit `Width`/`Height` when you genuinely need a fixed canvas across a
-set of captures. Then use round numbers with a comfortable font size, and **look
-at the rendered output** to confirm the glyphs are tight — never trust a computed
-formula. If text looks spaced-out, your Width/Height is fighting the font: drop
-them and let VHS size it.
+set of captures, and keep it generous. If a capture looks soft on your page, the
+fix is almost always *bigger*, not different dimensions.
 
 ## Annotated example: a still PNG
 
 ```
 # --- determinism + framing ---
 Set Shell "bash"
-Set FontSize 20         # readable; canvas left to VHS defaults (crisp glyphs)
+Set FontSize 20         # readable; canvas left to VHS defaults (big enough to stay sharp)
 Set Padding 24
 Set Theme "Catppuccin Mocha"
 Set CursorBlink false
 Set TypingSpeed 50ms
 # No Set Width/Height — VHS defaults render tight monospace. Set them only if you
-# need a fixed canvas across many shots, and eyeball the result for stretched text.
+# need a fixed canvas across many shots — and keep it generous so pages don't upscale it.
 
 # --- hidden setup (not recorded) ---
 Hide
@@ -159,7 +162,7 @@ Screenshot myapp-diff.png
 
 ```
 Set Shell "bash"
-Set FontSize 20          # canvas left to VHS defaults — crisp glyphs, no kerning trap
+Set FontSize 20          # canvas left to VHS defaults — big enough to stay sharp when scaled
 Set Padding 24
 Set Theme "Catppuccin Mocha"
 Set CursorBlink false

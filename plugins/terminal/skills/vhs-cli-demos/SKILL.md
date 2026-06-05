@@ -40,11 +40,11 @@ these right and the rest is polish:
    frames. Run `gifsicle -O3` (lossless, 20-30× smaller, zero quality loss) — via
    the bundled `scripts/optimize_gif.sh` — or bake it into your pipeline. Never
    ship a raw VHS GIF, and never reach for lossy compression as the default fix.
-2. **Make it deterministic — and let VHS size the canvas.** Pin the clock, lock
-   the theme, pick a readable `FontSize`, and settle long enough for cold-start.
-   Do **not** hand-compute `Set Width`/`Set Height` to pixel-fit a column count —
-   VHS's defaults render crisply, and a mismatched canvas stretches the glyphs
-   (spaced-out, broken-looking kerning). (See Determinism.)
+2. **Make it deterministic, and size it generously.** Pin the clock, lock the
+   theme, pick a readable `FontSize`, and settle long enough for cold-start.
+   Leave `Set Width`/`Set Height` alone and let VHS use its roomy defaults: a
+   too-small capture renders fine on its own but turns soft and blurry the
+   moment it's scaled up to fill a README or docs column. (See Determinism.)
 3. **Use the right output.** `Screenshot file.png` for a single still; `Output
    file.gif`/`.mp4` for motion. `Output file.png` is a trap — it records a frame
    *sequence*, not an image.
@@ -102,19 +102,19 @@ drift up front:
   date will drift between runs. If the app honors an env var or flag for a fixed
   "now" (many do for exactly this reason), set it in the tape via `Env` or an
   exported variable. If it doesn't, consider adding one — it's the cleanest fix.
-- **Sizing — pick a `FontSize`, then leave the canvas alone.** This is the one
-  that bites: VHS sizes the output from `Set Width`/`Set Height` in *pixels*, but
-  the terminal renders a *character grid* whose cell size comes from the font. If
-  you hand-pick a Width/Height that doesn't land on an exact whole number of cells
-  for the actual font metrics, the renderer **stretches the glyphs to fill the
-  canvas** — the result looks spaced-out, with broken kerning. Don't try to
-  pixel-fit a cols×rows target. Instead: set a readable `FontSize` (≈18-22) and
-  **omit `Width`/`Height` so VHS uses its known-good defaults (1200×600)**, which
-  render crisply. Only set explicit dimensions when you need a specific canvas
-  across a set of captures — and then use round numbers with a comfortable font,
-  and *look at the output* to confirm the glyphs are tight, never trust a
-  cols×multiplier formula. (Determinism is preserved either way: same FontSize +
-  same content → same render.)
+- **Sizing — pick a `FontSize`, then leave the canvas alone.** VHS sizes the
+  output from `Set Width`/`Set Height` in *pixels*; the terminal renders its
+  character grid at the font's natural cell width, left-aligned, and just margins
+  any leftover space (it does not stretch glyphs to fill a too-wide canvas). So
+  the canvas pixel count doesn't change how the text *looks* at its own size. What
+  bites is **scale**: a small capture renders crisp but goes soft and blurry the
+  moment a README or docs page scales it up to fit a column. The fix is to capture
+  big enough that no upscaling is needed: set a readable `FontSize` (≈18-22) and
+  **omit `Width`/`Height` so VHS uses its roomy defaults (1200×600)**. Only set
+  explicit dimensions for a specific reason (a fixed canvas across a set), and
+  then keep them generous — undersizing, not pixel-grid mismatch, is the trap.
+  (Determinism is preserved either way: same FontSize + same content → same
+  render.)
 - **Lock the theme.** Pass the app's theme flag and set VHS's terminal palette to
   match (`Set Theme`). Don't rely on ambient terminal colours.
 - **Disable animations during the shot.** Spinners, idle-tip rotations, blinking

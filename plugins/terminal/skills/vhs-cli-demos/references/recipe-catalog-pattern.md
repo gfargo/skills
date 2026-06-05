@@ -70,11 +70,10 @@ pass and the trailing-quit strip).
 lives **once**, so no recipe has to remember it:
 
 - Emit the `Set` block (shell, a fixed `FontSize`, theme, `CursorBlink false`).
-  Leave `Width`/`Height` to VHS's defaults so glyphs stay crisp — don't compute
-  pixel dimensions from a cols×multiplier formula (it stretches the font; see the
-  kerning trap in `tape-reference.md`). If a recipe needs an unusually wide or
-  tall canvas, carry an optional explicit `width`/`height` on the recipe and pass
-  it through verbatim, eyeballed — not derived.
+  Leave `Width`/`Height` to VHS's roomy defaults so captures are big enough not to
+  blur when a docs page scales them up (see the sizing note in
+  `tape-reference.md`). If a recipe genuinely needs a larger canvas, carry an
+  optional explicit `width`/`height` on the recipe and keep it generous.
 - `Hide` … `Show` around setup: unquoted-`$PATH` export, pinned-time env var,
   `cd` into the fixture, `clear`.
 - For stills: append `Screenshot name.png`; for GIFs: `Output name.gif`.
