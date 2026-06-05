@@ -1,17 +1,19 @@
 # gfargo/skills
 
-> A curated **[Claude Code](https://docs.claude.com/en/docs/claude-code) skills marketplace** by [Griffen Fargo](https://github.com/gfargo). Add it once, then install any skill you want — more land here over time.
+> My personal **[Claude Code](https://docs.claude.com/en/docs/claude-code) skills marketplace**. Add it once, then install whichever skills you want — I add more over time.
 
 [![Release](https://img.shields.io/github/v/release/gfargo/skills?label=release&color=2da44e)](https://github.com/gfargo/skills/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Skills are reusable expertise you hand to Claude. Install one and it loads **automatically**, on the right task, in every project — no copy-pasting prompts into each repo. This marketplace bundles mine into plugins you can install à la carte.
+I'm [Griffen Fargo](https://github.com/gfargo). Skills are reusable expertise you hand to an AI agent: install one and it loads **automatically**, on the right task, in every project — no copy-pasting prompts into each repo. This is where I publish mine, bundled into plugins you can install à la carte.
 
 ---
 
 ## Contents
 
-- [Quick start](#quick-start)
+- [Install](#install)
+  - [In Claude Code](#in-claude-code)
+  - [With `npx skills`](#with-npx-skills)
 - [Skills](#skills)
   - [`terminal:tui-design`](#terminaltui-design)
   - [`terminal:vhs-cli-demos`](#terminalvhs-cli-demos)
@@ -25,19 +27,35 @@ Skills are reusable expertise you hand to Claude. Install one and it loads **aut
 
 ---
 
-## Quick start
+## Install
+
+### In Claude Code
 
 ```bash
-# 1. Add the marketplace (one time)
 /plugin marketplace add gfargo/skills
-
-# 2. Install a plugin — its skills become available, namespaced by plugin
 /plugin install terminal@gfargo-skills
 ```
 
-That's it. The skills now load themselves whenever they're relevant; you don't invoke them by hand.
+That installs my `terminal` plugin — both of its skills (`terminal:tui-design` and `terminal:vhs-cli-demos`) at once. They load themselves whenever they're relevant, so there's nothing to invoke by hand.
 
-> Prefer the shell? `claude plugin marketplace add gfargo/skills` then `claude plugin install terminal@gfargo-skills` does the same thing non-interactively.
+> Prefer the shell? `claude plugin marketplace add gfargo/skills && claude plugin install terminal@gfargo-skills` does the same thing non-interactively.
+
+### With `npx skills`
+
+This repo is a standard Claude Code marketplace, so [Vercel's `skills` CLI](https://github.com/vercel-labs/skills) reads it too. That's the path I'd use if you're on **Cursor, Codex CLI, Gemini CLI, or another agent**, want a **project-local** install, or only want **one** of the skills:
+
+```bash
+# Pick interactively from the skills in this repo
+npx skills add gfargo/skills
+
+# Install just one, by name
+npx skills add gfargo/skills --skill vhs-cli-demos
+
+# Global install, targeting a specific agent
+npx skills add gfargo/skills -g -a claude-code
+```
+
+`npx skills` discovers the skills through this repo's `.claude-plugin/marketplace.json`, so there's no extra setup. The one difference worth knowing: Claude Code's own `/plugin` installs a plugin as a **single unit** (you get both skills), whereas `npx skills --skill <name>` can grab them **individually**.
 
 ---
 
@@ -48,7 +66,7 @@ That's it. The skills now load themselves whenever they're relevant; you don't i
 | **[`terminal:tui-design`](#terminaltui-design)** | `terminal` | Design and build clean, professional TUIs and CLIs |
 | **[`terminal:vhs-cli-demos`](#terminalvhs-cli-demos)** | `terminal` | Capture deterministic screenshots and demo GIFs of them |
 
-The two pair naturally: **design** a terminal app, then **capture** it for your README, docs, or marketing site.
+I built these two to pair: **design** a terminal app, then **capture** it for your README, docs, or marketing site.
 
 ### `terminal:tui-design`
 
@@ -61,7 +79,7 @@ Design and build clean, professional, minimal terminal UIs and command-line tool
 <details>
 <summary><strong>When it triggers · example prompts</strong></summary>
 
-Fires automatically on terminal-UI work, even when you never say "TUI":
+It fires automatically on terminal-UI work, even when you never say "TUI":
 
 - "Build me a TUI for browsing my Postgres tables."
 - "Should I use Bubble Tea or Ratatui for this?"
@@ -82,7 +100,7 @@ Generate **deterministic screenshots and demo GIFs** of any CLI or terminal app 
 <details>
 <summary><strong>When it triggers · example prompts</strong></summary>
 
-Fires on capture/recording work, even without naming VHS:
+It fires on capture/recording work, even without naming VHS:
 
 - "Make a demo GIF of my CLI for the README."
 - "Screenshot my terminal app for the docs site."
@@ -97,7 +115,7 @@ Fires on capture/recording work, even without naming VHS:
 
 ## Requirements
 
-- **Claude Code** with plugin support (the `/plugin` commands).
+- **Claude Code** with plugin support (the `/plugin` commands), or any agent supported by `npx skills`.
 - For **`terminal:vhs-cli-demos`** captures:
 
   ```bash
@@ -119,7 +137,7 @@ marketplace  (gfargo/skills)
     └── skills  (tui-design, vhs-cli-demos)   →  used as  terminal:<skill>
 ```
 
-Add the marketplace once, then install whichever plugins you want. Installing a plugin makes all of its skills available, namespaced as `<plugin>:<skill>`. Skills are **description-triggered** — Claude loads them when the task matches, so there's nothing to remember and nothing to invoke manually.
+You add the marketplace once, then install whichever plugins you want. Installing a plugin makes all of its skills available, namespaced as `<plugin>:<skill>`. Skills are **description-triggered** — the agent loads them when the task matches, so there's nothing to remember and nothing to invoke manually.
 
 ---
 
@@ -154,18 +172,20 @@ Add the marketplace once, then install whichever plugins you want. Installing a 
 
 ## Adding a skill
 
+When I add a new skill I:
+
 1. Drop a `skills/<name>/` folder (a `SKILL.md`, plus any `references/` and `scripts/`) into the relevant plugin — or add a whole new plugin under `plugins/` and list it in `marketplace.json`.
 2. Bump the `version` in both `marketplace.json` and that plugin's `plugin.json`.
 3. Tag a release.
 
-Issues and PRs are welcome — library updates, new exemplars, and bug reports especially.
+I welcome issues and PRs — library updates, new exemplars, and bug reports especially.
 
 ---
 
 ## Related reading
 
-- [**Teaching Claude to design TUIs**](https://wp.griffen.codes/2026/04/30/tui-design-skill-claude/) — the story behind `tui-design`.
-- More write-ups at [griffen.codes](https://griffen.codes).
+- I wrote up [**the story behind `tui-design`**](https://wp.griffen.codes/2026/04/30/tui-design-skill-claude/).
+- More on [griffen.codes](https://griffen.codes).
 
 ---
 
