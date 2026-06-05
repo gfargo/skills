@@ -2,7 +2,7 @@
 
 > My personal **Claude Code skills marketplace**. Add it once, then install whichever skills you want — I add more over time.
 
-[![skills.sh](https://skills.sh/b/gfargo/skills)](https://skills.sh/gfargo/skills)
+[![skills.sh](https://www.skills.sh/b/gfargo/skills)](https://www.skills.sh/gfargo/skills)
 [![Release](https://img.shields.io/github/v/release/gfargo/skills?label=release&color=2da44e)](https://github.com/gfargo/skills/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -72,9 +72,7 @@ Designing clean, professional, minimal terminal UIs and command-line tools acros
 - **Per-ecosystem deep-dives**, loaded only when relevant — Bubble Tea / Lipgloss / Bubbles (Go), Ratatui / Crossterm (Rust), Textual / Rich (Python), Ink / `@clack/prompts` / `@inquirer/prompts` (TypeScript).
 - **Exemplar case studies** — what lazygit, k9s, btop, helix, yazi, and atuin each get right.
 
-```bash
-npx skills add gfargo/skills --skill tui-design     # just this one
-```
+Want only this one? `npx skills add gfargo/skills --skill tui-design`
 
 <details>
 <summary><strong>Example prompts</strong></summary>
@@ -95,9 +93,7 @@ Deterministic screenshots and demo GIFs of any CLI or terminal app with [Charm V
 - **Lossless size optimization** — raw VHS GIFs run 10–20 MB; a bundled `gifsicle -O3` pass shrinks them 20–30× with zero quality loss, no lossy defaults.
 - **Scale** — the recipe-catalog + driver pattern for keeping many captures in sync as the UI changes.
 
-```bash
-npx skills add gfargo/skills --skill vhs-cli-demos  # just this one
-```
+Want only this one? `npx skills add gfargo/skills --skill vhs-cli-demos`
 
 <details>
 <summary><strong>Example prompts</strong></summary>
