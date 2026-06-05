@@ -2,6 +2,7 @@
 
 > My personal **Claude Code skills marketplace**. Add it once, then install whichever skills you want — I add more over time.
 
+[![skills.sh](https://skills.sh/b/gfargo/skills)](https://skills.sh/gfargo/skills)
 [![Release](https://img.shields.io/github/v/release/gfargo/skills?label=release&color=2da44e)](https://github.com/gfargo/skills/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -45,6 +46,7 @@ This is a standard Claude Code marketplace, so [Vercel's `skills` CLI](https://g
 
 ```bash
 npx skills add gfargo/skills                        # pick from a list
+npx skills add gfargo/skills --all                  # every skill in the repo
 npx skills add gfargo/skills --skill vhs-cli-demos  # just one
 npx skills add gfargo/skills -g -a claude-code      # global, for Claude Code
 ```
@@ -70,6 +72,10 @@ Designing clean, professional, minimal terminal UIs and command-line tools acros
 - **Per-ecosystem deep-dives**, loaded only when relevant — Bubble Tea / Lipgloss / Bubbles (Go), Ratatui / Crossterm (Rust), Textual / Rich (Python), Ink / `@clack/prompts` / `@inquirer/prompts` (TypeScript).
 - **Exemplar case studies** — what lazygit, k9s, btop, helix, yazi, and atuin each get right.
 
+```bash
+npx skills add gfargo/skills --skill tui-design     # just this one
+```
+
 <details>
 <summary><strong>Example prompts</strong></summary>
 
@@ -88,6 +94,10 @@ Deterministic screenshots and demo GIFs of any CLI or terminal app with [Charm V
 - **Motion-GIF storytelling** — a `.tape` is a screenplay: one story per demo, budgeted read-time, end on the UI not a shell prompt.
 - **Lossless size optimization** — raw VHS GIFs run 10–20 MB; a bundled `gifsicle -O3` pass shrinks them 20–30× with zero quality loss, no lossy defaults.
 - **Scale** — the recipe-catalog + driver pattern for keeping many captures in sync as the UI changes.
+
+```bash
+npx skills add gfargo/skills --skill vhs-cli-demos  # just this one
+```
 
 <details>
 <summary><strong>Example prompts</strong></summary>
