@@ -52,6 +52,8 @@ claude plugin install terminal@gfargo-skills
 
 These two are meant to pair well: design a terminal interface, then capture it for a README, docs site, release note, or marketing page.
 
+---
+
 ### `terminal:tui-design`
 
 Design and build professional terminal UIs across Go, Rust, Python, and TypeScript.
@@ -76,6 +78,8 @@ Install only this skill:
 npx skills add gfargo/skills --skill tui-design
 ```
 
+---
+
 ### `terminal:vhs-cli-demos`
 
 Create deterministic screenshots and demo GIFs of CLIs and TUIs with [Charm VHS](https://github.com/charmbracelet/vhs).
@@ -99,6 +103,8 @@ Install only this skill:
 ```bash
 npx skills add gfargo/skills --skill vhs-cli-demos
 ```
+
+---
 
 ## Requirements
 
