@@ -4,7 +4,7 @@
     "name": "Griffen Fargo",
     "email": "ghfargo@gmail.com"
   },
-  "description": "Griffen Fargo's published Claude Code skills. Add this marketplace once, then install any plugin from it.",
+  "description": "Griffen Fargo's published agentic coding skills, following the Agent Skills spec.",
   "plugins": [
     {
       "name": "terminal",

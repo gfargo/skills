@@ -1,23 +1,34 @@
 # gfargo/skills
 
-> Personal Claude Code skills, starting with terminal tooling.
+> Personal agentic coding skills, starting with terminal tooling.
 
 [![skills.sh](https://www.skills.sh/b/gfargo/skills)](https://www.skills.sh/gfargo/skills)
 [![Release](https://img.shields.io/github/v/release/gfargo/skills?label=release&color=2da44e)](https://github.com/gfargo/skills/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-This repo publishes installable skills for Claude Code and other agents that support the [Agent Skills](https://agentskills.io) format. The current plugin is focused on terminal apps: designing polished TUIs and capturing clean demos of them.
+This repo publishes installable agentic coding skills that follow the [Agent Skills](https://agentskills.io) spec. The current collection is focused on terminal apps: designing polished TUIs and capturing clean demos of them.
 
 ## Install
 
-### Claude Code
+### Agent Skills CLI
+
+[`npx skills`](https://github.com/vercel-labs/skills) installs these skills globally or into a project:
+
+```bash
+npx skills add gfargo/skills                        # choose from a list
+npx skills add gfargo/skills --all                  # install every skill
+npx skills add gfargo/skills --skill tui-design     # install one skill
+npx skills add gfargo/skills --skill vhs-cli-demos  # install one skill
+```
+
+### Claude Code Plugin
 
 ```bash
 /plugin marketplace add gfargo/skills
 /plugin install terminal@gfargo-skills
 ```
 
-That installs the `terminal` plugin, including both `terminal:tui-design` and `terminal:vhs-cli-demos`.
+Claude Code can also install this repo as a plugin marketplace. The command above installs the `terminal` plugin, including both `terminal:tui-design` and `terminal:vhs-cli-demos`.
 
 To update later:
 
@@ -30,17 +41,6 @@ For non-interactive setup:
 ```bash
 claude plugin marketplace add gfargo/skills
 claude plugin install terminal@gfargo-skills
-```
-
-### Other Agents
-
-[`npx skills`](https://github.com/vercel-labs/skills) can install the same skills globally or into a project:
-
-```bash
-npx skills add gfargo/skills                        # choose from a list
-npx skills add gfargo/skills --all                  # install every skill
-npx skills add gfargo/skills --skill tui-design     # install one skill
-npx skills add gfargo/skills --skill vhs-cli-demos  # install one skill
 ```
 
 ## Skills
@@ -113,7 +113,7 @@ brew install gifsicle
 
 ## About
 
-I'm [Griffen Fargo](https://griffen.codes). This is where I publish the skills I build and use for agent-assisted development.
+I'm [Griffen Fargo](https://griffen.codes). This is where I publish the skills I build and use for agentic coding workflows.
 
 Issues and PRs are welcome, especially for library updates, new terminal exemplars, and fixes to stale guidance.
 
