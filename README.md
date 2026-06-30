@@ -117,12 +117,6 @@ brew install vhs
 brew install gifsicle
 ```
 
-## About
-
-I'm [Griffen Fargo](https://griffen.codes). This is where I publish the skills I build and use for agentic coding workflows.
-
-Issues and PRs are welcome, especially for library updates, new terminal exemplars, and fixes to stale guidance.
-
 ## License
 
 [MIT](LICENSE) © Griffen Fargo
