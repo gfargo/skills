@@ -2,6 +2,21 @@
 
 A deep dive into how users interact with TUIs — keybinding philosophy, focus management, navigation patterns, mouse support, and discoverability. The top-level `SKILL.md` covers the principles; this file goes deeper into the *why* and the trade-offs.
 
+**Contents:**
+- [Keybinding philosophies](#keybinding-philosophies)
+- [Cross-app keybinding conventions](#cross-app-keybinding-conventions)
+- [Reserved keys — never bind these](#reserved-keys--never-bind-these)
+- [Discoverability — the four-layer pattern](#discoverability--the-four-layer-pattern)
+- [Modal vs modeless — the deeper trade-off](#modal-vs-modeless--the-deeper-trade-off)
+- [Focus management](#focus-management)
+- [Search and filter](#search-and-filter)
+- [Multi-select](#multi-select)
+- [Mouse support — the real trade-off](#mouse-support--the-real-trade-off)
+- [Undo / redo](#undo--redo) · [Confirmation patterns](#confirmation-patterns)
+- [Talking to the terminal emulator — OSC 8, 52, 9](#talking-to-the-terminal-emulator--osc-8-52-9)
+- Named patterns: [fzf](#the-fzf-pattern-in-detail) · [lazygit](#the-lazygit-pattern--multi-pane-with-numeric-tabs) · [k9s](#the-k9s-pattern--command-driven) · [helix](#the-helix-pattern--selection-first-modal-editing)
+- [Common interaction pitfalls](#common-interaction-pitfalls)
+
 ---
 
 ## Keybinding philosophies
@@ -178,7 +193,7 @@ When to add: when your keymap exceeds ~20 distinct actions. Below that, `?` help
 **The principle:** *every action that has a keybinding should also be a palette command.* The keybinding is the shortcut; the palette is the long-form name + searchable description.
 
 Examples:
-- Textual's built-in command palette (`Ctrl+\` by default).
+- Textual's built-in command palette (`Ctrl+P` by default since v0.77; it originally shipped on `Ctrl+\`, which collides with SIGQUIT).
 - VS Code's Ctrl+Shift+P (the conceptual ancestor for many TUIs).
 - helix's `:` (ex-style command, not strictly a palette but similar role).
 - k9s's `:` (resource-typing, but adopts the same "type to filter actions" model).
@@ -300,8 +315,8 @@ Universal pattern: **Space toggles** the row's marked state. Marked rows show a 
 Variants:
 - **Visual mode** (`v`): yazi and vim — extend selection with motion keys.
 - **Range select** (Shift+Click or Shift+arrow): from current to clicked.
-- **Select all** (`Ctrl+A`): mark everything.
-- **Invert** (`Ctrl+I` or `*`): swap marked/unmarked.
+- **Select all** (`Ctrl+A`): mark everything — with the caveat that `Ctrl+A` is tmux's common prefix and readline's start-of-line, so keep an alternative binding.
+- **Invert** (`*` or another printable key): swap marked/unmarked. Avoid `Ctrl+I` — in the legacy encoding it's indistinguishable from Tab (only the Kitty keyboard protocol tells them apart), and Tab is your focus-cycle key.
 
 After multi-selecting, an action key applies to all marked items: `d` deletes all marked, `y` yanks all, etc.
 
@@ -389,6 +404,43 @@ Step 2: Are you sure? [y/N]
 For nuclear actions. Used rarely.
 
 **Match friction to consequence.** Y/n for "stage all files" is fine. Typed name for "delete production." Don't make every confirmation typed-name — users learn to just type fast and lose the safety.
+
+---
+
+## Talking to the terminal emulator — OSC 8, 52, 9
+
+Some interactions aren't between the user and your app — they're between your app and the *terminal emulator*: open a link, set the clipboard, pop a desktop notification. OSC escape sequences carry these requests in-band, down the same byte stream as your output. That's their superpower: they traverse SSH, containers, and nested shells, because the emulator on the user's *local* machine interprets them — no X11 forwarding, no remote clipboard daemon.
+
+### OSC 8 — hyperlinks
+
+`ESC ] 8 ; params ; URI ESC \` … link text … `ESC ] 8 ; ; ESC \`. The optional `id=` param stitches one logical link across wrapped lines or split regions so all its cells underline together on hover; simple filters shouldn't set ids, full-screen apps that manage the screen should.
+
+**Support:** iTerm2, kitty, WezTerm, Ghostty, foot, Windows Terminal (1.4+), Alacritty (0.11+), tmux 3.4+. Degradation is graceful — a terminal that doesn't know OSC 8 ignores it and renders the visible text normally — but strip it when stdout isn't a TTY, or the raw bytes land in files and pipes.
+
+**Libraries:** lipgloss has a `Hyperlink` style property (termenv underneath); Rich/Textual support links via the `link` style attribute. **Ratatui has no native support** — escape sequences inside `Text`/`Span` break its per-cell width accounting (open issues #563/#1227); workaround crates (`hyperrat`, `tui-link`) exist but work around the buffer model rather than fixing it.
+
+**Over SSH, remember the link opens on the local machine.** A `file://` URI pointing at a remote path won't resolve. For "open this file," suspend and spawn `$EDITOR` on the remote side instead; save OSC 8 for `https://` URLs and the like.
+
+### OSC 52 — write the system clipboard
+
+`ESC ] 52 ; c ; <base64 payload> ESC \` asks the emulator to set the system clipboard — from anywhere, including over SSH. Practical limits: the common ceiling comes from xterm/hterm's 100,000-byte maximum sequence length, ≈74,994 bytes of decoded text; older kitty builds capped far lower. Keep payloads to tens of KB or chunk them.
+
+**tmux:** `set-clipboard` controls forwarding — `on` lets inner apps set the outer clipboard; `external` (the default since 2.6) reserves that for tmux itself. Forwarding needs the outer terminal's `Ms` terminfo capability. tmux understands OSC 52 natively — it does **not** need `allow-passthrough`.
+
+**Security:** writing is the safe half. Clipboard *reads* are how a malicious remote exfiltrates data, so most terminals disable or prompt on them (kitty prompts; WezTerm ignores queries; Alacritty disabled paste-back by default in 0.13). Windows Terminal even gates writes on window focus (since Feb 2026). Design for write-only.
+
+**Libraries:** crossterm 0.29 added OSC 52 copy; Bubble Tea v2 ships `tea.SetClipboard`. Still provide a local fallback (`pbcopy` / `xclip` / `wl-copy`, or Rust's `arboard`) — OS clipboard APIs are more reliable when you're not over SSH, and some terminals disable OSC 52 entirely.
+
+### OSC 9 / 777 — desktop notifications
+
+`ESC ] 9 ; message ESC \` (OSC 9, iTerm2-originated) has the widest support: kitty, WezTerm, Ghostty, iTerm2, foot. OSC 777 (`ESC ] 777 ; notify ; title ; body ESC \`) adds a title where supported (WezTerm, Ghostty, foot); a reasonable strategy is 777 where you know it works, else 9. tmux swallows both unless wrapped in DCS passthrough with `allow-passthrough on` (tmux 3.3+).
+
+**Etiquette:** notify only when long-running work finishes (or fails) while the user is likely elsewhere — build done, tests finished, deploy complete. Fire once, keep it short, prefer in-UI status when the app has focus. Never notify for routine events or things the user just did.
+
+### The rest of the family, in one line each
+
+- **OSC 11** — query the terminal's background color (`OSC 11 ; ? ST`); the standard light/dark detection trick, covered under Theming in `visual-patterns.md`.
+- **Bracketed paste (mode 2004)** — the terminal wraps pastes in `ESC [200~ … ESC [201~` so apps can tell paste from typing; any prompt reading free text should enable it (frameworks generally do).
 
 ---
 

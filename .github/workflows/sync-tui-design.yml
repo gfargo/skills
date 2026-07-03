@@ -1,0 +1,99 @@
+name: Sync tui-design from source
+
+# Keeps plugins/terminal/skills/tui-design/ current with releases of
+# https://github.com/gfargo/tui-design-skill, which is the source of truth
+# for that skill's content (this repo just vendors a copy into the
+# `terminal` bundle alongside vhs-cli-demos).
+#
+# Pull-based by design: this workflow reads tui-design-skill's public
+# releases API (no cross-repo token needed) rather than tui-design-skill
+# pushing here, so no secret has to be provisioned or rotated.
+#
+# On finding a newer release it mirrors the skill content in, bumps the
+# `terminal` plugin's patch version (this bundle's own version is
+# independent of tui-design-skill's — a sync is always treated as a patch
+# to the bundle regardless of the size of the upstream change), commits
+# directly to main, and cuts a matching gfargo/skills release. No PR gate
+# on the sync itself — this workflow file is what got reviewed.
+
+on:
+  schedule:
+    - cron: '17 13 * * *' # daily, ~9am US Eastern
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+env:
+  SOURCE_REPO: gfargo/tui-design-skill
+  SOURCE_SKILL_PATH: plugins/tui-design/skills/tui-design
+  DEST_SKILL_PATH: plugins/terminal/skills/tui-design
+  PLUGIN_JSON: plugins/terminal/.claude-plugin/plugin.json
+  MARKETPLACE_JSON: .claude-plugin/marketplace.json
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gfargo/skills
+        uses: actions/checkout@v4
+
+      - name: Check latest tui-design-skill release
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest_tag=$(gh api "repos/${SOURCE_REPO}/releases/latest" --jq '.tag_name')
+          current_tag=$(cat "${DEST_SKILL_PATH}/.source-version" 2>/dev/null || echo "none")
+          echo "latest=$latest_tag" >> "$GITHUB_OUTPUT"
+          echo "current=$current_tag" >> "$GITHUB_OUTPUT"
+          if [ "$latest_tag" = "$current_tag" ]; then
+            echo "up_to_date=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "up_to_date=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "tui-design-skill: current=$current_tag latest=$latest_tag"
+
+      - name: Fetch source at latest tag
+        if: steps.check.outputs.up_to_date == 'false'
+        run: |
+          git clone --depth 1 --branch "${{ steps.check.outputs.latest }}" \
+            "https://github.com/${SOURCE_REPO}.git" /tmp/source
+
+      - name: Mirror skill content
+        if: steps.check.outputs.up_to_date == 'false'
+        run: |
+          rsync -a --delete "/tmp/source/${SOURCE_SKILL_PATH}/" "${DEST_SKILL_PATH}/"
+          echo "${{ steps.check.outputs.latest }}" > "${DEST_SKILL_PATH}/.source-version"
+
+      - name: Bump terminal plugin version
+        if: steps.check.outputs.up_to_date == 'false'
+        id: bump
+        run: |
+          old=$(jq -r '.version' "${PLUGIN_JSON}")
+          IFS='.' read -r major minor patch <<< "$old"
+          new="${major}.${minor}.$((patch + 1))"
+          sed -i "s/\"version\": \"${old}\"/\"version\": \"${new}\"/" "${PLUGIN_JSON}"
+          sed -i "s/\"version\": \"${old}\"/\"version\": \"${new}\"/" "${MARKETPLACE_JSON}"
+          echo "old_version=$old" >> "$GITHUB_OUTPUT"
+          echo "new_version=$new" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and tag
+        if: steps.check.outputs.up_to_date == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "${DEST_SKILL_PATH}" "${PLUGIN_JSON}" "${MARKETPLACE_JSON}"
+          git commit -m "sync: tui-design ${{ steps.check.outputs.latest }} (terminal v${{ steps.bump.outputs.new_version }})"
+          git tag "v${{ steps.bump.outputs.new_version }}"
+          git push origin HEAD:main
+          git push origin "v${{ steps.bump.outputs.new_version }}"
+
+      - name: Create release
+        if: steps.check.outputs.up_to_date == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.bump.outputs.new_version }}" \
+            --title "terminal v${{ steps.bump.outputs.new_version }} — tui-design ${{ steps.check.outputs.latest }}" \
+            --notes "Synced \`terminal:tui-design\` to [gfargo/tui-design-skill@${{ steps.check.outputs.latest }}](https://github.com/${{ env.SOURCE_REPO }}/releases/tag/${{ steps.check.outputs.latest }}) — see that release for what changed. \`terminal:vhs-cli-demos\` is unaffected by this sync."
