@@ -9,8 +9,15 @@
     {
       "name": "terminal",
       "source": "./plugins/terminal",
-      "description": "Terminal tooling skills: design clean TUIs/CLIs (tui-design) and capture deterministic screenshots + demo GIFs of them with VHS (vhs-cli-demos).",
+      "description": "Terminal tooling: design clean TUIs/CLIs (tui-design) and capture screenshots/GIFs with VHS (vhs-cli-demos).",
       "version": "1.0.2",
+      "author": { "name": "Griffen Fargo" }
+    },
+    {
+      "name": "devops",
+      "source": "./plugins/devops",
+      "description": "VPS infrastructure with strut: deploy, backup, drift, secrets, fleet management.",
+      "version": "1.0.0",
       "author": { "name": "Griffen Fargo" }
     }
   ]
