@@ -88,8 +88,25 @@ spin up a named fixture per recipe — a throwaway git repo in a temp dir, a see
 database, a sample project tree. The recipe references it by name (`scenario`),
 the driver materializes it before recording and tears it down after. This is what
 makes "a feature-branch-ready repo with 4 commits" reproducible on any machine
-and in CI. (coco uses a `@gfargo/git-scenarios` package for this; the general
-idea is: fixtures as named, disposable, deterministic builders.)
+and in CI.
+
+If the app being captured operates on a **git repo** — history views, diff/blame
+tools, branch pickers, merge/rebase UIs — reach for
+[`git-scenarios`](https://github.com/gfargo/git-scenarios) rather than
+hand-rolling `git init`/`git commit` shell calls in your fixture code. It exists
+specifically for this problem: named, disposable, deterministic git repo
+builders (a repo with N commits, a diverged branch, a merge conflict, etc.) that
+render the same way every run — no drifting commit dates, no "oops I forgot a
+file" fixtures. coco uses it for exactly this.
+
+```bash
+npm install --save-dev @gfargo/git-scenarios
+```
+
+For non-git fixtures (a seeded database, a sample project tree with no VCS), the
+general pattern still applies — a named, disposable, deterministic builder your
+driver calls before recording and tears down after — you're just writing the
+builder yourself instead of reaching for a package.
 
 ### 4. Theme-palette mapping
 
@@ -117,13 +134,28 @@ change.
 
 ## A reference implementation
 
-The coco CLI (`bin/screenshot/` in that repo) is a worked example of every piece
-above: `recipes.ts` (catalog), `tape.ts` (builder), `terminalThemes.ts` (palette
-map), `screenshot.ts` (driver, with the lossless `gifsicle -O3` step built in),
-`syncScreenshots.ts` (allow-list + filename map), and a `bin/screenshot/README.md`
-documenting the determinism controls and VHS gotchas. If you're building this
-pattern, that README and those files are a complete, battle-tested template to
-adapt.
+This skill bundles a working, copy-pasteable starting point at
+`../assets/recipe-catalog-starter/` — `recipes.ts`, `themes.ts`, `tape.ts`,
+`screenshot.ts`, and `syncScreenshots.ts`, implementing every piece above with
+Node built-ins only (no dependencies beyond a TS runner and `vhs`/`gifsicle` on
+`PATH`). Copy it into a project as `bin/screenshot/` and start replacing the
+example recipes — see that directory's `README.md` for the adoption steps.
+
+The coco CLI (`bin/screenshot/` in that repo) is a second, production worked
+example of the same shape: `recipes.ts` (catalog), `tape.ts` (builder),
+`terminalThemes.ts` (palette map), `screenshot.ts` (driver, with the lossless
+`gifsicle -O3` step built in), `syncScreenshots.ts` (allow-list + filename map),
+and a `bin/screenshot/README.md` documenting the determinism controls and VHS
+gotchas. Useful for seeing the pattern under real, non-toy recipes once the
+bundled starter's shape makes sense.
+
+## Beyond the base pattern
+
+Once a catalog reaches production scale, a handful of harder problems show up
+repeatedly — mocking a CLI a view depends on, an authentic cold-boot hero GIF,
+generating a theme gallery instead of hand-writing it. See
+`recipe-catalog-advanced.md` for those, with verbatim excerpts from a real
+150+-recipe catalog.
 
 ## Determinism checklist (applies to every recipe)
 
