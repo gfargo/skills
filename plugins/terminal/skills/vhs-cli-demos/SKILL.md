@@ -31,6 +31,11 @@ covered below: captures that look *wrong* (loading spinners, drifting dates, emp
 state — a determinism problem) and GIFs that are *enormous* (10-20 MB — a
 file-size problem with a one-line lossless fix).
 
+This skill assumes the interface being captured already looks good. If the user
+is still shaping the TUI/CLI itself — layout, keybindings, color, what a screen
+should even show — that's the `tui-design` skill's job; design it there first,
+then come back here to capture it.
+
 ## The essentials (if you read nothing else)
 
 Three things separate a capture that ships from one that embarrasses you. Get
@@ -67,7 +72,17 @@ reference only when you reach that step:
   many captures kept in sync (the pattern behind a mature pipeline: typed recipe
   list, scenario fixtures, theme-palette mapping, a sync step to a docs/site
   folder). Read it when the user has more than a handful of captures or wants a
-  repeatable `npm run screenshot`-style workflow.
+  repeatable `npm run screenshot`-style workflow. Pairs with
+  `assets/recipe-catalog-starter/` — a copy-pasteable implementation of the
+  whole pattern, not just a description of it.
+- **`references/recipe-catalog-advanced.md`** — techniques that only show up
+  once a catalog reaches production scale (100+ recipes): mocking an external
+  CLI a view depends on (`gh`/`glab`), an authentic cold-boot hero GIF instead
+  of always hiding startup, decoupling the on-camera command from the real one,
+  pinning a fast model for deterministic AI-response timing, and generating a
+  theme gallery programmatically instead of hand-writing each variant. Read it
+  once the base recipe-catalog pattern feels natural and a real need for one of
+  these shows up.
 
 ## Setup
 
@@ -84,8 +99,10 @@ install those explicitly (`brew install ttyd ffmpeg`).
 
 1. **Pick the output**: a still PNG (`Screenshot`) or a motion GIF (`Output
    foo.gif`). Stills are for docs/feature shots; GIFs for workflows in motion.
-2. **Write the tape** — the scene. Start from `vhs new demo.tape` or the
-   annotated examples in the tape reference.
+2. **Write the tape** — the scene. Start from `scripts/new_tape.sh demo
+   [--gif|--still]`, which scaffolds a tape with the determinism defaults below
+   already filled in (rather than bare `vhs new`, which has none of them), or
+   the annotated examples in the tape reference.
 3. **Make it deterministic** — pin time, lock the theme, pick a readable font
    size, give the app time to settle (see Determinism). This is what separates a
    capture you can regenerate from one you got lucky with once.
