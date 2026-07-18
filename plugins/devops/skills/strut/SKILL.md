@@ -30,6 +30,8 @@ strut <stack> rollback --env prod         # restore previous deploy snapshot
 # Inspect
 strut <stack> status  --env prod          # container status
 strut <stack> health  --env prod --json   # health checks
+strut <stack> briefing --env prod         # one-call situation report: posture + prioritized actions
+strut <stack> preflight --env prod        # deploy go/no-go verdict (GO/CAUTION/NO-GO) before releasing
 strut <stack> logs <service> --follow --env prod
 strut <stack> diff    --env prod          # preview pending changes vs VPS
 strut fleet status                        # git sync state across all [hosts]
@@ -74,6 +76,7 @@ Load the relevant reference file for detailed, step-by-step procedures:
 3. **Use `release` for VPS** (runs remotely over SSH), not `deploy` (runs locally).
 4. **Make changes in git, not on the VPS** — let deployments propagate; drift detection catches manual edits.
 5. **Health checks gate success** — driven by `services.conf`; keep it current.
+6. **Assess before you act** — run `briefing` to triage a stack in one call, and `preflight` for a go/no-go before any release. Both are read-only aggregations of the checks above (`--json` for machine parsing).
 
 ## Environment Files
 
