@@ -73,8 +73,11 @@ jobs:
           old=$(jq -r '.version' "${PLUGIN_JSON}")
           IFS='.' read -r major minor patch <<< "$old"
           new="${major}.${minor}.$((patch + 1))"
-          sed -i "s/\"version\": \"${old}\"/\"version\": \"${new}\"/" "${PLUGIN_JSON}"
-          sed -i "s/\"version\": \"${old}\"/\"version\": \"${new}\"/" "${MARKETPLACE_JSON}"
+          # Scope the marketplace.json edit to the "terminal" entry by name —
+          # a blind sed on the bare version string would also clobber any other
+          # plugin (e.g. devops) whose version happens to match "$old".
+          jq --arg v "$new" '.version = $v' "${PLUGIN_JSON}" > "${PLUGIN_JSON}.tmp" && mv "${PLUGIN_JSON}.tmp" "${PLUGIN_JSON}"
+          jq --arg v "$new" '(.plugins[] | select(.name == "terminal") | .version) = $v' "${MARKETPLACE_JSON}" > "${MARKETPLACE_JSON}.tmp" && mv "${MARKETPLACE_JSON}.tmp" "${MARKETPLACE_JSON}"
           echo "old_version=$old" >> "$GITHUB_OUTPUT"
           echo "new_version=$new" >> "$GITHUB_OUTPUT"
 

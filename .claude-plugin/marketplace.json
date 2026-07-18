@@ -10,7 +10,7 @@
       "name": "terminal",
       "source": "./plugins/terminal",
       "description": "Terminal tooling: design clean TUIs/CLIs (tui-design) and capture screenshots/GIFs with VHS (vhs-cli-demos).",
-      "version": "1.0.7",
+      "version": "1.0.4",
       "author": { "name": "Griffen Fargo" }
     },
     {
