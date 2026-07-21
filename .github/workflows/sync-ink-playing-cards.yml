@@ -1,0 +1,108 @@
+name: Sync ink-playing-cards skill from source
+
+# Keeps plugins/games/skills/ink-playing-cards/ current with releases of
+# https://github.com/gfargo/ink-playing-cards, which is the source of truth
+# for that skill's content (this repo just vendors a copy into the
+# `games` bundle).
+#
+# Pull-based by design, same as sync-strut.yml and sync-tui-design.yml:
+# reads the source repo's public releases API (no cross-repo token needed).
+#
+# Note: ink-playing-cards releases are library releases, so the skill only
+# syncs when a release includes skills/ink-playing-cards/. The initial copy
+# here was seeded from main (the skill landed after the 1.1.1 release), with
+# .source-version stamped 1.1.1 so the first sync happens on the next release.
+#
+# Tags use a "games-v" prefix rather than the bare "v{version}" scheme the
+# strut/tui-design workflows use. Those two increment independent per-plugin
+# counters but both tag as bare "vX.Y.Z", which has already collided once
+# (devops v1.0.3 landed on main but its tag/release never got created because
+# terminal's sync had already claimed tag v1.0.3). Prefixing avoids repeating
+# that here — see gfargo/skills for the missing devops v1.0.3 release.
+
+on:
+  schedule:
+    - cron: '29 13 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+env:
+  SOURCE_REPO: gfargo/ink-playing-cards
+  SOURCE_SKILL_PATH: skills/ink-playing-cards
+  DEST_SKILL_PATH: plugins/games/skills/ink-playing-cards
+  PLUGIN_JSON: plugins/games/.claude-plugin/plugin.json
+  MARKETPLACE_JSON: .claude-plugin/marketplace.json
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check latest ink-playing-cards release
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest=$(gh api "repos/${SOURCE_REPO}/releases/latest" --jq '.tag_name')
+          current=$(cat "${DEST_SKILL_PATH}/.source-version" 2>/dev/null || echo "none")
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          if [ "$latest" = "$current" ]; then
+            echo "up_to_date=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "up_to_date=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "ink-playing-cards: current=$current latest=$latest"
+
+      - name: Fetch source at latest tag
+        if: steps.check.outputs.up_to_date == 'false'
+        run: |
+          git clone --depth 1 --branch "${{ steps.check.outputs.latest }}" \
+            "https://github.com/${SOURCE_REPO}.git" /tmp/source
+          if [ ! -d "/tmp/source/${SOURCE_SKILL_PATH}" ]; then
+            echo "::error::${SOURCE_SKILL_PATH} does not exist at tag ${{ steps.check.outputs.latest }} — release cut without the skill?"
+            exit 1
+          fi
+
+      - name: Mirror skill content
+        if: steps.check.outputs.up_to_date == 'false'
+        run: |
+          rsync -a --delete "/tmp/source/${SOURCE_SKILL_PATH}/" "${DEST_SKILL_PATH}/"
+          echo "${{ steps.check.outputs.latest }}" > "${DEST_SKILL_PATH}/.source-version"
+
+      - name: Bump games plugin version
+        if: steps.check.outputs.up_to_date == 'false'
+        id: bump
+        run: |
+          old=$(jq -r '.version' "${PLUGIN_JSON}")
+          IFS='.' read -r major minor patch <<< "$old"
+          new="${major}.${minor}.$((patch + 1))"
+          # Scope the marketplace.json edit to the "games" entry by name —
+          # a blind sed on the bare version string would also clobber any other
+          # plugin (e.g. terminal, devops) whose version happens to match "$old".
+          jq --arg v "$new" '.version = $v' "${PLUGIN_JSON}" > "${PLUGIN_JSON}.tmp" && mv "${PLUGIN_JSON}.tmp" "${PLUGIN_JSON}"
+          jq --arg v "$new" '(.plugins[] | select(.name == "games") | .version) = $v' "${MARKETPLACE_JSON}" > "${MARKETPLACE_JSON}.tmp" && mv "${MARKETPLACE_JSON}.tmp" "${MARKETPLACE_JSON}"
+          echo "new_version=$new" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and tag
+        if: steps.check.outputs.up_to_date == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "${DEST_SKILL_PATH}" "${PLUGIN_JSON}" "${MARKETPLACE_JSON}"
+          git commit -m "sync: ink-playing-cards ${{ steps.check.outputs.latest }} (games v${{ steps.bump.outputs.new_version }})"
+          git tag "games-v${{ steps.bump.outputs.new_version }}"
+          git push origin HEAD:main
+          git push origin "games-v${{ steps.bump.outputs.new_version }}"
+
+      - name: Create release
+        if: steps.check.outputs.up_to_date == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "games-v${{ steps.bump.outputs.new_version }}" \
+            --title "games v${{ steps.bump.outputs.new_version }} — ink-playing-cards ${{ steps.check.outputs.latest }}" \
+            --notes "Synced \`games:ink-playing-cards\` to [gfargo/ink-playing-cards@${{ steps.check.outputs.latest }}](https://github.com/${SOURCE_REPO}/releases/tag/${{ steps.check.outputs.latest }})"
