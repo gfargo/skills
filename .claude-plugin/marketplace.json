@@ -23,6 +23,15 @@
       "author": {
         "name": "Griffen Fargo"
       }
+    },
+    {
+      "name": "games",
+      "source": "./plugins/games",
+      "description": "Terminal game development: build card games in the CLI with ink-playing-cards (Ink + React).",
+      "version": "1.0.0",
+      "author": {
+        "name": "Griffen Fargo"
+      }
     }
   ]
 }

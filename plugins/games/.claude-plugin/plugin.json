@@ -1,0 +1,11 @@
+{
+  "name": "games",
+  "description": "Terminal game development: build card games in the CLI with ink-playing-cards — card components, deck management, zones, events, and effects using Ink and React.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Griffen Fargo",
+    "email": "ghfargo@gmail.com"
+  },
+  "homepage": "https://github.com/gfargo/skills",
+  "keywords": ["ink", "react", "cli", "terminal", "card-games", "games", "deck", "playing-cards"]
+}
