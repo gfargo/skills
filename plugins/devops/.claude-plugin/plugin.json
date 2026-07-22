@@ -1,7 +1,7 @@
 {
   "name": "devops",
   "description": "VPS infrastructure management with strut: deploy Docker Compose stacks, backup databases, detect drift, rotate secrets, manage fleets, configure domains/SSL, and audit/migrate existing servers.",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "author": {
     "name": "Griffen Fargo",
     "email": "ghfargo@gmail.com"
