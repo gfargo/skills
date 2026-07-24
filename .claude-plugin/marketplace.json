@@ -19,7 +19,7 @@
       "name": "devops",
       "source": "./plugins/devops",
       "description": "VPS infrastructure with strut: deploy, backup, drift, secrets, fleet management.",
-      "version": "1.0.11",
+      "version": "1.0.12",
       "author": {
         "name": "Griffen Fargo"
       }
