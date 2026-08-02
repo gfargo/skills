@@ -49,7 +49,7 @@ strut my-stack keys github:rotate-vps-key --repos "YOUR_ORG/repo-a,YOUR_ORG/repo
 ```bash
 strut my-stack keys db:rotate postgres --env prod
 strut my-stack keys db:rotate neo4j --env prod
-strut my-stack release --env prod       # redeploy so services pick up new passwords
+strut my-stack deploy --env prod       # redeploy so services pick up new passwords
 strut my-stack health --env prod
 ```
 
@@ -93,7 +93,7 @@ strut my-stack keys ssh:audit --env prod
 ```bash
 strut my-stack logs --tail 100 --env prod
 # Most common: services didn't pick up the new DB password → redeploy
-strut my-stack release --env prod
+strut my-stack deploy --env prod
 ```
 
 ### Rotation failed mid-process
@@ -101,5 +101,5 @@ strut my-stack release --env prod
 ```bash
 ls .prod.env.backup-*
 cp .prod.env.backup-YYYYMMDD-HHMMSS .prod.env
-strut my-stack release --env prod
+strut my-stack deploy --env prod
 ```

@@ -20,9 +20,11 @@ strut <stack> <command> [--env <name>] [options]
 ## Command Quick Reference
 
 ```bash
-# Deploy & release
-strut <stack> release --env prod          # update repo → migrate → deploy → verify (on VPS)
-strut <stack> deploy  --env prod          # deploy containers (local, or VPS if VPS_HOST set)
+# Deploy
+strut <stack> deploy  --env prod          # deploy to wherever the stack lives
+strut <stack> deploy  --env prod --local  # force the local Docker daemon
+strut <stack> deploy  --env prod --no-sync  # restart without shipping new code
+strut <stack> release --env prod          # alias for `deploy --require-remote`
 strut <stack> rebuild --env prod          # build images on target + deploy
 strut <stack> stop    --env prod          # stop containers
 strut <stack> rollback --env prod         # restore previous deploy snapshot
@@ -73,7 +75,7 @@ Load the relevant reference file for detailed, step-by-step procedures:
 
 1. **Always `--dry-run` first** for destructive commands (deploy, restore, drift fix, stop).
 2. **Back up before major changes:** `strut <stack> backup all --env prod`.
-3. **Use `release` for VPS** (runs remotely over SSH), not `deploy` (runs locally).
+3. **`deploy` picks its own target** from the stack's topology — a VPS-mapped stack gets the full pipeline on that host, anything else deploys locally. Never choose a command name to choose a target. Use `--require-remote` in CI/automation so an unresolved host fails instead of silently deploying to the runner; `--local` is the explicit opt-out.
 4. **Make changes in git, not on the VPS** — let deployments propagate; drift detection catches manual edits.
 5. **Health checks gate success** — driven by `services.conf`; keep it current.
 6. **Assess before you act** — run `briefing` to triage a stack in one call, and `preflight` for a go/no-go before any release. Both are read-only aggregations of the checks above (`--json` for machine parsing).

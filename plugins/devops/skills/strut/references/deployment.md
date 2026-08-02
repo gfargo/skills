@@ -5,11 +5,11 @@ Procedures for deploying strut services to a VPS.
 ## Quick Deploy
 
 ```bash
-strut my-stack release --env prod --dry-run   # Preview
-strut my-stack release --env prod             # Full release
+strut my-stack deploy --env prod --dry-run   # Preview
+strut my-stack deploy --env prod             # Deploy
 ```
 
-`release` runs on the VPS over SSH and automatically: updates the repo → runs migrations → deploys → verifies health.
+`deploy` targets whatever host the stack maps to. For a VPS-mapped stack it runs the full pipeline on that host over SSH: updates the repo → runs migrations → deploys → verifies health → rolls back if unhealthy. For a stack with no VPS it deploys against local Docker. `--local` forces local; `--require-remote` refuses to fall back to it. `release` is an alias for `deploy --require-remote`.
 
 ## Manual Deploy Steps
 
@@ -46,7 +46,7 @@ strut my-stack deploy --env prod --blue-green    # stand up green, health-gate, 
 
 1. Create an env file from the template, fill in secrets (`VPS_HOST`, registry creds, DB passwords).
 2. Configure `strut.conf` with registry type and org.
-3. Deploy: `strut my-stack release --env prod`.
+3. Deploy: `strut my-stack deploy --env prod`.
 
 ## Migrations
 
@@ -126,8 +126,8 @@ tags that release would revert to, not the tags it shipped.
 
 ## Local vs VPS Semantics
 
-- `deploy` / `stop` — runs locally, or on the VPS if `VPS_HOST` is set
-- `release` — always runs on the VPS via SSH
+- `deploy` / `stop` — target the host the stack maps to; local Docker when it maps to none
+- `release` — alias for `deploy --require-remote`
 - `update` — syncs the strut repo on the VPS (no container restart)
 - `shell` / `exec` — SSH to the VPS
 
@@ -135,5 +135,5 @@ tags that release would revert to, not the tags it shipped.
 
 1. Always `--dry-run` first for destructive commands.
 2. Back up before major changes: `strut my-stack backup all --env prod`.
-3. Use `release` for VPS deploys (runs remotely), not `deploy` (runs locally).
+3. Use `--no-sync` when changing config rather than code — it skips the git sync and just restarts. Use `--require-remote` in CI so an unresolved host fails instead of deploying to the runner.
 4. Keep `services.conf` health checks current — they gate deploy success.
