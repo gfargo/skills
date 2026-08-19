@@ -6,7 +6,7 @@ Ratatui dominates Rust TUI development — thousands of crates build on it. Fork
 
 **Contents:**
 - [Quick recommendation](#quick-recommendation)
-- [Ratatui](#ratatui-ratatui-ratatui) — [Widgets](#widgets) · [Layout](#layout) · [Styling](#styling)
+- [Ratatui](#ratatui-ratatui-ratatui) — [Lifecycle and terminal handoff](#lifecycle-and-terminal-handoff) · [Widgets](#widgets) · [Layout](#layout) · [Styling](#styling)
 - [Backends](#backends-crossterm-vs-termion-vs-termwiz)
 - [State management](#state-management-patterns) · [Async with Tokio](#async-with-tokio)
 - [Testing](#testing) · [Debugging](#debugging)
@@ -16,7 +16,6 @@ Ratatui dominates Rust TUI development — thousands of crates build on it. Fork
 - [Pitfalls](#pitfalls)
 - [Notable Rust TUI apps](#notable-rust-tui-apps-to-study)
 - [CLI design in Rust](#cli-design-in-rust)
-- [Idioms summary](#idioms-summary)
 
 ## Quick recommendation
 
@@ -49,7 +48,7 @@ use ratatui::{prelude::*, widgets::*};
 use color_eyre::Result;
 
 fn main() -> Result<()> {
-    color_eyre::install()?;            // panic hook restores terminal first
+    color_eyre::install()?;            // install reporting before Ratatui wraps the hook
     let mut terminal = ratatui::init();
     let result = App::default().run(&mut terminal);
     ratatui::restore();
@@ -95,7 +94,22 @@ impl App {
 }
 ```
 
-`ratatui::init()` enables raw mode, enters the alt screen, and constructs a `Terminal<CrosstermBackend>`. `ratatui::restore()` reverses it. **`color_eyre::install()` first** so panics restore the terminal before printing.
+`ratatui::init()` enables raw mode, enters the alt screen, constructs a `Terminal<CrosstermBackend>`, and installs a panic hook that restores the terminal before delegating to the hook already installed. `ratatui::restore()` handles normal shutdown. Install reporting hooks such as `color_eyre` **before** `ratatui::init()` so Ratatui can wrap them with terminal restoration.
+
+### Lifecycle and terminal handoff
+
+Ratatui owns rendering and terminal setup, but not the application event loop, subprocesses, or general process-signal policy. Prefer the managed API and make every external lifecycle event converge on the loop boundary.
+
+| Boundary | Ratatui 0.30 contract |
+|---|---|
+| Normal exit | Prefer `ratatui::run(...)`; it initializes, runs the closure, and restores afterward. With `init()` / `restore()`, retain the loop result, restore, then return the result so errors cannot skip cleanup. |
+| SIGTERM | Ratatui does not turn process signals into application events. Use the owning runtime or signal integration to send a quit event or cancellation into the loop, then let the closure return through managed cleanup. Default SIGTERM and SIGKILL do not unwind Rust cleanup code. |
+| Interactive child | Stop or pause the input-reader task first, restore shell modes, run and wait for the child, reinitialize, clear the terminal, and force a complete draw. Retain the child result while attempting every reentry step independently; if child and reentry both fail, report both instead of letting `?` discard one. A still-running input task can consume terminal capability responses during reinitialization. |
+| Foreground suspend | On Unix, use the same temporary-handoff sequence, send SIGTSTP only after restoration, then reinitialize and redraw after SIGCONT. Offer another path on Windows rather than assuming job-control signals exist. |
+
+Ratatui's official [external-editor recipe](https://ratatui.rs/recipes/apps/spawn-vim/) demonstrates the reader-pause and restore/reinitialize boundary. Keep the existing fallible-setup warning below in mind: custom handoff cleanup should make independent best-effort attempts instead of assuming any single helper is transactional. A successful redraw proves only that the renderer recovered; reload any file, process, or remote state the child could have changed.
+
+Concretely, store `child_result`, collect reentry failures without `?`, then match or aggregate the two outcomes. Calling `try_init()?`, `clear()?`, or `draw()?` before inspecting `child_result` can silently replace the original child failure and violates the handoff contract.
 
 ## Widgets
 
@@ -302,9 +316,9 @@ Real-world anchors: **gitui** adopted insta + TestBackend snapshots in late 2025
   ```
   Best-in-class argparse with auto-generated help, shell completions, and validation.
 
-- **color-eyre** — installs a panic hook that prints rich error reports with source spans. Critical pairing for Ratatui — your panic handler should restore terminal state *first*, then color-eyre prints the report.
+- **color-eyre** — installs a panic hook that prints rich error reports with source spans. Install it before `ratatui::init()` or `ratatui::run()`; Ratatui then wraps the reporting hook and restores terminal state before delegating to it.
 
-- **owo-colors** — zero-allocation color formatting. Recommended over `colored` (older, allocates) and `ansi_term` (unmaintained).
+- **owo-colors** — zero-allocation color formatting. Direct styling emits color; opt into its `supports-colors` feature and use `if_supports_color`, or add your own policy, when output must account for TTY capability and `NO_COLOR`. Recommended over `colored` (older, allocates) and `ansi_term` (unmaintained).
 
 - **indicatif** — progress bars for non-TUI CLIs. Auto-hides on non-TTY.
 
@@ -316,24 +330,29 @@ Real-world anchors: **gitui** adopted insta + TestBackend snapshots in late 2025
 
 - **ratatui-image** — image display in Ratatui apps via Sixel/kitty/iTerm2 protocols.
 
-## Panic safety — the critical pattern
+## Panic and error safety — the critical pattern
 
-A Ratatui app that panics without restoring the terminal leaves the user in raw mode + alt screen + no cursor. Awful. The fix:
+A Ratatui app that exits badly can leave the user in raw mode + alt screen + no cursor. On current Ratatui, prefer `ratatui::run()` for the complete managed lifecycle or `ratatui::init()` when the application needs to own the loop. Install any reporting hook first, then let Ratatui wrap it:
 
 ```rust
-fn install_hooks() -> Result<()> {
-    let panic_hook = std::panic::take_hook();
-    std::panic::set_hook(Box::new(move |info| {
-        let _ = ratatui::restore();   // restore FIRST
-        panic_hook(info);              // then print panic message
-    }));
-
+fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
-    Ok(())
+    ratatui::run(|terminal| App::default().run(terminal))
 }
 ```
 
-Call `install_hooks()` before `ratatui::init()`. The official templates do this. **This is non-negotiable for production apps.**
+If you construct `Terminal` and configure Crossterm raw/alternate-screen state manually, you own both normal and panic cleanup. In that case, wrap the existing reporting hook yourself:
+
+```rust
+color_eyre::install()?;
+let report_hook = std::panic::take_hook();
+std::panic::set_hook(Box::new(move |info| {
+    let _ = ratatui::restore();
+    report_hook(info);
+}));
+```
+
+Do not add that custom wrapper on top of `ratatui::run()` or `ratatui::init()`; those managed APIs already install it. The fallible helpers are not transactional: `try_init()` can return after an earlier setup step changed terminal state, and `try_restore()` stops at its first teardown error. If the caller requires fallible setup or teardown, handle an error with independent best-effort cleanup attempts (disable raw mode, leave the alternate screen, disable mouse/paste modes, show the cursor) rather than assuming one returned `Err` rolled everything back. `ratatui::restore()` performs the default Crossterm teardown—custom backends must run their matching backend-specific teardown instead. Whichever path you choose, inject setup/teardown failures and verify normal exit, returned errors, and panics in a PTY.
 
 ## Alternatives to Ratatui
 
@@ -396,24 +415,10 @@ For non-TUI CLIs:
 
 - **clap** for argparse.
 - **indicatif** for progress bars and spinners (auto-hides on non-TTY).
-- **owo-colors** for terminal colors (respects `NO_COLOR` automatically).
+- **owo-colors** for terminal colors; use its `supports-colors` feature plus `if_supports_color`, or an explicit app policy, to honor terminal capability and `NO_COLOR`.
 - **anyhow** or **color-eyre** for error reporting.
 - **env_logger** or **tracing** + **tracing-subscriber** for logging.
 
 Pair with the principles in `references/cli-basics.md` for argument design, exit codes, and stream handling.
 
 ---
-
-## Idioms summary
-
-- Always install a panic hook that restores terminal **before** color-eyre runs.
-- Use `color_eyre::install()` after the panic hook.
-- Filter `KeyEventKind::Press` to avoid double-firing on Windows.
-- For async apps, use the EventStream + tick channel + `tokio::select!` pattern.
-- Layout once per frame; reuse the `Rect`s.
-- Use `Stylize` extension trait for brevity (`.bold().yellow()`).
-- For complex apps, copy from the official template rather than starting from scratch.
-- Respect `NO_COLOR` — owo-colors and most modern crates do automatically.
-- Use `unicode_width` for cell-width math; don't trust `String::len()`.
-
-For deeper patterns shared across apps, see `references/visual-patterns.md` and `references/interaction-patterns.md`.

@@ -4,7 +4,7 @@ The Go TUI landscape consolidated around two camps: the **Charm stack** (Bubble 
 
 **Contents:**
 - [Quick recommendation](#quick-recommendation)
-- [Bubble Tea](#bubble-tea-charmbracelet-bubbletea) · [Lipgloss](#lipgloss-charmbracelet-lipgloss) · [Bubbles](#bubbles-charmbracelet-bubbles) · [Huh](#huh-charmbracelet-huh)
+- [Bubble Tea](#bubble-tea-charmbracelet-bubbletea) — [Lifecycle and terminal handoff](#lifecycle-and-terminal-handoff) · [Lipgloss](#lipgloss-charmbracelet-lipgloss) · [Bubbles](#bubbles-charmbracelet-bubbles) · [Huh](#huh-charmbracelet-huh)
 - [Other Charm libraries](#other-charm-libraries-worth-knowing)
 - [tview](#tview-rivo-tview) · [gocui](#gocui-awesome-gocui-gocui) · [tcell](#lower-level-tcell)
 - [CLI framing: Cobra and urfave/cli](#cli-framing-cobra-and-urfave-cli)
@@ -12,7 +12,6 @@ The Go TUI landscape consolidated around two camps: the **Charm stack** (Bubble 
 - [Testing](#testing) · [Debugging](#debugging)
 - [Notable Go TUI apps](#notable-go-tui-apps-to-study)
 - [Cross-platform notes](#cross-platform-notes)
-- [Idioms summary](#idioms-summary)
 
 ## Quick recommendation
 
@@ -86,6 +85,21 @@ func main() {
     }
 }
 ```
+
+`Program.Run()` owns Bubble Tea's normal terminal cleanup and default panic recovery. Do not add `defer p.RestoreTerminal()` as a final-cleanup guard: `RestoreTerminal` is the counterpart to `ReleaseTerminal` and resumes Bubble Tea's terminal modes rather than restoring the user's shell. Add an outer custom cleanup boundary only when deliberately bypassing or disabling the framework-managed path.
+
+### Lifecycle and terminal handoff
+
+Bubble Tea v2 owns the terminal for the whole `Program.Run()` call. Keep resumable work inside that lifecycle rather than tearing the program down and trying to reconstruct it.
+
+| Boundary | Bubble Tea v2 contract |
+|---|---|
+| Normal exit | Return `tea.Quit`. `Program.Run()` performs final restoration on normal, error, and recovered-panic paths. |
+| Interrupt or termination | Raw-mode Ctrl+C arrives as `tea.KeyPressMsg`; return `tea.Interrupt` when the caller should receive `tea.ErrInterrupted`, or `tea.Quit` for an intentional zero-status quit. Bubble Tea's default signal handler converts external SIGINT/SIGTERM into managed loop termination. Do not call `os.Exit` from `Update`. |
+| Interactive child | Return `tea.ExecProcess(exec.Command(...), callback)`. It pauses the program, releases the terminal, attaches the child's standard streams, waits, restores and repaints, then reports the child error or, after child success, a restoration error through the callback message. If both fail, the callback exposes the child error. In the callback-message branch, reload data the child could have changed; repainting alone uses the old model. Use an ordinary `tea.Cmd` for non-interactive I/O. |
+| Foreground suspend | Return `tea.Suspend`; after the Unix job resumes, handle `tea.ResumeMsg` to reload state that may have changed while away. Suspend is unsupported on Windows and should not be a required path there. |
+
+The low-level `Program.ReleaseTerminal()` / `RestoreTerminal()` pair is a temporary handoff escape hatch, not final cleanup. Prefer [`ExecProcess`](https://github.com/charmbracelet/bubbletea/blob/v2.0.8/exec.go) for editors and shells; Bubble Tea's [tagged lifecycle source](https://github.com/charmbracelet/bubbletea/blob/v2.0.8/tea.go) defines signal, interrupt, suspend, and restoration semantics together.
 
 **Frame-level declarations live on the view, not the program.** `tea.WithAltScreen()`, `tea.WithMouseCellMotion()`, and `tea.WithMouseAllMotion()` were removed in v2 — set `v.AltScreen = true` and `v.MouseMode = tea.MouseModeCellMotion` (or `tea.MouseModeAllMotion` for hover) in `View()`.
 
@@ -374,7 +388,7 @@ func init() {
 
 **Cobra + Bubble Tea integration**: the Cobra `Run` function does `tea.NewProgram(...).Run()`. Don't write to stdout from `PreRun` if you'll enter alt-screen (output gets eaten). For commands that take pipe input, check `isatty.IsTerminal(os.Stdin.Fd())` before launching the TUI; if piped, run in non-interactive mode.
 
-Cobra ships shell completion generation (`cobra-cli completion bash|zsh|fish|powershell`) — wire it up; users expect it.
+Cobra supports generated shell completions. Add a `completion` command to the application (or scaffold one with `cobra-cli add completion`), then users generate a script with `myapp completion bash|zsh|fish|powershell`; `cobra-cli completion ...` completes the generator itself, not the generated application.
 
 **Fang** (`charmbracelet/fang`) — the CLI starter kit that wraps Cobra: styled help and error output, automatic `--version`, manpage generation. The idiomatic Cobra companion in a Charm-stack app.
 
@@ -495,14 +509,3 @@ Bubble Tea, tview, and gocui all work on Linux, macOS, and Windows (Terminal, co
 For SSH-served TUIs, **Wish** is the right answer — it handles per-session terminal capabilities (the client's truecolor support, not the server's) and gives you middleware for auth, logging, rate limiting.
 
 ---
-
-## Idioms summary
-
-- **Bubble Tea**: All I/O in `tea.Cmd`s. Cache `WindowSizeMsg` for layout. Forward messages to child Bubbles. Use `tea.Batch` for parallel, `tea.Sequence` for ordered. Use `key.Binding` + `key.Matches` for declarative keys. Use `tea.LogToFile` for debug — never `fmt.Println`.
-- **Lipgloss**: Define styles once at package level (they're immutable). Use `JoinHorizontal`/`JoinVertical`/`Place` for layout. Use `LightDark` for theme support. Use `Width()`/`Height()` to measure, not `len()`.
-- **Bubbles**: Embed components in your model. Forward `Update` calls. Use `key.KeyMap` + `help.Model` for the footer hint bar.
-- **tview**: Use `app.QueueUpdateDraw` for goroutine-originated changes — never `app.Draw` directly off-thread.
-- **gocui**: Layout is your `Manager` function. Each view is an `io.Writer`. Use `gocui.ErrQuit` to exit.
-- **Cobra**: Wire up shell completions. Don't print to stdout in `PreRun` if entering alt-screen.
-
-For deeper patterns shared across Go apps, see `references/visual-patterns.md` and `references/interaction-patterns.md`.
