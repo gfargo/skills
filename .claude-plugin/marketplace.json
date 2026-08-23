@@ -37,7 +37,7 @@
       "name": "security",
       "source": "./plugins/security",
       "description": "WAF management as code with Doorman: firewall rules, IP blocking, rate limiting, bot protection for Vercel and Cloudflare.",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "author": {
         "name": "Griffen Fargo"
       }
