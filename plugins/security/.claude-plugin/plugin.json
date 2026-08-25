@@ -1,7 +1,7 @@
 {
   "name": "security",
   "description": "Web application firewall management as code with Doorman: create rules, block IPs, rate limit, protect against bots, and deploy WAF configs to Vercel and Cloudflare.",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "author": {
     "name": "Griffen Fargo",
     "email": "ghfargo@gmail.com"
