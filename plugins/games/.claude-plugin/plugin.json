@@ -1,7 +1,7 @@
 {
   "name": "games",
-  "description": "Terminal game development: build card games in the CLI with ink-playing-cards — card components, deck management, zones, events, and effects using Ink and React.",
-  "version": "1.0.1",
+  "description": "Game-development tooling: build terminal card games with ink-playing-cards and manage reproducible pixel-art pipelines with PixelKiln.",
+  "version": "1.0.2",
   "author": {
     "name": "Griffen Fargo",
     "email": "ghfargo@gmail.com"
@@ -15,6 +15,9 @@
     "card-games",
     "games",
     "deck",
-    "playing-cards"
+    "playing-cards",
+    "pixel-art",
+    "assets",
+    "pixelkiln"
   ]
 }

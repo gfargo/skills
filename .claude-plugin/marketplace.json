@@ -27,8 +27,8 @@
     {
       "name": "games",
       "source": "./plugins/games",
-      "description": "Terminal game development: build card games in the CLI with ink-playing-cards (Ink + React).",
-      "version": "1.0.1",
+      "description": "Game-development tooling: terminal card games with ink-playing-cards and reproducible pixel-art pipelines with PixelKiln.",
+      "version": "1.0.2",
       "author": {
         "name": "Griffen Fargo"
       }
