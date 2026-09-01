@@ -22,7 +22,7 @@ npx skills add gfargo/skills --skill vhs-cli-demos  # terminal: VHS demos
 npx skills add gfargo/skills --skill strut          # devops: strut VPS management
 npx skills add gfargo/skills --skill doorman        # security: WAF management
 npx skills add gfargo/skills --skill ink-playing-cards  # games: card games in the terminal
-npx skills add gfargo/skills@pixelkiln              # games: reproducible pixel-art workflows
+npx skills add gfargo/skills --skill pixelkiln      # games: reproducible pixel-art workflows
 ```
 
 ### Claude Code Plugin
@@ -129,7 +129,7 @@ Plan, generate, review, recover, audit, pack, and export manifest-driven pixel-a
 The skill keeps paid generation budgeted and recoverable, preserves human review, and treats manifests, lockfiles, generated assets, and provenance as build state.
 
 ```bash
-npx skills add gfargo/skills@pixelkiln
+npx skills add gfargo/skills --skill pixelkiln
 ```
 
 ---
