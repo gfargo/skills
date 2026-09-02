@@ -11,9 +11,10 @@ submission, reviewed by a human, and recorded with exact provenance.
 ## Working rules
 
 - Locate `pixelkiln.manifest.json` first. Paths are manifest-relative.
-- Never inspect, print, or commit provider credentials. PixelKiln can load
-  `PIXELLAB_API_KEY` from `.env.local` beside the manifest or from the current
-  working directory.
+- Never inspect, print, or commit provider credentials. Read the manifest's
+  top-level `provider`: PixelKiln loads `PIXELLAB_API_KEY` for `pixellab` and
+  `RD_API_KEY` for experimental `retrodiffusion` from `.env.local` beside the
+  manifest or from the current working directory.
 - Run `pixelkiln doctor --dry-run` and `pixelkiln plan` before paid work. Report
   actionable, recoverable, and estimated cost figures with their provider unit.
 - Do not regenerate recoverable work. Use `pixelkiln restore` first.
@@ -42,10 +43,16 @@ debugging one phase. Use `restore` for missing bytes, `adopt` for exact matches
 already in the provider account, and `salvage` for reviewed unclaimed objects.
 Use `pack`, `mount`, or `export` only for the artifact format the project needs.
 
-PixelKiln's orchestration is provider-neutral. PixelLab is currently its only
-production and live-tested adapter; `FakeProvider` is the deterministic test
-adapter. Do not imply that other production providers already work.
+PixelKiln's orchestration is provider-neutral. PixelLab is its production and
+paid-generation-tested adapter. Retro Diffusion stills, tileset sheets,
+animated GIFs, and PNG spritesheets are experimental. Authenticated RD Fast and
+RD Plus single-candidate stills have passed from quote through validated output
+and recovery. Advanced workflows remain mock-tested.
+`FakeProvider` is the deterministic test adapter. Do not describe Retro
+Diffusion as production-ready until representative multi-candidate, tileset,
+GIF, and spritesheet live smoke tests pass.
 
 When working in the PixelKiln repository, consult `docs/GETTING_STARTED.md` for
-the full workflow, `docs/CLI.md` for flags, `docs/MANIFEST.md` for the schema,
-and `docs/RECOVERY.md` before account adoption, salvage, discard, or purge.
+the full workflow, `docs/PIXELLAB.md` or `docs/RETRO_DIFFUSION.md` for provider
+setup, `docs/CLI.md` for flags, `docs/MANIFEST.md` for the schema, and
+`docs/RECOVERY.md` before account adoption, salvage, discard, or purge.
