@@ -12,9 +12,7 @@ submission, reviewed by a human, and recorded with exact provenance.
 
 - Locate `pixelkiln.manifest.json` first. Paths are manifest-relative.
 - Never inspect, print, or commit provider credentials. Read the manifest's
-  top-level `provider`: PixelKiln loads `PIXELLAB_API_KEY` for `pixellab` and
-  `RD_API_KEY` for experimental `retrodiffusion` from `.env.local` beside the
-  manifest or from the current working directory.
+  top-level `provider`, then load the matching provider reference below.
 - Run `pixelkiln doctor --dry-run` and `pixelkiln plan` before paid work. Report
   actionable, recoverable, and estimated cost figures with their provider unit.
 - Do not regenerate recoverable work. Use `pixelkiln restore` first.
@@ -43,11 +41,18 @@ debugging one phase. Use `restore` for missing bytes, `adopt` for exact matches
 already in the provider account, and `salvage` for reviewed unclaimed objects.
 Use `pack`, `mount`, or `export` only for the artifact format the project needs.
 
-PixelKiln's orchestration is provider-neutral. PixelLab is its production and
-paid-generation-tested adapter. Retro Diffusion stills, tileset sheets,
-animated GIFs, and PNG spritesheets are experimental. Authenticated RD Fast and
-RD Plus single-candidate stills have passed from quote through validated output
-and recovery. Advanced workflows remain mock-tested.
+## Provider routing
+
+Read only the reference needed for the current decision:
+
+- For PixelLab configuration, generators, costs, alpha behavior, or account
+  operations, read [references/pixellab.md](references/pixellab.md).
+- For Retro Diffusion styles, USD budgets, environment assets, animation, or
+  experimental limits, read
+  [references/retro-diffusion.md](references/retro-diffusion.md).
+- When one game or repository needs both providers, read
+  [references/mixed-providers.md](references/mixed-providers.md).
+
 `FakeProvider` is the deterministic test adapter. Do not describe Retro
 Diffusion as production-ready until representative multi-candidate, tileset,
 GIF, and spritesheet live smoke tests pass.
