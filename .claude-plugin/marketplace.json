@@ -28,7 +28,7 @@
       "name": "games",
       "source": "./plugins/games",
       "description": "Game-development tooling: terminal card games with ink-playing-cards and reproducible pixel-art pipelines with PixelKiln.",
-      "version": "1.0.5",
+      "version": "1.0.6",
       "author": {
         "name": "Griffen Fargo"
       }

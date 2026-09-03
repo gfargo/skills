@@ -50,7 +50,9 @@ Read only the reference needed for the current decision:
 - For Retro Diffusion styles, USD budgets, environment assets, animation, or
   experimental limits, read
   [references/retro-diffusion.md](references/retro-diffusion.md).
-- When one game or repository needs both providers, read
+- For a self-hosted ComfyUI workflow, node bindings, local cost semantics, or
+  portable output recovery, read [references/comfyui.md](references/comfyui.md).
+- When one game or repository needs more than one provider, read
   [references/mixed-providers.md](references/mixed-providers.md).
 
 `FakeProvider` is the deterministic test adapter. Do not describe Retro
@@ -58,6 +60,6 @@ Diffusion as production-ready until representative multi-candidate, tileset,
 GIF, and spritesheet live smoke tests pass.
 
 When working in the PixelKiln repository, consult `docs/GETTING_STARTED.md` for
-the full workflow, `docs/PIXELLAB.md` or `docs/RETRO_DIFFUSION.md` for provider
-setup, `docs/CLI.md` for flags, `docs/MANIFEST.md` for the schema, and
+the full workflow, the matching provider setup guide, `docs/CLI.md` for flags,
+`docs/MANIFEST.md` for the schema, and
 `docs/RECOVERY.md` before account adoption, salvage, discard, or purge.

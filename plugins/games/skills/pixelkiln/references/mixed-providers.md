@@ -1,7 +1,7 @@
 # Mixed-provider projects
 
-Read this reference when one game or repository needs assets from both PixelLab
-and Retro Diffusion.
+Read this reference when one game or repository needs assets from PixelLab,
+Retro Diffusion, ComfyUI, or another combination of providers.
 
 One manifest selects one top-level `provider`. Do not add undocumented
 per-style provider fields: the current CLI constructs one account adapter for a
@@ -15,6 +15,8 @@ art/
   pixelkiln.pixellab.lock.json
   pixelkiln.retrodiffusion.manifest.json
   pixelkiln.retrodiffusion.lock.json
+  pixelkiln.comfyui.manifest.json
+  pixelkiln.comfyui.lock.json
 pixelkiln.workspace.json
 ```
 
@@ -26,18 +28,24 @@ pixelkiln gen --manifest art/pixelkiln.pixellab.manifest.json --lock art/pixelki
 
 pixelkiln plan --manifest art/pixelkiln.retrodiffusion.manifest.json --lock art/pixelkiln.retrodiffusion.lock.json
 pixelkiln gen --manifest art/pixelkiln.retrodiffusion.manifest.json --lock art/pixelkiln.retrodiffusion.lock.json --budget <usd>
+
+pixelkiln plan --manifest art/pixelkiln.comfyui.manifest.json --lock art/pixelkiln.comfyui.lock.json
+pixelkiln gen --manifest art/pixelkiln.comfyui.manifest.json --lock art/pixelkiln.comfyui.lock.json --budget 0
 ```
 
-Register both manifests in the workspace catalog so aggregate status and claim
+Register every manifest in the workspace catalog so aggregate status and claim
 checks see the whole project. A mixed-provider warning is expected because it
 prevents account-wide commands from silently assuming one backend.
 
 Package each manifest's reviewed outputs independently, or use `pixelkiln pack
 --inputs <file> --out <path>` with an explicit JSON list when the final sheet
-must combine files from both providers. Never merge the two lockfiles or add
-generation counts to USD. Each entry must retain the provider that produced it.
+must combine files from multiple providers. Never merge their lockfiles or add
+generation counts, USD, and `free` plans. Each entry must retain the provider
+that produced it.
 
 A practical split is PixelLab for prompt-sensitive buildings and mature account
 recovery, then Retro Diffusion for environment-styled backdrops, clean cutouts,
-or native animation. The committed benchmark is evidence for those tendencies,
-not a guarantee; run one representative asset before expanding either batch.
+or native animation. ComfyUI fits private work, local models, and custom graph
+control, but its result depends on the exact workflow, model, nodes, and
+hardware. The committed hosted-provider benchmark is evidence for tendencies,
+not a guarantee. Run one representative asset before expanding any batch.
