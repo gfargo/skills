@@ -24,9 +24,11 @@ providers, or before any PixelLab account operation.
 | `tiles` | Ground variations or connected structures | 20–40 generations |
 
 In the committed environment benchmark, PixelLab followed complex building
-prompts more closely and produced the stronger scenic background. Its 256px map
-objects were opaque despite the route's transparency claim, so inspect alpha on
-one representative result before a batch.
+prompts more closely and produced broader, more separable depth bands in scenic
+backgrounds. Its 256px and 384px map objects were opaque despite the route's
+transparency claim, so inspect alpha on one representative result before a
+batch. Inspect scenic outputs for stray marks too: one untouched 384px attempt
+contained a generated signature-like glyph.
 
 For setup and current field constraints, use
 <https://pixelkiln.griffen.codes/docs/pixellab>. When working in the PixelKiln

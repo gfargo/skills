@@ -31,6 +31,13 @@ cutouts, smaller palettes, cinematic framing, or native animation. Build truly
 large scenes from separately generated terrain, backdrop, landmark, building,
 and foreground layers, then integer-upscale with nearest-neighbor filtering.
 
+The committed 384px benchmark produced substantially larger isometric
+buildings than the earlier 256px brief while retaining 52% to 75%
+transparency and 49 to 55 colors. Its volcanic backgrounds made the pass and
+lava path clear, but dropped a requested fortress and favored close canyon
+framing over separable distant planes. Use a representative large asset before
+assuming prompt details or layerability will survive a batch.
+
 For setup, selectors, and option constraints, use
 <https://pixelkiln.griffen.codes/docs/retro-diffusion>. The matched visual
 evidence is at <https://pixelkiln.griffen.codes/docs/provider-benchmark>. When
