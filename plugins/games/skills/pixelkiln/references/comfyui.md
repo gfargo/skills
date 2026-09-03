@@ -32,6 +32,14 @@ PNG still matches the manifest dimensions. The isolated workflow uses LoRA
 strength 1.0, while the environment workflow uses 0.85. Read
 `docs/COMFYUI.md` for download links, checksums, licenses, and measured limits.
 
+For production-oriented stills, prefer the core-node refinement graph in
+`benchmarks/provider-postprocessing/comfyui/`. It runs BiRefNet on the decoded
+full-resolution image, quantizes RGB separately, joins the inverted background
+mask as alpha, and scales last. Do not quantize before background removal or
+feed a scenic background through the removal model. Use `pixelkiln audit` with
+both `--min-transparency` and `--max-colors` so the cleanup requirements fail in
+CI when a workflow or model changes.
+
 The plan reports `0 free` and generation uses `--budget 0`. Explain that this
 means no metered API charge. Hardware, electricity, hosting, and model licenses
 can still cost money.
