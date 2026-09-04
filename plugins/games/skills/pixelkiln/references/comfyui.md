@@ -20,17 +20,20 @@ worth the extra model testing and cleanup.
 1. Generate two to four candidates on the model's normal working canvas.
 2. Reject weak composition and missing prompt elements before post-processing.
 3. For isolated art, remove the background at full resolution.
-4. Recover one native pixel per detected cell.
-5. Quantize the recovered native image to the project's final palette, usually
-   16–32 colors without dithering to start.
-6. Review the native file at 1× and an integer zoom. Check silhouette, clusters,
+4. Run `pixelkiln refine` to recover one native pixel per detected cell and
+   apply the project's final palette, usually 16–32 colors without dithering.
+5. Review the native file at 1× and an integer zoom. Check silhouette, clusters,
    contours, single-pixel noise, palette separation, alpha, and seams.
+6. Record the named review with `pixelkiln refine approve`, then require
+   `pixelkiln refine check` before packaging.
 7. Accept the smallest clear result. For the tested stack, start with 48–128px
    native components and compose larger scenes from reviewed parts.
 
-PixelKiln does not automate steps 3–6 yet. Say so. Do not present the generated
-working canvas, a nearest-neighbor resize, or a grid-recovery result as the
-finished asset.
+Background removal stays in the ComfyUI graph. PixelKiln automates grid
+recovery, final palette enforcement, measurable audits, and the approval
+record. It does not decide whether the art is good. Do not present the generated
+working canvas, a nearest-neighbor resize, an unreviewed grid recovery, or a
+pending quality record as the finished asset.
 
 Test a workflow on at least two different scene families before recommending
 it. A prompt that reduced noise in the alpine benchmark increased noise in the
@@ -80,10 +83,11 @@ The boundary experiment in
 `benchmarks/provider-hires/comfyui/` keeps generation canvas, native art grid,
 and display size separate. Pixel Art XL can make a 1024px raster whose implied
 cells resolve to a much smaller editable grid. Nearest-neighbor scaling
-preserves those fake cells; it does not repair them. Reconstruct accepted output
-at 1× with a grid-aware tool such as Retro Diffusion Pixel Art Fixer, then
-compose and edit the native PNG. Record the fixer revision, source and output
-hashes, detected grid, confidence, and dimensions.
+preserves those fake cells; it does not repair them. Run accepted output through
+`pixelkiln refine` with the pinned local Retro Diffusion Pixel Art Fixer and an
+explicit project palette. Its companion records the fixer revision, source and
+output hashes, detected grid, confidence, dimensions, audit, and human-review
+state.
 
 Do not add `LatentUpscale` and a second sampling pass by default. The tested
 1536px and 2048px variants blurred the output. Nearest-neighbor scaling preserves

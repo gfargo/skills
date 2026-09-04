@@ -22,7 +22,9 @@ submission, reviewed by a human, and recorded with exact provenance.
   user explicitly provides a selection rule. Closing it applies nothing.
 - Treat every ComfyUI output as source material until it passes the native-grid,
   final-palette, prompt-coverage, and human 1× checks in the ComfyUI reference.
-  A successful PNG or high-confidence grid result is not quality approval.
+  Use `pixelkiln refine` for the mechanical checks and `refine check` for the
+  recorded gate. A successful PNG or high-confidence grid result is not quality
+  approval.
 - Preserve manual edits and ownership errors. Inspect the difference before any
   `--force` operation.
 - Commit the manifest, lockfile, generated outputs, and derived artifact
@@ -43,6 +45,8 @@ Use the staged `submit` → `poll` → `pick` → `fetch` commands when resuming
 debugging one phase. Use `restore` for missing bytes, `adopt` for exact matches
 already in the provider account, and `salvage` for reviewed unclaimed objects.
 Use `pack`, `mount`, or `export` only for the artifact format the project needs.
+Use provider-neutral `refine` after a candidate passes composition review and,
+for an isolated asset, background removal.
 
 ## Provider routing
 
