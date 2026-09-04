@@ -20,6 +20,9 @@ submission, reviewed by a human, and recorded with exact provenance.
   explicit `--budget` no higher than the authorized estimate.
 - Leave visual selection to the local `pixelkiln pick` review page unless the
   user explicitly provides a selection rule. Closing it applies nothing.
+- Treat every ComfyUI output as source material until it passes the native-grid,
+  final-palette, prompt-coverage, and human 1× checks in the ComfyUI reference.
+  A successful PNG or high-confidence grid result is not quality approval.
 - Preserve manual edits and ownership errors. Inspect the difference before any
   `--force` operation.
 - Commit the manifest, lockfile, generated outputs, and derived artifact

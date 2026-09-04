@@ -46,6 +46,8 @@ that produced it.
 A practical split is PixelLab for prompt-sensitive buildings and mature account
 recovery, then Retro Diffusion for environment-styled backdrops, clean cutouts,
 or native animation. ComfyUI fits private work, local models, and custom graph
-control, but its result depends on the exact workflow, model, nodes, and
-hardware. The committed hosted-provider benchmark is evidence for tendencies,
-not a guarantee. Run one representative asset before expanding any batch.
+control when the user accepts manual native-grid recovery, final palette
+enforcement, and art review. Start with a specialized hosted provider when
+minimizing cleanup matters more than local control. The committed benchmark is
+evidence for tendencies, not a guarantee. Run one representative asset before
+expanding any batch, and test a ComfyUI graph on at least two scene families.
