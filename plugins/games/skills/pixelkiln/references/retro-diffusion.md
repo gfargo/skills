@@ -14,6 +14,10 @@ large scene work, or when using native animation and tileset output.
   Diffusion's free authoritative quote before submission.
 - Account operations: balance is supported. Listing, adopt, salvage, tagging,
   and deletion are not exposed by the current adapter.
+- Recovery identity: the lock stores a durable `retrodiffusion://` reference,
+  never a temporary signed storage URL or inline image. Do not replace that
+  reference with the current download URL. Recovery uses the local content
+  cache first and needs `RD_API_KEY` to refresh a missing result.
 
 ## When to use it
 
