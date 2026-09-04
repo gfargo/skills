@@ -43,7 +43,7 @@ must combine files from multiple providers. Never merge their lockfiles or add
 generation counts, USD, and `free` plans. Each entry must retain the provider
 that produced it.
 
-A practical split is PixelLab for prompt-sensitive buildings and mature account
+A tested split is PixelLab for prompt-sensitive buildings and mature account
 recovery, then Retro Diffusion for environment-styled backdrops, clean cutouts,
 or native animation. ComfyUI fits private work, local models, and custom graph
 control when the user accepts a refinement pass and hands-on art review.

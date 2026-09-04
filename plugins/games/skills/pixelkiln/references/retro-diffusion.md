@@ -15,7 +15,7 @@ large scene work, or when using native animation and tileset output.
 - Account operations: balance is supported. Listing, adopt, salvage, tagging,
   and deletion are not exposed by the current adapter.
 
-## Where it earns a place
+## When to use it
 
 - `rd_plus__environment` for one-point-perspective scenic backgrounds.
 - `rd_plus__topdown_map` for 3/4 top-down maps.
@@ -31,7 +31,7 @@ cutouts, smaller palettes, cinematic framing, or native animation. Build truly
 large scenes from separately generated terrain, backdrop, landmark, building,
 and foreground layers, then integer-upscale with nearest-neighbor filtering.
 
-The committed 384px benchmark produced substantially larger isometric
+The committed 384px benchmark produced larger isometric
 buildings than the earlier 256px brief while retaining 52% to 75%
 transparency and 49 to 55 colors. Its volcanic backgrounds made the pass and
 lava path clear, but dropped a requested fortress and favored close canyon
