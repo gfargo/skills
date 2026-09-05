@@ -1,7 +1,7 @@
 {
   "name": "games",
   "description": "Game-development tooling: build terminal card games with ink-playing-cards and manage reproducible pixel-art pipelines with PixelKiln.",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "author": {
     "name": "Griffen Fargo",
     "email": "ghfargo@gmail.com"

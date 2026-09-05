@@ -68,14 +68,17 @@ Read only the reference needed for the current decision:
   [references/retro-diffusion.md](references/retro-diffusion.md).
 - For a self-hosted ComfyUI workflow, node bindings, local cost semantics, or
   portable output recovery, read [references/comfyui.md](references/comfyui.md).
+- For Scenario models, Compute Unit ceilings, two-part credentials, or durable
+  hosted-asset recovery, read [references/scenario.md](references/scenario.md).
 - When a bundled or installed recipe can supply the workflow, model hashes, or
   quality contract, read [references/recipes.md](references/recipes.md).
 - When one game or repository needs more than one provider, read
   [references/mixed-providers.md](references/mixed-providers.md).
 
-`FakeProvider` is the deterministic test adapter. Do not describe Retro
-Diffusion as production-ready until representative multi-candidate, tileset,
-GIF, and spritesheet live smoke tests pass.
+`FakeProvider` is the deterministic test adapter. Describe Scenario as
+experimental: one BFL Flux 2 Dev profile is live-tested, while other model
+schemas and broader batches are not. Do not describe Retro Diffusion as production-ready until representative
+multi-candidate, tileset, GIF, and spritesheet live smoke tests pass.
 
 When working in the PixelKiln repository, consult `docs/GETTING_STARTED.md` for
 the full workflow, the matching provider setup guide, `docs/CLI.md` for flags,
