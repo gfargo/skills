@@ -23,11 +23,13 @@ hashes.
   pass one `--budget provider=amount` ceiling for every paid provider in the plan.
 - Leave visual selection to the local `pixelkiln pick` review page unless the
   user explicitly provides a selection rule. Closing it applies nothing.
+- When a selected style declares `quality`, run manifest-mode `pixelkiln refine`
+  after its source is accepted and downloaded. Read the quality reference below.
+  Do not copy manifest-owned palette, path, or threshold settings into flags.
+  Never record approval without the named person's completed 1× review.
 - Treat every ComfyUI output as source material until it passes the native-grid,
   final-palette, prompt-coverage, and human 1× checks in the ComfyUI reference.
-  Use `pixelkiln refine` for the mechanical checks and `refine check` for the
-  recorded gate. A successful PNG or high-confidence grid result is not quality
-  approval.
+  A successful PNG or high-confidence grid result is not quality approval.
 - When the project commits a PixelKiln quality baseline, run `pixelkiln quality
   check --from <baseline>` before packaging. Treat a pass as structural
   continuity, never as human approval or proof that the prompt was satisfied.
@@ -54,8 +56,9 @@ Use the staged `submit` → `poll` → `pick` → `fetch` commands when resuming
 debugging one phase. Use `restore` for missing bytes, `adopt` for exact matches
 already in the provider account, and `salvage` for reviewed unclaimed objects.
 Use `pack`, `mount`, or `export` only for the artifact format the project needs.
-Use provider-neutral `refine` after a candidate passes composition review and,
-for an isolated asset, background removal.
+Prefer a manifest quality profile when a whole style shares the final-art rule.
+Use `refine --from` only for a one-off candidate outside that contract, after
+composition review and, for an isolated asset, background removal.
 
 ## Provider routing
 
@@ -72,6 +75,8 @@ Read only the reference needed for the current decision:
   hosted-asset recovery, read [references/scenario.md](references/scenario.md).
 - When a bundled or installed recipe can supply the workflow, model hashes, or
   quality contract, read [references/recipes.md](references/recipes.md).
+- When a manifest style declares `quality`, or packaging is blocked on derived
+  approval, read [references/quality.md](references/quality.md).
 - When one game or repository needs more than one provider, read
   [references/mixed-providers.md](references/mixed-providers.md).
 
