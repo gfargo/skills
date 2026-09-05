@@ -59,10 +59,12 @@ URL is `http://127.0.0.1:8188`; `COMFYUI_BASE_URL` overrides it. Keep an
 unauthenticated server off public networks.
 
 The style's `providerOptions.comfyui` must name a committed API-format workflow,
-one image output node, the expected candidate count, and bindings for prompt,
-width, height, and batch size. A seed binding is required when the style
-declares a seed. Node IDs and model filenames are workflow-specific. Check the
-exported JSON instead of guessing them.
+one image output node, the expected candidate count, and the inputs PixelKiln
+may replace. Text-to-image needs prompt, width, and height; multiple candidates
+need batch size; a declared seed needs seed. A revision needs `sourceImage`,
+inpainting needs `maskImage`, and declared strength needs `strength`. Read
+[Controlled revisions](revisions.md) before operating one. Node IDs and model
+filenames are workflow-specific. Check the exported JSON instead of guessing.
 
 Planning parses and hashes the workflow file without contacting ComfyUI. A
 workflow content change makes affected assets stale. The adapter supports only

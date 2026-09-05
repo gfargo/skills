@@ -27,6 +27,9 @@ hashes.
   after its source is accepted and downloaded. Read the quality reference below.
   Do not copy manifest-owned palette, path, or threshold settings into flags.
   Never record approval without the named person's completed 1× review.
+- When an asset declares `revision`, read the revision reference, require its
+  parent gate to pass, and never bypass a `blocked` plan. Generate or approve
+  the parent explicitly before re-planning the child.
 - Treat every ComfyUI output as source material until it passes the native-grid,
   final-palette, prompt-coverage, and human 1× checks in the ComfyUI reference.
   A successful PNG or high-confidence grid result is not quality approval.
@@ -75,6 +78,8 @@ Read only the reference needed for the current decision:
   hosted-asset recovery, read [references/scenario.md](references/scenario.md).
 - When a bundled or installed recipe can supply the workflow, model hashes, or
   quality contract, read [references/recipes.md](references/recipes.md).
+- When an asset declares `revision`, read
+  [references/revisions.md](references/revisions.md).
 - When a manifest style declares `quality`, or packaging is blocked on derived
   approval, read [references/quality.md](references/quality.md).
 - When one game or repository needs more than one provider, read

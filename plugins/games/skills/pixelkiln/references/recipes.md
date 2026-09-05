@@ -11,6 +11,12 @@ pixelkiln recipe verify \
   pixelkiln-recipes/comfyui/pixel-art-xl-environment/1.0.0
 ```
 
+For a square image-to-image revision, use
+`comfyui/pixel-art-xl-img2img@1.0.0` and read [Controlled revisions](revisions.md).
+Its graph and binding contract are tested; its visual quality still needs a
+broader benchmark. The first live fortress smoke preserved shape but missed
+the requested winter treatment and lost alpha.
+
 If the ComfyUI model root is known, pass it to `recipe verify`. Report missing
 or mismatched models; do not download or replace them without the user's
 request. Without `--model-root`, say that the recipe and workflow were verified
