@@ -12,13 +12,15 @@ hashes.
 ## Working rules
 
 - Locate `pixelkiln.manifest.json` first. Paths are manifest-relative.
-- Never inspect, print, or commit provider credentials. Read the manifest's
-  top-level `provider`, then load the matching provider reference below.
+- Never inspect, print, or commit provider credentials. Read the top-level
+  provider default and every style override, then load the matching provider
+  references below.
 - Run `pixelkiln doctor --dry-run` and `pixelkiln plan` before paid work. Report
   actionable, recoverable, and estimated cost figures with their provider unit.
 - Do not regenerate recoverable work. Use `pixelkiln restore` first.
 - Submit paid work only when the user has authorized generation. Always pass an
-  explicit `--budget` no higher than the authorized estimate.
+  explicit `--budget` no higher than the authorized estimate. For mixed work,
+  pass one `--budget provider=amount` ceiling for every paid provider in the plan.
 - Leave visual selection to the local `pixelkiln pick` review page unless the
   user explicitly provides a selection rule. Closing it applies nothing.
 - Treat every ComfyUI output as source material until it passes the native-grid,
@@ -44,6 +46,9 @@ pixelkiln plan
 pixelkiln gen --budget <approved-provider-units>
 pixelkiln audit --check
 ```
+
+For a mixed plan, replace the single ceiling with repeated provider-keyed
+ceilings copied from each plan group.
 
 Use the staged `submit` → `poll` → `pick` → `fetch` commands when resuming or
 debugging one phase. Use `restore` for missing bytes, `adopt` for exact matches

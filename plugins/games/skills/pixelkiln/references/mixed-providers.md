@@ -3,45 +3,38 @@
 Read this reference when one game or repository needs assets from PixelLab,
 Retro Diffusion, ComfyUI, or another combination of providers.
 
-One manifest selects one top-level `provider`. Do not add undocumented
-per-style provider fields: the current CLI constructs one account adapter for a
-manifest run, and a single `--budget` has one provider-specific unit.
+The top-level `provider` is the default. A style may override it with its own
+`provider`; assets may not. Keep each style's output directory distinct and put
+service settings under the matching `providerOptions` key.
 
-Use one manifest and lockfile per provider inside the same project:
-
-```text
-art/
-  pixelkiln.pixellab.manifest.json
-  pixelkiln.pixellab.lock.json
-  pixelkiln.retrodiffusion.manifest.json
-  pixelkiln.retrodiffusion.lock.json
-  pixelkiln.comfyui.manifest.json
-  pixelkiln.comfyui.lock.json
-pixelkiln.workspace.json
-```
-
-Keep their output directories distinct. Plan and authorize them separately:
+Run `doctor --dry-run` and `plan` across the intended filters. Report every plan
+group separately. Never add generation counts, USD, and `free` costs. Copy each
+estimate into a named ceiling:
 
 ```bash
-pixelkiln plan --manifest art/pixelkiln.pixellab.manifest.json --lock art/pixelkiln.pixellab.lock.json
-pixelkiln gen --manifest art/pixelkiln.pixellab.manifest.json --lock art/pixelkiln.pixellab.lock.json --budget <generations>
-
-pixelkiln plan --manifest art/pixelkiln.retrodiffusion.manifest.json --lock art/pixelkiln.retrodiffusion.lock.json
-pixelkiln gen --manifest art/pixelkiln.retrodiffusion.manifest.json --lock art/pixelkiln.retrodiffusion.lock.json --budget <usd>
-
-pixelkiln plan --manifest art/pixelkiln.comfyui.manifest.json --lock art/pixelkiln.comfyui.lock.json
-pixelkiln gen --manifest art/pixelkiln.comfyui.manifest.json --lock art/pixelkiln.comfyui.lock.json --budget 0
+pixelkiln gen \
+  --budget pixellab=<generations> \
+  --budget retrodiffusion=<usd> \
+  --budget comfyui=0
 ```
 
-Register every manifest in the workspace catalog so aggregate status and claim
-checks see the whole project. A mixed-provider warning is expected because it
-prevents account-wide commands from silently assuming one backend.
+Do not replace those with one unkeyed total. PixelKiln should refuse the run if
+a paid provider ceiling is missing, repeated, or unknown. A `free` provider may
+be written explicitly as zero. Confirm that validation happens before any
+provider receives a submission.
 
-Package each manifest's reviewed outputs independently, or use `pixelkiln pack
---inputs <file> --out <path>` with an explicit JSON list when the final sheet
-must combine files from multiple providers. Never merge their lockfiles or add
-generation counts, USD, and `free` plans. Each entry must retain the provider
-that produced it.
+Use one lockfile for one manifest. Its entry-level provider is authoritative
+when polling, selecting, fetching, restoring, or tagging existing work. A style
+provider change makes prior work stale; do not use `accept` to relabel it.
+
+For `balance`, `adopt`, `salvage`, or `purge`, pass the explicit account provider
+when the manifest is mixed. Never assume that the top-level default covers all
+styles. Provider-qualified workspace claims keep identical remote IDs from
+different services separate.
+
+Separate manifests remain valid when teams, credentials, or release schedules
+need a harder boundary. Register them in the workspace catalog and never merge
+their lockfiles by hand.
 
 A tested split is PixelLab for prompt-sensitive buildings and mature account
 recovery, then Retro Diffusion for environment-styled backdrops, clean cutouts,
