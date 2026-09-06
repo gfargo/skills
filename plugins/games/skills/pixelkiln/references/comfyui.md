@@ -66,11 +66,33 @@ inpainting needs `maskImage`, and declared strength needs `strength`. Read
 [Controlled revisions](revisions.md) before operating one. Node IDs and model
 filenames are workflow-specific. Check the exported JSON instead of guessing.
 
+Bindings may also use project-defined names. Match each name to the asset's
+`providerInputs` entry instead of copying one workflow per pose, reference, or
+strength. When a custom binding targets `LoadImage.image` or
+`LoadImageMask.image`, its value is a manifest-relative PNG/JPEG. Keep that file
+with the project: PixelKiln hashes it during planning, checks it again before
+submission, uploads it under a content-addressed name, and records no local
+path. Do not tell users to copy these inputs into ComfyUI by hand.
+
+Other custom inputs must be string, finite number, or boolean values matching
+the committed workflow placeholder. Treat an unknown binding, duplicate target,
+reserved built-in name, missing file, or type mismatch as a manifest error.
+Changing an input value or image bytes makes only the affected asset stale.
+
+For `generator: frames`, `providerOptions.comfyui.frames.vary` names one custom
+binding and the matching `providerInputs` value is an ordered 2–64 item array.
+Keep `numImages: 1`. A nonzero `seedStep` also requires `style.seed` and a seed
+binding. Review, fetch, refine, approve, and pack the set as one asset. Reject a
+set when any frame changes grid dimensions, step, or phase; never keep only its
+good-looking members.
+
 Planning parses and hashes the workflow file without contacting ComfyUI. A
-workflow content change makes affected assets stale. The adapter supports only
-the `map` generator, PNG output from one node, 1–16 candidates, and dimensions
-from 16–4096px. Manifest `styleImages` and `palette` are unsupported; those
-controls belong in the workflow.
+workflow content change makes affected assets stale. The adapter supports
+`map` and ordered still-image `frames`, PNG output from one node, 1–16 map
+candidates, 2–64 frames, and dimensions from 16–4096px. Manifest `styleImages`
+and `palette` are unsupported; those
+shared controls belong in the workflow. Per-asset ControlNet and reference
+images belong in custom bindings plus `providerInputs`.
 
 ## Tested evidence, not a preset
 

@@ -12,12 +12,16 @@ hashes.
 ## Working rules
 
 - Locate `pixelkiln.manifest.json` first. Paths are manifest-relative.
+- Treat `style.extends` as a source-level variant, not a reason to copy the
+  parent. Keep every child `outDir` explicit, inspect the resolved plan, and
+  remember that a pixel-affecting parent edit intentionally makes children stale.
 - Never inspect, print, or commit provider credentials. Read the top-level
   provider default and every style override, then load the matching provider
   references below.
 - Run `pixelkiln doctor --dry-run` and `pixelkiln plan` before paid work. Report
   actionable, recoverable, and estimated cost figures with their provider unit.
-- Do not regenerate recoverable work. Use `pixelkiln restore` first.
+- Do not regenerate recoverable work. Follow the exact zero-cost action printed
+  by `plan`: `poll`, `pick`, `fetch`, or `restore`.
 - Submit paid work only when the user has authorized generation. Always pass an
   explicit `--budget` no higher than the authorized estimate. For mixed work,
   pass one `--budget provider=amount` ceiling for every paid provider in the plan.
@@ -25,7 +29,8 @@ hashes.
   user explicitly provides a selection rule. Closing it applies nothing.
 - When a selected style declares `quality`, run manifest-mode `pixelkiln refine`
   after its source is accepted and downloaded. Read the quality reference below.
-  Do not copy manifest-owned palette, path, or threshold settings into flags.
+  Do not copy manifest-owned palette, path, interpreter, or threshold settings
+  into flags.
   Never record approval without the named person's completed 1× review.
 - When an asset declares `revision`, read the revision reference, require its
   parent gate to pass, and never bypass a `blocked` plan. Generate or approve
@@ -33,6 +38,8 @@ hashes.
 - Treat every ComfyUI output as source material until it passes the native-grid,
   final-palette, prompt-coverage, and human 1× checks in the ComfyUI reference.
   A successful PNG or high-confidence grid result is not quality approval.
+- Treat a ComfyUI `frames` asset as indivisible. Review its animated strip,
+  refine and approve the complete set, and never package a subset of its roles.
 - When the project commits a PixelKiln quality baseline, run `pixelkiln quality
   check --from <baseline>` before packaging. Treat a pass as structural
   continuity, never as human approval or proof that the prompt was satisfied.
@@ -56,7 +63,8 @@ For a mixed plan, replace the single ceiling with repeated provider-keyed
 ceilings copied from each plan group.
 
 Use the staged `submit` → `poll` → `pick` → `fetch` commands when resuming or
-debugging one phase. Use `restore` for missing bytes, `adopt` for exact matches
+debugging one phase. Use the plan's printed stage for paid work and `restore`
+for missing downloaded bytes, `adopt` for exact matches
 already in the provider account, and `salvage` for reviewed unclaimed objects.
 Use `pack`, `mount`, or `export` only for the artifact format the project needs.
 Prefer a manifest quality profile when a whole style shares the final-art rule.
