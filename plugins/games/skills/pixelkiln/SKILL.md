@@ -51,8 +51,12 @@ hashes.
 - Preserve manual edits and ownership errors. Inspect the difference before any
   `--force` operation. When the person wants to touch art up by hand, use
   `pixelkiln edit --only <asset> --style <style> --no-open`: it copies the
-  generated PNG to `edits/` and declares it as the asset's source, so the
-  generated file and lockfile stay the record and `plan` stays `ok`.
+  generated PNG to `edits/` (one file per member for a frame or tile set) and
+  declares it as the asset's source, so the generated file and lockfile stay
+  the record and `plan` stays `ok`. The gallery's in-browser editor is for the
+  person; `pixelkiln tools install editor` prefetches it without opening
+  anything. Art changed in PixelLab's own editor comes back with
+  `pixelkiln fetch --refresh`, never by regenerating.
 - Commit the manifest, lockfile, generated outputs, and derived artifact
   companions. Never commit `.env.local` or `.pixelkiln/` cache data.
 
