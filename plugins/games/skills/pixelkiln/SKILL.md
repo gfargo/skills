@@ -49,7 +49,10 @@ hashes.
   check --from <baseline>` before packaging. Treat a pass as structural
   continuity, never as human approval or proof that the prompt was satisfied.
 - Preserve manual edits and ownership errors. Inspect the difference before any
-  `--force` operation.
+  `--force` operation. When the person wants to touch art up by hand, use
+  `pixelkiln edit --only <asset> --style <style> --no-open`: it copies the
+  generated PNG to `edits/` and declares it as the asset's source, so the
+  generated file and lockfile stay the record and `plan` stays `ok`.
 - Commit the manifest, lockfile, generated outputs, and derived artifact
   companions. Never commit `.env.local` or `.pixelkiln/` cache data.
 
