@@ -48,6 +48,10 @@ hashes.
 - When the project commits a PixelKiln quality baseline, run `pixelkiln quality
   check --from <baseline>` before packaging. Treat a pass as structural
   continuity, never as human approval or proof that the prompt was satisfied.
+- A regeneration keeps the generation it replaces: `pixelkiln history` lists
+  them and `pixelkiln restore --only <asset> --style <style> --generation <n>`
+  brings one back at no cost. When the person wants the previous result back,
+  restore it; never regenerate to get there.
 - Preserve manual edits and ownership errors. Inspect the difference before any
   `--force` operation. When the person wants to touch art up by hand, use
   `pixelkiln edit --only <asset> --style <style> --no-open`: it copies the
