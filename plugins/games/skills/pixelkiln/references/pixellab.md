@@ -22,12 +22,20 @@ providers, or before any PixelLab account operation.
 | `pixflux` | Closed palettes or full-bleed backgrounds | 1 generation |
 | `1dir` | Reference-guided work or several candidates | 20–40 generations |
 | `tiles` | Ground variations or connected structures | 20–40 generations |
-| `character` | A character in 4 or 8 directions, its poses (`state`), and its loops (`animation`) | 1 per base, 20–40 per pose, 1 per template loop per direction |
+| `character` | A character in 4 or 8 directions, its poses (`state`), and its loops (`animation`) | 1 per standard base, 6 per pro-flash base at 64px (1 from a `reference`), 20–40 per pose, 1 per template loop per direction |
 
 A base can start from the author's own south-facing sprite (`reference` on
 the asset; standard wants it at the style's size, v3 up to 256px, pro up
 to 168px), and a standard humanoid base takes `proportions` (`chibi`,
-`heroic`, or multipliers) on the style or the asset.
+`heroic`, or multipliers) on the style or the asset. A pro base can be
+designed from a `concept` image (up to 1024px) and follow the look of
+another generated character in the style (`styleCharacter`), which makes
+that character a dependency the way a loop's parent is.
+
+A v3 loop can start from a pose image (`startFrame`) or interpolate to one
+(`endFrame`), take a `subject` when the character's own description would
+mislead, and ask PixelLab to `enhancePrompt`; a template loop takes
+`outline`, `shading`, and `detail` overrides instead.
 
 A loop costs per direction, and a sprite facing east is the sprite facing
 west flipped. Declare the west loop and make the east one `{ "mirror":
