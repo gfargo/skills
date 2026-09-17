@@ -40,6 +40,13 @@ hashes.
 - When an asset declares `revision`, read the revision reference, require its
   parent gate to pass, and never bypass a `blocked` plan. Generate or approve
   the parent explicitly before re-planning the child.
+- A character `state`, `animation`, `mirror`, or pro `styleCharacter` is a
+  dependent asset the same way: one `pixelkiln gen` runs the waves in order
+  and stops when the budget cannot cover the next one. Before declaring the
+  east-facing loop of a character, check whether a `mirror` of the west one
+  does the job for nothing; before drawing a base from text, ask whether the
+  user has a south-facing sprite to `reference` instead (1 generation on
+  `pro-flash` at 64px). Mirrors swap handedness.
 - Treat every ComfyUI output as source material until it passes the native-grid,
   final-palette, prompt-coverage, and human 1× checks in the ComfyUI reference.
   A successful PNG or high-confidence grid result is not quality approval.

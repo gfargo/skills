@@ -39,7 +39,7 @@ mislead, and ask PixelLab to `enhancePrompt`; a template loop takes
 
 A loop costs per direction, and a sprite facing east is the sprite facing
 west flipped. Declare the west loop and make the east one `{ "mirror":
-"hero.walk.west" }`: PixelKiln flips it locally for nothing, in the wave
+"bot.walk.west" }`: PixelKiln flips it locally for nothing, in the wave
 after the source lands. South and north cannot be mirrored. Eight directions
 of one loop are then 5 generations, not 8.
 
