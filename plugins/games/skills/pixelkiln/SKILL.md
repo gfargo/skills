@@ -12,6 +12,10 @@ hashes.
 ## Working rules
 
 - Locate `pixelkiln.manifest.json` first. Paths are manifest-relative.
+- Give every new asset a descriptive `id` (`oak_tree`, `iron_sword`, not
+  `asset_3` or `object1`). A vague id is cheap to write and expensive the
+  moment another asset needs to reference it (`state.of`, `animation.of`,
+  `revision.from`, `mirror`) or a person asks which one it was.
 - Treat `style.extends` as a source-level variant, not a reason to copy the
   parent. Keep every child `outDir` explicit, inspect the resolved plan, and
   remember that a pixel-affecting parent edit intentionally makes children stale.
