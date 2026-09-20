@@ -103,7 +103,13 @@ composition review and, for an isolated asset, background removal.
 Read only the reference needed for the current decision:
 
 - For PixelLab configuration, generators, costs, alpha behavior, or account
-  operations, read [references/pixellab.md](references/pixellab.md).
+  operations, read [references/pixellab.md](references/pixellab.md). For a
+  PixelLab style aimed at a specific resolution or fidelity tier (retro,
+  high-detail, or matching an existing set's look), read
+  [references/pixellab-fidelity.md](references/pixellab-fidelity.md) first.
+  Before proposing new PixelLab-backed work, check
+  [references/pixellab-roadmap.md](references/pixellab-roadmap.md) for
+  whether it is a confirmed gap or already covered and undocumented.
 - For Retro Diffusion styles, USD budgets, environment assets, animation, or
   experimental limits, read
   [references/retro-diffusion.md](references/retro-diffusion.md).
