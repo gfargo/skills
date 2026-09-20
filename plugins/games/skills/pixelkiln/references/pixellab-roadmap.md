@@ -45,6 +45,15 @@ which tutorial(s) demonstrated real (not hypothetical) demand for it.
   already confirmed for `tiles` and `1dir`); `/create-tileset-sidescroller`,
   reference images, `color_image`, and the `pro` pipeline's own tunables
   beyond `spreadX`/`slopeSize`/`raggedness` remain unmodeled.
+- **Pro-tier full-bleed background generation** (`generate-image-v2`, PixelLab's
+  Pro image tier) at arbitrary custom aspect ratios (not just square) —
+  already measured at 40 generations in `docs/ENDPOINTS.md`, but `pixflux`
+  wraps only the cheap 1-generation non-Pro endpoint. Demonstrated
+  generating a 384×216 scene background in "How to Make Animated Pixel Art
+  Scenes with PixelLab." Closed by the `imagePro` generator; see
+  `pixellab.md`. Reference images and a style image
+  (`reference_images`/`style_image`) remain unmodeled, and the completed
+  job's response shape has not itself been exercised live yet.
 
 ## Generic (non-character) animation and interpolation
 
@@ -161,15 +170,6 @@ in Seconds," "How to Make Animated Pixel Art Scenes"). This is distinct from
 PixelKiln's internal `quantize()`, which is used only inside the
 `refine`/quality-gate pipeline against a manifest-declared palette, not
 exposed as a general ad hoc post-generation cleanup step.
-
-## Pro-tier full-bleed background generation
-
-`generate-image-v2`, PixelLab's Pro image tier, at arbitrary custom aspect
-ratios (not just square) — already measured at 40 generations in
-docs/ENDPOINTS.md, but pixelkiln's `pixflux` generator wraps only the cheap
-1-generation non-Pro endpoint. Demonstrated generating a 384×216 scene
-background in "How to Make Animated Pixel Art Scenes with PixelLab." No
-`pixflux`-adjacent way to reach the Pro tier or a non-square canvas today.
 
 ## Not PixelLab gaps at all — different products, no action implied
 

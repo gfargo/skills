@@ -177,10 +177,10 @@ anything PixelLab publishes — use these as the actual target, not a vibe:
 
 ## What this adapter still has no fidelity lever for
 
-Pro-tier full-bleed background generation at custom aspect ratios
-(`generate-image-v2`, PixelLab's "Pro" image tier beyond `pixflux`), a
-dedicated post-generation "pixel correction" cleanup pass (strength-slider
+A dedicated post-generation "pixel correction" cleanup pass (strength-slider
 noise/detail reduction, distinct from `image-to-pixelart`), and
 `reduce-colors` (arbitrary post-hoc palette quantization with dithering) are
-real PixelLab capabilities with no equivalent in this adapter today. See
+real PixelLab capabilities with no equivalent in this adapter today. Pro-tier
+full-bleed background generation at custom aspect ratios (`generate-image-v2`)
+is closed as the `imagePro` generator (`pixellab.md`). See
 [pixellab-roadmap.md](./pixellab-roadmap.md).

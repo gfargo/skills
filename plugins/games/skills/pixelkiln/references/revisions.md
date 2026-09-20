@@ -18,6 +18,10 @@ Read this reference when an asset declares `revision`.
   changed input must stop the run before provider work begins.
 - In candidate review, compare the source beside every output. Reject
   silhouette or layout drift before post-processing.
+- `pixelkiln gallery --edit` can create an `image-to-image` revision directly
+  from a parent's drawer ("+ New revision" under "Revisions from this
+  asset"), once the parent has usable pixels; it does not offer `inpaint`
+  (needs a mask upload) or `outpaint`, so add those by hand.
 - ComfyUI is the only built-in revision adapter. Its workflow needs
   `sourceImage`; inpaint also needs `maskImage`; declared strength needs a
   `strength` binding.

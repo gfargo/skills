@@ -19,10 +19,11 @@ providers, or before any PixelLab account operation.
 | Generator | Use it for | Measured cost |
 |---|---|---:|
 | `map` | One prop, icon, building, or landmark, up to 400×400 | 1 generation |
-| `pixflux` | Closed palettes or full-bleed backgrounds | 1 generation |
+| `pixflux` | Closed palettes or full-bleed backgrounds up to 400×400 | 1 generation |
 | `1dir` | Reference-guided work or several candidates | 20–40 generations |
 | `tiles` | Ground variations or connected structures | 20–40 generations |
 | `terrain` | A two-terrain Wang tileset for elevation (grass-to-water, floor-to-cliff) | Unmeasured; borrows the same 20–40 canvas tiers |
+| `imagePro` | A larger or non-square background/scene, or real style transfer | **40 generations flat**, any size |
 | `character` | A character in 4 or 8 directions, its poses (`state`), and its loops (`animation`) | 1 per standard base, 6 per pro-flash base at 64px (1 from a `reference`), 20–40 per pose, 1 per template loop per direction |
 
 `tiles` is not limited to top-down ground: `tileType` selects the projection
@@ -103,6 +104,26 @@ default). The style's existing `outline`/`shading`/`detail` apply here too.
 Reference images, a forced palette, and the `pro` pipeline's own tunables
 beyond the three above (`tileStrength`, `tilesetAdherence`, and the rest)
 are not modeled yet; open an issue if a real project needs one of them.
+
+`imagePro` wraps PixelLab's Pro image tier, `/generate-image-v2` — the
+`pixflux`-adjacent gap named in `pixellab-roadmap.md`: real style transfer
+and non-square or larger canvases (16–792 wide, 16–688 tall; the exact
+ceiling in a corner also depends on aspect ratio, e.g. 512×512 for square or
+688×384 for 16:9), where `pixflux` tops out at 400×400 with no style
+reference at all. Set the asset's `width`/`height` for anything other than
+the style's default square. Unlike every other multi-candidate generator
+here, its cost is a **flat 40 generations regardless of size** (measured;
+`docs/ENDPOINTS.md`, "Single-image generators, measured") — `1dir` and
+`tiles` scale with canvas area, this does not. One call still returns
+several candidates to pick from by the same size tiering as `1dir` (up to
+42px: 64, 43–85px: 16, 86–170px: 4, above 170px: 1), reached through the
+generic background-job endpoint the same way a `revision` is. Reference
+images and a style image (`reference_images`, `style_image` +
+`style_options`, up to 4 subject references plus one style reference) exist
+on this endpoint but are not modeled yet, and the completed job's exact
+response shape has not been exercised against a live account — see
+`pollImagePro` in `src/providers/pixellab.ts` if a real call ever
+contradicts what it assumes.
 
 Do not confuse pixelkiln's `map` generator with PixelLab's own "Map
 Workshop": `map` returns one static prop, icon, or building in a single
