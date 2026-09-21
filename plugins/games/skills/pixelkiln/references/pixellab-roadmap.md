@@ -54,6 +54,24 @@ which tutorial(s) demonstrated real (not hypothetical) demand for it.
   `pixellab.md`. Reference images and a style image
   (`reference_images`/`style_image`) remain unmodeled, and the completed
   job's response shape has not itself been exercised live yet.
+- **A standalone single isometric tile** (`/create-isometric-tile`, a third,
+  separate path to isometric content distinct from both `tiles`'
+  `tileType: "isometric"` and `terrain`'s `/create-tileset`, which is
+  confirmed square-only with no isometric option at all) — a real gap: no
+  per-tile elevation primitive existed for a raised mesa or a cliff block
+  outside a connected ground set. Found via direct API/schema investigation,
+  not a tutorial (real downstream demand: a Godot game's terrain-verticality
+  work). Closed by the `isometricTile` generator; see `pixellab.md`. Its
+  `isometricTileShape` (thin/thick/block) is a direct thickness control
+  `tiles`/`terrain` do not have. **Cost measured once, and it corrected a
+  wrong assumption**: the endpoint's own OpenAPI response schema example is
+  `{ type: "usd", usd: 0.02 }`, which reads as real-dollar billing, but a
+  live call against a subscription account billed exactly 1 generation
+  instead — `costUnit` is `"generations"` here, not `"usd"`. Only one
+  size/shape combination (32px, `"block"`) has actually been measured; no
+  size-tiering formula is documented the way `1dir`/`tiles` have one. Style
+  images, `init_image`/`init_image_strength`, and `color_image` remain
+  unmodeled.
 
 ## Generic (non-character) animation and interpolation
 

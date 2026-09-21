@@ -125,6 +125,36 @@ response shape has not been exercised against a live account — see
 `pollImagePro` in `src/providers/pixellab.ts` if a real call ever
 contradicts what it assumes.
 
+`isometricTile` wraps a *third*, separate path to isometric content:
+`/create-isometric-tile`, distinct from both `tiles`' own `tileType:
+"isometric"` (a full connectable set) and `terrain`'s `/create-tileset`
+(confirmed square-only — no isometric option exists there at all). It
+generates one standalone tile, no candidates, no connectable set — the
+shape for a per-tile elevation primitive (a raised mesa, a cliff block) when
+a connected ground set is not what's needed. `isometricTileShape` controls
+vertical thickness — `"thin tile"` (~15% canvas height), `"thick tile"`
+(~25%), or `"block"` (~50%, the API default) — the most direct
+height/elevation knob of any generator here. `isometricTileSize` is the
+API's own tile grid (16 or 32, default 16), separate from `size` (the 16–64px
+generation canvas; the endpoint's own guidance is that sizes above 24px
+"often produce better quality results"). `outline` defaults to `"lineless"`
+on this endpoint specifically (`tiles-pro`'s own default is `"outline"`),
+with its own three-value enum (`"single color outline"`, `"selective
+outline"`, `"lineless"`); `shading`/`detail` reuse the same enums `terrain`
+does. **Cost: 1 generation flat, measured** — PixelLab's own OpenAPI response
+example shows `{ type: "usd", usd: 0.02 }`, which reads as real-dollar
+billing, but a real call against a live subscription account billed exactly
+1 generation instead (`usage: { type: "generations", generations: 1 }`);
+`costUnit` here is `"generations"` like every other generator, not `"usd"`.
+Only one size/shape combination (32px, `"block"`) has actually been
+measured, and the endpoint documents no size-tiering formula, so
+`isometricTileCost()` assumes flat pricing across the 16–64px range rather
+than guessing a tier. Style images, `init_image`/`init_image_strength`
+(image-to-image), and `color_image` (native forced-palette) exist on this
+endpoint and are not modeled yet; pixelkiln's own `palette`/`enforcePalette`
+post-processing already works generically on the downloaded tile if a
+closed palette is what's actually needed.
+
 Do not confuse pixelkiln's `map` generator with PixelLab's own "Map
 Workshop": `map` returns one static prop, icon, or building in a single
 generation with no scene, canvas, or placement concept. Map Workshop (scene
