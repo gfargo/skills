@@ -72,6 +72,21 @@ which tutorial(s) demonstrated real (not hypothetical) demand for it.
   size-tiering formula is documented the way `1dir`/`tiles` have one. Style
   images, `init_image`/`init_image_strength`, and `color_image` remain
   unmodeled.
+- **Object Creator's rotation/state/animation family** (`/create-object-pro-flash`,
+  a skeleton-free entity distinct from both `character` and the generic
+  `/objects` polling resource `1dir`/`map` already use) — demonstrated in
+  "Object Creator" and used throughout "GBA-Style Sprites" and "Build a Game
+  with AI"; `map` (one generation, no direction/state concept) and `1dir`
+  (one direction only) were the closest analogs, and neither modeled
+  rotation, states, or animation for a plain object. Closed by the
+  `objectPro` generator; see `pixellab.md`. It reuses `character`'s own
+  `asset.state`/`asset.animation` authoring shapes and mirror handling
+  rather than inventing parallel ones. **Cost is not independently
+  measured**: assumed identical to `character` pro-flash's own measured
+  formula, since the request bodies are near-identical minus `template_id` —
+  a real assumption pending a live check, not a confirmed number the way
+  `isometricTile`'s now is. Batch "pack" generation (N distinct objects from
+  one call) remains unmodeled — see above.
 
 ## Generic (non-character) animation and interpolation
 
@@ -87,17 +102,13 @@ PixelLab"). Pixelkiln's only interpolation concept is the `character` v3
 loop's `startFrame`/`endFrame`, scoped strictly inside a `character` asset —
 there is no way to animate a `map`, `pixflux`, or `tiles` output at all.
 
-## Object Creator
+## Object Creator: batch generation only
 
-Generic 8-direction object rotation, object "states" (prompted variations of
-an existing object), object animation (with a pro-vs-V3 model choice), and
-batch "pack" generation (one prompt or style reference → N distinct objects,
-each with an optional per-item text override) — all scoped to a standalone
-object, not a `character`. Demonstrated in "Object Creator" and used
-throughout "GBA-Style Sprites" and "Build a Game with AI." Pixelkiln's
-closest generator is `map` (single prop, one generation, no direction or
-state concept at all) and `1dir` (implies one direction). Neither models
-rotation, states, or animation for a plain object.
+Object Creator's "pack" generation — one prompt or style reference → N
+distinct objects in one call, each with an optional per-item text override —
+remains unmodeled. Demonstrated in "Object Creator" and used throughout
+"GBA-Style Sprites" and "Build a Game with AI." The rest of Object Creator
+(8-direction rotation, states, pro/v3 animation) is closed; see below.
 
 ## UI elements and RPG UI kits
 

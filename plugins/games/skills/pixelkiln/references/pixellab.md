@@ -125,6 +125,33 @@ response shape has not been exercised against a live account — see
 `pollImagePro` in `src/providers/pixellab.ts` if a real call ever
 contradicts what it assumes.
 
+`objectPro` wraps `/create-object-pro-flash` — the same base → state →
+animation family `character` uses (`docs/CHARACTERS.md`), for PixelLab's
+separate, skeleton-free "object" entity, distinct from the generic
+`/objects` polling resource `1dir`/`map` already share. It reuses
+`character`'s own `asset.state`/`asset.animation` authoring fields and
+mirror handling verbatim rather than inventing parallel ones — an
+`objectPro` asset's `state`/`animation` are validated identically, since an
+object's state is a strict subset of a character's (no `paletteFromReference`/
+`canvas` equivalent on the API, always inherits the parent's exact canvas)
+and its animation is the same minus the template/skeleton concept objects
+have none of: `template`, `subject`, `outline`, `shading`, `detail` on an
+`objectPro` animation are rejected at resolve time rather than silently
+dropped. `objectDirections` (1 or 8, default 8) is a real choice `character`
+pro-flash does not offer (always 8); a 1-direction object's animation must
+target `south` — passing any other direction, or `directions` at all to the
+API for a 1-direction object, is what the endpoint itself 400s on.
+Regenerating an already-animated direction is simpler than `character`'s
+own "find and delete the prior take" dance: `/objects/{id}/animations` has
+its own `replace_existing` flag, which PixelKiln always passes. **Cost is
+not independently measured** — `objectProCost()` assumes it prices
+identically to `character` pro-flash's own measured formula
+(`proFlashCharacterCost`), since the request bodies are near-identical minus
+`template_id`; treat it as a working assumption pending a live check.
+Batch "pack" generation (PixelLab's Object Creator can make N distinct
+objects from one call) and `objectPro`'s own place in `pixelkiln adopt` are
+not modeled yet.
+
 `isometricTile` wraps a *third*, separate path to isometric content:
 `/create-isometric-tile`, distinct from both `tiles`' own `tileType:
 "isometric"` (a full connectable set) and `terrain`'s `/create-tileset`
