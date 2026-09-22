@@ -150,7 +150,13 @@ identically to `character` pro-flash's own measured formula
 `template_id`; treat it as a working assumption pending a live check.
 Batch "pack" generation (PixelLab's Object Creator can make N distinct
 objects from one call) and `objectPro`'s own place in `pixelkiln adopt` are
-not modeled yet.
+not modeled yet. `pixelkiln gallery --edit` offers "+ New state" and
+"+ New animation" on a `character` or `objectPro` base/state's drawer, same
+family, same manifest-only write "+ New revision" does — it writes the
+`asset.state`/`asset.animation` fields above (minus `startFrame`/`endFrame`
+and template `outline`/`shading`/`detail`, which need a manifest-relative
+image the gallery does not offer) and leaves generation to `gen` or the
+page's own budget, same as any other added asset.
 
 `isometricTile` wraps a *third*, separate path to isometric content:
 `/create-isometric-tile`, distinct from both `tiles`' own `tileType:
