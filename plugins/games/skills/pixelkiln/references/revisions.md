@@ -15,8 +15,9 @@ Read this reference when an asset declares `revision`.
 - `reduce-colors` and `correct-pixelart` send no prompt to the provider — the
   asset's `prompt` stays a manifest-only label. `numColors`/`paletteImage`
   are mutually exclusive; a `paletteImage` has no size relationship to the
-  parent, unlike a mask. Neither mode's cost is measured against a live
-  PixelLab account; treat the estimate as a placeholder.
+  parent, unlike a mask. Cost is confirmed live: a flat 0.1 generations each
+  on a 32×32 source (against the schema's own dollar-denominated example);
+  unconfirmed whether that holds at larger canvases.
 - `animate` and `animate-pixminimax` DO send the asset's `prompt`, as the
   motion description, and produce an ordered **frame set** — the one
   revision shape that lands in candidate review (`pixelkiln pick`) rather
