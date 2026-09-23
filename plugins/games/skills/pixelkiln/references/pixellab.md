@@ -290,10 +290,24 @@ batch. Inspect scenic outputs for stray marks too: one untouched 384px attempt
 contained a generated signature-like glyph.
 
 An asset that declares `revision` against a PixelLab style calls `inpaint`
-(masked) or `image-to-image` (whole-image, no mask); `outpaint` is refused,
-since PixelLab has no canvas-expansion endpoint. Read `docs/REVISIONS.md`'s
-PixelLab section before using either — its cost is an estimate, not yet
-measured. For a style aimed at a specific look (a retro/console feel or a
+(masked), `image-to-image` (whole-image, no mask), `reduce-colors`
+(palette quantize, `/reduce-colors`), `correct-pixelart` (edge/noise
+cleanup, `/correct-pixelart`), `animate` (`/animate-with-text-v3`), or
+`animate-pixminimax` (`/animate-pixminimax`, beta, tier 1 subscription or
+higher); `outpaint` is refused, since PixelLab has no canvas-expansion
+endpoint. `reduce-colors`/`correct-pixelart` send no prompt to PixelLab at
+all — they are mechanical, not described — and complete synchronously with
+no background job, unlike every other PixelLab call this adapter makes.
+`animate`/`animate-pixminimax` DO send the asset's own prompt, as the motion
+description, and produce an ordered **frame set** landing in candidate
+review, not a single image — the one revision mode shape that isn't "one
+image in, one image out." Neither animate endpoint's completed-job response
+shape has ever been observed; `pollAnimateRevision` guesses defensively
+rather than assume one. Read `docs/REVISIONS.md`'s PixelLab section before
+using any of these — cost is an estimate for all six, and everything past
+`inpaint`/`image-to-image` is schema-only (taken from PixelLab's live
+OpenAPI document, never exercised against a real account). For a style aimed
+at a specific look (a retro/console feel or a
 high-fidelity showcase asset) rather than a default, read
 [pixellab-fidelity.md](./pixellab-fidelity.md) before choosing `size`,
 `detail`, `shading`, or `outline`. For what PixelLab can do that this adapter
