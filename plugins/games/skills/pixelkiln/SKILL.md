@@ -44,8 +44,8 @@ hashes.
 - When an asset declares `revision`, read the revision reference, require its
   parent gate to pass, and never bypass a `blocked` plan. Generate or approve
   the parent explicitly before re-planning the child.
-- A character `state`, `animation`, `mirror`, or pro `styleCharacter` is a
-  dependent asset the same way: one `pixelkiln gen` runs the waves in order
+- A character `state`, `animation`, `portrait`, `outfit`, `mirror`, or pro
+  `styleCharacter` is a dependent asset the same way: one `pixelkiln gen` runs the waves in order
   and stops when the budget cannot cover the next one. Before declaring the
   east-facing loop of a character, check whether a `mirror` of the west one
   does the job for nothing (an animation's `directions` list declares the
@@ -53,6 +53,10 @@ hashes.
   selects the whole family); before drawing a base from text, ask whether the
   user has a south-facing sprite to `reference` instead (1 generation on
   `pro-flash` at 64px). Mirrors swap handedness.
+- Before an outside or upscaled sprite becomes a `reference` or `styleImages`
+  path, run `pixelkiln unzoom --from <file> --out <file>` to bring it back to
+  its native pixel grid. Upscaled input degrades every PixelLab endpoint that
+  takes a reference, and the unzoomed result is opaque.
 - Treat every ComfyUI output as source material until it passes the native-grid,
   final-palette, prompt-coverage, and human 1× checks in the ComfyUI reference.
   A successful PNG or high-confidence grid result is not quality approval.
@@ -94,7 +98,8 @@ ceilings copied from each plan group.
 Use the staged `submit` → `poll` → `pick` → `fetch` commands when resuming or
 debugging one phase. Use the plan's printed stage for paid work and `restore`
 for missing downloaded bytes, `adopt` for exact matches
-already in the provider account, and `salvage` for reviewed unclaimed objects.
+already in the provider account, and `salvage` for reviewed unclaimed objects
+and characters.
 Use `pack`, `mount`, or `export` only for the artifact format the project needs.
 Prefer a manifest quality profile when a whole style shares the final-art rule.
 Use `refine --from` only for a one-off candidate outside that contract, after
@@ -104,8 +109,10 @@ composition review and, for an isolated asset, background removal.
 
 Read only the reference needed for the current decision:
 
-- For PixelLab configuration, generators, costs, alpha behavior, or account
-  operations, read [references/pixellab.md](references/pixellab.md). For a
+- For PixelLab configuration, generators (including `uiElement` for single UI
+  pieces and `imageProFlash` for styled stills), costs, alpha behavior,
+  account operations, or the `unzoom`, `font`, `estimate-skeleton`, and
+  `skeleton-preview` utilities, read [references/pixellab.md](references/pixellab.md). For a
   PixelLab style aimed at a specific resolution or fidelity tier (retro,
   high-detail, or matching an existing set's look), read
   [references/pixellab-fidelity.md](references/pixellab-fidelity.md) first.

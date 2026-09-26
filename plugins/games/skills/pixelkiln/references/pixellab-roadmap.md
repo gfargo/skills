@@ -1,7 +1,8 @@
-# PixelLab surface this adapter does not cover
+# PixelLab coverage and remaining gaps
 
-A catalog of PixelLab capabilities confirmed absent from PixelKiln, built by
-reading all 29 tutorials on PixelLab's official YouTube channel (the original
+A catalog of PixelLab capabilities checked against PixelKiln: what this
+adapter now covers, and what is still absent. It was built by reading all 29
+tutorials on PixelLab's official YouTube channel (the original
 26 — the 12 featured on pixellab.ai plus 14 more from the channel's "PixelLab
 Tutorial" playlist, filtered to ~12 months back from that pass — plus 3 more
 published since: "Level Up Your Game: Custom Sprite Animation Tutorial,"
@@ -16,10 +17,16 @@ confirmed gap with real demand rather than a guess. Nothing here is a
 commitment to build it — it is what is missing, with the evidence for why it
 might matter, so that decision can be made deliberately.
 
-Each entry names the PixelLab tool, why pixelkiln doesn't have it today, and
-which tutorial(s) demonstrated real (not hypothetical) demand for it.
+Each open entry names the PixelLab tool, why pixelkiln doesn't have it today,
+and which tutorial(s) demonstrated real (not hypothetical) demand for it.
 
 ## Already closed since this catalog's research began
+
+- **Skeleton-v3 template loops** — `/characters/animations`'
+  `mode: "skeleton-v3"` poses a template with the skeleton video model
+  (2 to 4 generations and 3 to 5 minutes per direction, beta, Tier 1 and
+  up). Now a character loop's `mode: "skeleton-v3"`; see
+  `docs/CHARACTERS.md`. Not yet billed live.
 
 - **Masked inpainting and whole-image editing** — was the single largest gap
   found (routine in at least 6 of the 26 tutorials). Now the `revision` asset
@@ -93,7 +100,7 @@ which tutorial(s) demonstrated real (not hypothetical) demand for it.
   formula, since the request bodies are near-identical minus `template_id` —
   a real assumption pending a live check, not a confirmed number the way
   `isometricTile`'s now is. Batch "pack" generation (N distinct objects from
-  one call) remains unmodeled — see above.
+  one call) is covered on `1dir` by its `batch` field — see below.
 - **Pixel correction** (`/correct-pixelart`, a dedicated cleanup pass distinct
   from `image-to-pixelart` — the latter is documented, docs/ENDPOINTS.md, as
   being "for photographs and 3-D renders, not for reprocessing" pixel art)
@@ -246,6 +253,28 @@ which tutorial(s) demonstrated real (not hypothetical) demand for it.
   actually describe `uiAsset`'s pricing. Left unpatched from one data point:
   over-reading stays the safe `--budget` direction, but a real call likely
   costs about half of what `pixelkiln plan` prints, pending a second size.
+- **Skeleton-driven animation** (`POST /animate-with-skeleton-v3`, beta,
+  tier 1+ subscription — pose a reference image frame-by-frame from a
+  supplied 18-joint skeleton per frame, instead of a text motion
+  description) — closed by the `revision` asset shape's `animate-skeleton`
+  mode; see `pixellab.md` and `docs/REVISIONS.md#skeleton-driven-animation`.
+  `POST /estimate-skeleton` (auto-derive a reference image's own keypoints)
+  is wrapped too, but deliberately kept outside the manifest pipeline — a
+  standalone `pixelkiln estimate-skeleton` CLI command, not a
+  `resolveSpecs`/`estimate()`-time call — so `animate-skeleton`'s submission
+  composes exactly one never-tested-live PixelLab endpoint, not two chained
+  together. **Correcting this catalog's own prior research**: this entry
+  used to also claim a distinct "animation to animation" endpoint existed,
+  for transferring an existing walk cycle's motion onto a different
+  character. Checked against the live `animate_with_skeleton_v3` MCP tool
+  schema: **there is no such endpoint.** The real composition is
+  `estimate-skeleton` run once per frame of a source animation, then
+  `animate-with-skeleton-v3` against a *different* reference image reusing
+  those keypoints — a two-endpoint composition a person can now build by
+  hand with the primitives above, not a primitive pixelkiln itself
+  automates. Neither `animate-with-skeleton-v3` nor `estimate-skeleton` has
+  been exercised against a live account; request field names come from the
+  MCP tool schema, not an observed call.
 
 - **Fonts** (`/generate-font-pro`, an 80-glyph atlas plus a `.ttf` from a
   style description) — no tutorial demonstrated it in depth, so demand is
@@ -259,79 +288,56 @@ which tutorial(s) demonstrated real (not hypothetical) demand for it.
   Closed by `pixelkiln unzoom`, a standalone command on a loose file, since
   the art it is for comes from outside the manifest. Its result is opaque
   (transparency is composited onto white first). Cost unmeasured.
+- **Pro Flash for plain image create, edit, and inpaint** — a third image
+  tier, distinct from `pixflux`/`map`'s 1-generation endpoints and
+  `imagePro`'s flat-40 `generate-image-v2`, on the same model
+  `character`/`objectPro` already use for their `pro-flash` engine
+  (`gpt-image-2.5-flare`), confirmed against PixelLab's MCP tool schemas.
+  Demonstrated in "Pixel Art Animation Tutorial: Images Pro Flash, Skeleton
+  V3 & PixMiniMax": a styled character from a style image, re-edited
+  repeatedly ("give him a winter outfit," then a thicker one from *that*
+  result), then inpainted hair, shirt, and pants as separate masked passes.
+  Closed by the `imageProFlash` generator (`create`, one style image +
+  `styleTraits`, 16–256px in multiples of 4) and a revision's
+  `"engine": "pro-flash"`, which sends `image-to-image` to `edit` (text
+  method) and `inpaint` to `inpaint` (32–256px in multiples of 4, no
+  `strength`). A still's `source_image_id` is recorded and reused when a Pro
+  Flash character or object base's `reference` is that still's exact file
+  (issue #145). Shape, via `get_pro_flash_capabilities` (a free quote, not
+  billed):
+  - `create`: native 16×16 (experimental, always grid-corrected), 24×24,
+    32×32, 32×48, 64×64, 96×64, 96×96; custom (beta) 16–256 in steps of 4.
+    One output, no reference images.
+  - `edit`: native 32×32 up to 128×128, custom 32–256 step 4. Two
+    `edit_methods`: `"text"` or `"reference"` (one `reference_image` that
+    must fit the edit canvas natively). Canvas never grows.
+  - `inpaint`: same sizes as `edit`; a rectangle or a same-size mask PNG
+    (white = generate, black = preserve). Always crops to the mask.
+  - Cost quotes (provisional): `create` 5 at 32 and 64px, 9 at 256px;
+    `edit`/`inpaint` 5 at 64px, `inpaint` 6 at 128px; `character` and
+    `object` at 64px `image: 5, rotations: 1, total: 6`, matching
+    pixelkiln's measured `proFlashCharacterCost`. None billed live yet.
+
+  Still unmodeled: `edit`'s `"reference"` method, the
+  `use_color_palette_correction` flag (snap the edit back to the source's
+  palette), inpaint's three `output_methods` (`"New layer with changes"`,
+  `"Modify current layer, only changes"`, `"Modify current layer"`), and
+  `context_image` + a required `bounding_box`, which lets the model see up to
+  3× the native canvas of surrounding context — the problem
+  `docs/REVISIONS.md`'s "select a sub-region" workaround for `inpaint-v3`'s
+  512px ceiling solves by hand today.
+- **Portraits and outfit transfer** (`portrait-character-pro`,
+  `transfer-outfit-v2`) — closed as the `character` asset kinds `portrait`
+  (a bust of a base or state's south sprite) and `outfit` (an existing
+  loop's frames re-clothed from a reference image); see
+  `docs/CHARACTERS.md`. Both were live-measured: a 16px portrait billed 20,
+  a 2-frame 92×92 outfit transfer billed 20.
 - **`/create-8-direction-object`** is deliberately left unwrapped. `objectPro`
   already covers what it does (8 rotations from a prompt or a reference
   image, a `view`, a style image) on `/create-object-pro-flash` at roughly 6
   generations to its 20–40. Its one unique field, `style_object_id` (style
   from an existing 8-direction object's sprites), is not worth a second,
   pricier engine on its own.
-
-## Pro Flash for plain image create, edit, and inpaint
-
-PixelLab ships a **third image-generation tier**, distinct from both
-pixelkiln's already-modeled ones — `pixflux`/`map`'s cheap 1-generation
-non-Pro endpoints, and `imagePro`'s Pro tier (`generate-image-v2`, flat 40
-generations) — confirmed directly against PixelLab's own MCP tool schemas
-(`create_image_pro_flash`, `edit_image_pro_flash`, `inpaint_image_pro_flash`,
-`get_pro_flash_capabilities`), not just a tutorial's framing, the same
-standard this catalog holds itself to elsewhere. It is the **same underlying
-model** `character`/`objectPro` already use for their `pro-flash` engine
-(`gpt-image-2.5-flare`, "medium" provider quality per
-`get_pro_flash_capabilities`), but exposed here for **plain images** — create,
-edit, and inpaint — with no character or object involved. Demonstrated at
-length in "Pixel Art Animation Tutorial: Images Pro Flash, Skeleton V3 &
-PixMiniMax": creating a styled character from a reference-image "style
-image," then repeatedly re-editing the same asset ("give him a winter
-outfit," then, from *that* result, "a thicker royal winter outfit with a
-bigger sword" — evolving the previous edit rather than restarting from the
-original each time), then inpainting new hair, a shirt, and pants as separate
-masked passes, each isolated onto its own layer.
-
-**Confirmed shape, via `get_pro_flash_capabilities` (a free, no-generation
-quote/identity lookup — not billed):**
-
-- **`create`**: native sizes 16×16 (experimental, always pixel-grid-corrected
-  by `image-to-pixel-art`'s own fixer), 24×24, 32×32, 32×48, 64×64, 96×64,
-  96×96; custom sizes (beta) 16–256 in steps of 4 on both sides. Takes a
-  `style_image` (URL/base64/owned image id) with `style_options`
-  (`color_palette`/`outline`/`detail`/`shading` toggles) — the same
-  style-copying mechanic as `character` pro-flash's `styleTraits`, just not
-  yet exposed for a plain image. One output, no reference images.
-- **`edit`**: native sizes 32×32 up to **128×128** (a larger ceiling than
-  `create`'s 96×96), custom 32–256 step 4. Two distinct `edit_methods`:
-  `"text"` (a description) or `"reference"` (a `reference_image`, max 1,
-  which must fit the edit canvas natively — no resizing). No style options.
-  Canvas never grows. An optional `use_color_palette_correction` flag snaps
-  the edited result back to the source's own palette.
-- **`inpaint`**: same size range as `edit`. Mask is a rectangle
-  (`mask_x`/`y`/`width`/`height`) or a same-size mask PNG, white = generate /
-  black = preserve / alpha ignored — the same convention `inpaint-v3` already
-  uses. Always crops to the mask. Three `output_methods`: `"New layer with
-  changes"`, `"Modify current layer, only changes"`, `"Modify current
-  layer"` — matching exactly what the tutorial's Aseprite/Pixelorama UI
-  offers, and a real choice the already-modeled `inpaint-v3` does not expose
-  at all today (pixelkiln's `inpaint` revision always gets one behavior). A
-  new, genuinely unmodeled mechanic: `context_image` + a required
-  `bounding_box` lets the model see up to **3×** the native canvas in either
-  dimension of surrounding context beyond the masked region itself — for
-  inpainting a sub-region of a larger scene coherently, the same problem
-  `docs/REVISIONS.md`'s existing "select a sub-region" workaround for
-  `inpaint-v3`'s 512px ceiling solves by hand today.
-- **Cost, from live (but not billed — `get_pro_flash_capabilities`'s quotes
-  are provisional) queries**: `create` 32×32 and 64×64 both quote 5
-  generations flat; 256×256 quotes 9. `edit`/`inpaint` at 64×64 quote 5;
-  `inpaint` at 128×128 quotes 6. `character` and `object` at 64×64 (8
-  directions) both quote `image: 5, rotations: 1, total: 6` — matching
-  pixelkiln's own already-measured `proFlashCharacterCost` (6 at 64px)
-  exactly, reassuring cross-validation of the quote endpoint even though it
-  is a quote, not a bill.
-
-Not modeled at all today: pixelkiln's `imagePro` generator and the `revision`
-asset shape's `image-to-image`/`inpaint` modes only ever call the non-Flash
-endpoints (`generate-image-v2`, `edit-images-v2`, `inpaint-v3`). Adding Pro
-Flash would mean a new generator (or a model/engine choice on the existing
-ones) plus a new inpaint `outputMethod` field and the `context_image`
-mechanism — real, scoped work, not a docs fix.
 
 ## Map Workshop (scene composition)
 
@@ -347,8 +353,11 @@ describing only the new terrain, and export the whole map (tilesets, full
 composite, and every object as separate files). Demonstrated at length in
 "Create Interior Maps," "PixelLab Map Workshop Tutorial," "How to Create
 Destructible Environments in Seconds," and "Create a Full Side Scroller
-Level." Zero pixelkiln analogue — and see pixellab.md for the naming
-collision with pixelkiln's own unrelated `map` generator.
+Level." Zero pixelkiln analogue for the scene editor itself — and see
+pixellab.md for the naming collision with pixelkiln's own unrelated `map`
+generator. The one part the public API exposes, `/map-objects` style matching
+(`background_image` + `inpainting`), is closed: a `map` asset's `scene` field
+(issue #216).
 
 One concrete, recurring gotcha worth carrying into any future implementation:
 default/generic object prompts in Map Workshop reliably come out oversized
@@ -364,22 +373,23 @@ native Godot 4 `TileSet` resource directly, verified in CI — worth knowing if
 Map Workshop parity is ever considered, since the export leg is arguably
 already solved better here than in PixelLab's own reference flow.
 
-## Skeleton-driven animation and animation-to-animation motion transfer
+## Animation-to-animation motion transfer
 
-Two more animation mechanisms with no equivalent: **"Animate with skeleton"**
-(fit a rig template — bipedal, realistic, chibi, or quadruped body plans —
-generate two frames at a time with each accepted pair becoming context for
-the next, height/head-size/offset controls) and **"Animation to animation"**
-(transfer the motion/shape structure of an *existing* walk cycle onto a
-newly described or referenced character, frame budget capped by the source's
-canvas size). Both demonstrated in "How to Make Walking Animations for Pixel
-Art Characters in PixelLab." Neither exists in pixelkiln's `character`
-schema, which only knows named templates, v3 text loops, and pro loops — none
-take a user-supplied motion source or expose a skeleton-editing surface.
-Already flagged as explicitly out of scope in docs/PIXELLAB.md
-("skeleton-driven animation"); animation-to-animation is new information not
-previously catalogued anywhere.
-
+Transferring the motion of an *existing* walk cycle onto a newly described or
+referenced character — demonstrated in "How to Make Walking Animations for
+Pixel Art Characters in PixelLab." As corrected in the now-closed
+skeleton-driven-animation entry above: this is not one endpoint, it is
+`estimate-skeleton` run per frame of the source animation plus
+`animate-with-skeleton-v3` against the new character's reference image
+reusing those keypoints. Both primitives exist in this adapter now
+(`animate-skeleton` revision mode, `pixelkiln estimate-skeleton`), so a
+person can build this by hand today — chaining `estimate-skeleton` calls
+across a source animation's frames into one keypoints file, then pointing an
+`animate-skeleton` revision's `from` at a different character. What remains
+a real gap is automating that chain as its own pixelkiln capability (one
+command, not N manual `estimate-skeleton` calls plus hand-assembling the
+result into a `SkeletonSetSchema` file) — worth scoping once the base
+`animate-skeleton` mode has shipped and seen real use.
 
 ## Not PixelLab gaps at all — different products, no action implied
 
@@ -388,7 +398,5 @@ previously catalogued anywhere.
   `agent_inspect`/`agent_feedback`/`agent_help`) manage a *separate* PixelLab
   product — "deploy your own agent," confirmed directly from the live tool
   schemas — unrelated to game-asset generation. Nothing to build here.
-- Portraits, outfit transfer, and lip-sync/vocal-animation/talking-gif are
-  already named as out of scope in docs/PIXELLAB.md. Portrait and
-  outfit-transfer support exist on an internal branch stack not yet merged;
-  lip-sync and vocal animation have no in-flight work.
+- Lip-sync/vocal-animation/talking-gif are named as out of scope in
+  docs/PIXELLAB.md, with no in-flight work.

@@ -12,6 +12,11 @@ Read this reference when an asset declares `revision`.
 - An inpaint mask must be a PNG and match the available parent dimensions.
 - Start image-to-image strength around `0.2`–`0.4`; explain that the exact
   effect belongs to the model and graph.
+- On PixelLab, `"engine": "pro-flash"` sends an `image-to-image` or `inpaint`
+  revision to the Pro Flash edit/inpaint endpoints instead of the Pro ones:
+  5 generations up to 96px, 6 up to 208px, 9 beyond (provisional quotes),
+  against 20–40. The parent must be 32–256px per side in multiples of 4, and
+  `strength` is refused. Other modes reject `engine`.
 - `reduce-colors` and `correct-pixelart` send no prompt to the provider — the
   asset's `prompt` stays a manifest-only label. `numColors`/`paletteImage`
   are mutually exclusive; a `paletteImage` has no size relationship to the
@@ -40,6 +45,19 @@ Read this reference when an asset declares `revision`.
   while cardinal ones in the same batch generate fine — suspect the enhanced
   prompt's wording, not the model, when only some directions of a
   multi-directional set come out wrong.
+- `animate-skeleton` (PixelLab, beta, tier 1+) poses the parent from a
+  committed `keypointsFile`: the parent's current pose plus 3–15 per-frame
+  poses. It needs `direction`; `prompt` names the motion and the optional
+  `description` says what the subject looks like. Bootstrap the file with
+  `pixelkiln estimate-skeleton <image> --out <file>` (a direct call, outside
+  any budget, like `balance`; square 16–256px images only), which writes the
+  estimated pose plus `--frames` copies (default 4) to edit. Joint labels are
+  PixelLab's 18 names, each once per pose. After every edit, run
+  `pixelkiln skeleton-preview <asset>` (local, free) and look at the sheet:
+  the starting pose must match the sprite, or every frame degrades silently. Plan cost
+  interpolates PixelLab's documented anchors (3 frames = 2, 8 = 3, 15 = 4);
+  like the other animate modes it lands in candidate review and is
+  unmeasured live.
 - `interpolate` needs `lastFrame` (the end keyframe; the parent is the
   start) and lets the model pick the frame count. Suggest it for motion one
   `animate` pass can't produce cleanly: build the key poses first as
@@ -53,8 +71,8 @@ Read this reference when an asset declares `revision`.
   `/reduce-colors`/`/correct-pixelart` endpoints synchronously (no background
   job); everything else in this file about the dependency gate, hashing, and
   candidate review applies identically regardless of provider. ComfyUI
-  cannot back `animate`, `animate-pixminimax`, `interpolate`, or
-  `edit-animation` at all (`supportsRevision` refuses them) — its revision
+  cannot back `animate`, `animate-pixminimax`, `animate-skeleton`,
+  `interpolate`, or `edit-animation` at all (`supportsRevision` refuses them) — its revision
   path always writes a single output image, and an animation is a frame
   set; that's a structural gap, not a missing binding.
 - A filtered child resolves its parents for safety but does not generate them.
@@ -65,10 +83,14 @@ Read this reference when an asset declares `revision`.
   silhouette or layout drift before post-processing.
 - `pixelkiln gallery --edit` can create an `image-to-image` revision directly
   from a parent's drawer ("+ New revision" under "Revisions from this
-  asset"), once the parent has usable pixels; it does not offer `inpaint`
-  (needs a mask upload), `outpaint`, `reduce-colors`, `correct-pixelart`,
-  `animate`, `animate-pixminimax`, `interpolate`, or `edit-animation` yet,
-  so add those by hand.
+  asset"), once the parent has usable pixels. On a single PixelLab sprite,
+  "+ Skeleton animation" creates an `animate-skeleton` revision: poses from a
+  project file, pasted JSON, or "Estimate poses" (one confirmed, un-budgeted
+  PixelLab call), edited in a drag-to-edit pose editor over the sprite,
+  written into the project on save. "Edit poses" on an existing
+  `animate-skeleton` record reopens the editor on its keypoints file. It does not offer `inpaint` (needs a mask upload), `outpaint`,
+  `reduce-colors`, `correct-pixelart`, `animate`, `animate-pixminimax`,
+  `interpolate`, or `edit-animation` yet, so add those by hand.
 - Before an outside image becomes a `styleImages` or `reference` path,
   suggest `pixelkiln unzoom --from <file>`: upscaled pixel art (every art
   pixel a block of screen pixels) degrades every reference-taking PixelLab

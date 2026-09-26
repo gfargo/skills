@@ -12,7 +12,9 @@ providers, or before any PixelLab account operation.
 - Cost unit: subscription generations. Copy the exact `pixelkiln plan` total
   into `--budget`; do not translate it into dollars.
 - Account operations: balance, adopt, salvage, tag, and separately confirmed
-  purge are supported. Read `docs/RECOVERY.md` before using them.
+  purge are supported, for characters as well as objects (salvage reviews a
+  base with its states and loops as one group). Read `docs/RECOVERY.md`
+  before using them.
 
 ## Generator choice
 
@@ -24,9 +26,12 @@ providers, or before any PixelLab account operation.
 | `tiles` | Ground variations or connected structures | 20–40 generations |
 | `terrain` | A two-terrain Wang tileset for elevation (grass-to-water, floor-to-cliff) | Unmeasured; borrows the same 20–40 canvas tiers |
 | `imagePro` | A larger or non-square background/scene, or real style transfer | **40 generations flat**, any size |
-| `character` | A character in 4 or 8 directions, its poses (`state`), and its loops (`animation`) | 1 per standard base, 6 per pro-flash base at 64px (1 from a `reference`), 20–40 per pose, 1 per template loop per direction |
+| `character` | A character in 4 or 8 directions, its poses (`state`), its loops (`animation`), bust `portrait`s, and `outfit` transfers onto a loop | 1 per standard base, 6 per pro-flash base at 64px (1 from a `reference`), 20–40 per pose or portrait, 1 per template loop per direction (2–4 as `skeleton-v3`), 20 per outfit (measured once) |
+| `objectPro` | A prop, creature, or vehicle that needs rotations, states, or loops but has no character rig | 6 per base at 64px (1 from a `reference`), **unmeasured**; assumed to match `character` pro-flash |
+| `isometricTile` | One standalone isometric tile (a raised mesa, a cliff block), 16–64px | **1 generation, measured once** (32px `block`) |
 | `uiAsset` | A UI panel, button, health bar, or other chrome, from precise `pieces` and/or named `elements` | **20 generations, measured once** (256×192); the borrowed canvas-tier estimate still predicts 40 |
 | `uiElement` | One UI element (button, slot, bar, dialogue box) from the prompt, 16px and up, with an optional concept image | 20–40 generations, **unmeasured** |
+| `imageProFlash` | A styled still on the Pro Flash model (style image + `styleTraits`), 16–256px in multiples of 4; also the natural source for a Pro Flash character's south sprite | 5–9 generations, PixelLab's provisional quote |
 
 `tiles` is not limited to top-down ground: `tileType` selects the projection
 (`isometric` — the API default —, `oblique`, `hex`, `hex_pointy`, `octagon`,
@@ -171,9 +176,9 @@ not independently measured** — `objectProCost()` assumes it prices
 identically to `character` pro-flash's own measured formula
 (`proFlashCharacterCost`), since the request bodies are near-identical minus
 `template_id`; treat it as a working assumption pending a live check.
-Batch "pack" generation (PixelLab's Object Creator can make N distinct
-objects from one call) and `objectPro`'s own place in `pixelkiln adopt` are
-not modeled yet. `pixelkiln gallery --edit` offers "+ New state" and
+`objectPro`'s own place in `pixelkiln adopt` is not modeled yet. (N distinct
+objects from one call, PixelLab's Object Creator "pack", is the `1dir`
+`batch` field above.) `pixelkiln gallery --edit` offers "+ New state" and
 "+ New animation" on a `character` or `objectPro` base/state's drawer, same
 family, same manifest-only write "+ New revision" does — it writes the
 `asset.state`/`asset.animation` fields above (minus `startFrame`/`endFrame`
@@ -258,9 +263,24 @@ widgets under `uiAsset`'s 192px floor. Unmeasured: the plan borrows the
 20/25/40 canvas tiers, and the completed job's shape has not been observed
 live.
 
+`imageProFlash` wraps `/create-image-pro-flash`, the Pro Flash model as a plain
+still: priced 5 up to 96px, 6 up to 208px, 9 beyond (PixelLab's own
+provisional `/pro-flash/cost` quotes). Its lock entry keeps PixelLab's
+`source_image_id`; a Pro Flash character or object base whose `reference` is
+byte-for-byte that still's file is sent the id instead of the upload (same
+price, no re-encode). The same model edits and inpaints through a revision's
+`"engine": "pro-flash"` (`image-to-image`/`inpaint` only, 32–256px in multiples
+of 4, no `strength`), at the Pro Flash tier instead of the Pro endpoints' 20–40.
+
 Do not confuse pixelkiln's `map` generator with PixelLab's own "Map
 Workshop": `map` returns one static prop, icon, or building in a single
-generation with no scene, canvas, or placement concept. Map Workshop (scene
+generation. Its one scene concept is optional: a `map` asset's `scene` (`{
+"image": "floor.png", "placement": { "oval": 0.3 } }`, or `rectangle`, or a
+`mask` PNG the scene's size) draws the object into that picture, in its style,
+still for one generation. The scene can be another asset's output; the object
+is blocked until it exists and goes stale when it is redrawn. Whether the
+result is the object alone or composited, and where an oval sits, are
+unverified; look at the first result before a batch. Map Workshop (scene
 composition — laying out a tile floor, placing characters and movable
 objects, inpainting sections in place, exporting the result) is a distinct
 PixelLab product surface this adapter does not model at all.
@@ -297,6 +317,13 @@ when set) becomes frame 0 for free, so a requested `frames: 6` delivers 7
 files, not 6. Account for the `+1` when checking a loop's output count or
 estimating its budget; set it `false` only when the caller will supply its
 own first frame downstream.
+
+`"mode": "skeleton-v3"` with a `template` poses that template onto the
+character with PixelLab's skeleton video model instead of redrawing each
+frame: the steadiest template loop, 2 to 4 generations and 3 to 5 minutes
+per direction (plan budgets 4), beta, Tier 1 plans and up. Prefer it over a
+plain template loop when identity drift matters and the account qualifies;
+plain `template` stays the 1-generation option.
 
 A named `template` loop (`walk`, `breathing-idle`, and similar) is trained
 mostly on characters with empty hands, and reliably struggles once a
@@ -378,28 +405,43 @@ contained a generated signature-like glyph.
 An asset that declares `revision` against a PixelLab style calls `inpaint`
 (masked), `image-to-image` (whole-image, no mask), `reduce-colors`
 (palette quantize, `/reduce-colors`), `correct-pixelart` (edge/noise
-cleanup, `/correct-pixelart`), `animate` (`/animate-with-text-v3`), or
+cleanup, `/correct-pixelart`), `animate` (`/animate-with-text-v3`),
 `animate-pixminimax` (`/animate-pixminimax`, beta, tier 1 subscription or
-higher), `interpolate` (`/interpolation-v2`, in-betweens from the parent to
-a required `lastFrame` keyframe), or `edit-animation` (`/edit-animation-v2`,
-one edit across a whole frame set); `outpaint` is refused, since PixelLab has no canvas-expansion
-endpoint. `reduce-colors`/`correct-pixelart` send no prompt to PixelLab at
-all — they are mechanical, not described — and complete synchronously with
-no background job, unlike every other PixelLab call this adapter makes.
-`animate`/`animate-pixminimax` DO send the asset's own prompt, as the motion
-description, and produce an ordered **frame set** landing in candidate
+higher), `animate-skeleton` (`/animate-with-skeleton-v3`, also beta/tier
+1+ — poses the source frame-by-frame from a supplied 18-joint skeleton per
+frame, via a committed `keypointsFile` rather than a text motion
+description), `interpolate` (`/interpolation-v2`, in-betweens from the parent
+to a required `lastFrame` keyframe), or `edit-animation` (`/edit-animation-v2`,
+one edit across a whole frame set); `outpaint` is refused, since PixelLab has
+no canvas-expansion endpoint. `reduce-colors`/`correct-pixelart` send no
+prompt to PixelLab at all — they are mechanical, not described — and complete
+synchronously with no background job, unlike every other PixelLab call this
+adapter makes. `animate`/`animate-pixminimax`/`animate-skeleton` DO send the
+asset's own prompt, as the motion description (`animate-skeleton` calls it
+`action`, alongside a separate optional `description` field for appearance —
+the skeleton carries the motion, the text only names it and what the subject
+looks like), and produce an ordered **frame set** landing in candidate
 review, not a single image — the one revision mode shape that isn't "one
-image in, one image out." Neither animate endpoint's completed-job response
-shape has ever been observed; `pollAnimateRevision` guesses defensively
-rather than assume one. Read `docs/REVISIONS.md`'s PixelLab section before
-using any of these. A parent written as a set (a character's directions, an
-animation's frames) goes to `reduce-colors`, `correct-pixelart`, and
-`edit-animation` whole, in one call, so every member shares one palette or
-edit; the other modes refuse a set parent. `reduce-colors`/`correct-pixelart` cost is **confirmed
-live**: a flat 0.1 generations each (not the schema's dollar-denominated
-example), at least at a 32×32 source — `animate`/`animate-pixminimax` remain
-schema-only and unexercised, taken from PixelLab's live OpenAPI document
-rather than an observed call.
+image in, one image out." None of the animate/interpolate/edit-animation
+endpoints' completed-job response shape has ever been observed;
+`pollAnimateRevision` guesses defensively rather than assume one. Read
+`docs/REVISIONS.md`'s PixelLab section before using any of these. A parent
+written as a set (a character's directions, an animation's frames) goes to
+`reduce-colors`, `correct-pixelart`, and `edit-animation` whole, in one call,
+so every member shares one palette or edit; the other modes refuse a set
+parent. `reduce-colors`/`correct-pixelart` cost is **confirmed live**: a flat
+0.1 generations each (not the schema's dollar-denominated example), at least
+at a 32×32 source — `animate`/`animate-pixminimax`/`animate-skeleton`/
+`interpolate`/`edit-animation` remain schema-only and unexercised.
+`animate-skeleton`'s request field names come from the live
+`animate_with_skeleton_v3` MCP tool schema, a more authoritative source than
+the OpenAPI document the others are taken from, but still not an observed
+call. `estimate-skeleton` (auto-derive a reference image's own keypoints) is
+wrapped too, but deliberately as a standalone `pixelkiln estimate-skeleton`
+CLI command, never inside `submitRevision` — see
+[pixellab-roadmap.md](./pixellab-roadmap.md)'s now-closed skeleton-driven-
+animation entry for why composing two never-tested-live endpoints in one
+submission was rejected.
 
 `animate-pixminimax`'s `direction` + `enhancePrompt` combination has a
 measured-in-practice gotcha, not just a schema quirk: PixelLab's own tutorial
@@ -413,12 +455,20 @@ the `direction` value. The same tutorial states outright that PixMiniMax
 "allows up to 40 frames," a second, independent (though still not
 live-billed) confirmation of the ceiling above.
 
-PixelLab ships a further image-generation tier beyond what this adapter
-models: "Pro Flash" for plain image create/edit/inpaint, the same
-`gpt-image-2.5-flare` model `character`/`objectPro` pro-flash already use,
-now exposed for images with no character or object involved — see
-[pixellab-roadmap.md](./pixellab-roadmap.md) for the confirmed shape and
-cost.
+Parts of Pro Flash image editing are still outside this adapter: `edit`'s
+reference-image method, palette correction, inpaint's output-method choice,
+and inpainting with surrounding `context_image`. See
+[pixellab-roadmap.md](./pixellab-roadmap.md) for the confirmed shape.
+
+Three commands call PixelLab on loose files, outside the manifest and
+lockfile. `pixelkiln unzoom --from <file> --out <file>` returns upscaled
+pixel art to its native grid; run it before outside art becomes a
+`reference` or `styleImages` entry (input at least 256×256, result opaque,
+cost unmeasured). `pixelkiln font --description <text> --out <base>` writes a
+`.ttf` and an 80-glyph atlas for PixelLab's documented 25 generations, and
+asks first. `pixelkiln estimate-skeleton <image> --out <file>` starts an
+`animate-skeleton` keypoints file, and `pixelkiln skeleton-preview <asset>`
+draws its poses over the source for free. See `docs/CLI.md`, "PixelLab utilities".
 
 For a style aimed at a specific look (a
 retro/console feel or a
