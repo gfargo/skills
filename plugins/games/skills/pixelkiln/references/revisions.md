@@ -18,6 +18,13 @@ Read this reference when an asset declares `revision`.
   parent, unlike a mask. Cost is confirmed live: a flat 0.1 generations each
   on a 32×32 source (against the schema's own dollar-denominated example);
   unconfirmed whether that holds at larger canvases.
+- When the parent is a set (a character's directions, an animation's
+  `-frame-NN` files), `reduce-colors`, `correct-pixelart`, and
+  `edit-animation` send every member in one call and write the result back
+  under the same roles — the way to put a whole loop or all eight directions
+  on one shared palette. Every other mode refuses a set parent at plan time.
+  A leftover member file from an older generation blocks the revision; tell
+  the user which file to remove rather than deleting art yourself.
 - `animate` and `animate-pixminimax` DO send the asset's `prompt`, as the
   motion description, and produce an ordered **frame set** — the one
   revision shape that lands in candidate review (`pixelkiln pick`) rather
@@ -27,16 +34,29 @@ Read this reference when an asset declares `revision`.
   animation's final frame into the next). `animate` caps at 16 frames;
   `animate-pixminimax` (beta, tier 1+) allows up to 40 and adds `direction`.
   Neither endpoint's cost or completed-response shape is measured against a
-  live account.
+  live account. `direction` + `enhancePrompt` together have a real gotcha:
+  the enhanced prompt can add camera-relative language that fights the
+  requested world-facing `direction`, breaking an off-cardinal direction
+  while cardinal ones in the same batch generate fine — suspect the enhanced
+  prompt's wording, not the model, when only some directions of a
+  multi-directional set come out wrong.
+- `interpolate` needs `lastFrame` (the end keyframe; the parent is the
+  start) and lets the model pick the frame count. Suggest it for motion one
+  `animate` pass can't produce cleanly: build the key poses first as
+  `image-to-image` revisions, then interpolate between them.
+  `edit-animation` applies one prompt across a whole frame set (a cape added
+  to every frame of a walk); its frame ceiling falls with frame size (16 up
+  to 64px, 9 up to 80px, 4 up to 256px). Both land in candidate review and
+  are unmeasured; their plan cost borrows the 20/25/40 Pro tiers.
 - Both PixelLab and ComfyUI can back a `revision`, not just ComfyUI.
   PixelLab's `reduce-colors`/`correct-pixelart` calls its own
   `/reduce-colors`/`/correct-pixelart` endpoints synchronously (no background
   job); everything else in this file about the dependency gate, hashing, and
   candidate review applies identically regardless of provider. ComfyUI
-  cannot back `animate`/`animate-pixminimax` at all (`supportsRevision`
-  refuses both) — its revision path always writes a single output image, and
-  an animation is a frame set; that's a structural gap, not a missing
-  binding.
+  cannot back `animate`, `animate-pixminimax`, `interpolate`, or
+  `edit-animation` at all (`supportsRevision` refuses them) — its revision
+  path always writes a single output image, and an animation is a frame
+  set; that's a structural gap, not a missing binding.
 - A filtered child resolves its parents for safety but does not generate them.
   Generate, fetch, refine, and approve the parent explicitly, then re-plan.
 - PixelKiln rechecks parent and mask bytes immediately before submission. A
@@ -47,7 +67,13 @@ Read this reference when an asset declares `revision`.
   from a parent's drawer ("+ New revision" under "Revisions from this
   asset"), once the parent has usable pixels; it does not offer `inpaint`
   (needs a mask upload), `outpaint`, `reduce-colors`, `correct-pixelart`,
-  `animate`, or `animate-pixminimax` yet, so add those by hand.
+  `animate`, `animate-pixminimax`, `interpolate`, or `edit-animation` yet,
+  so add those by hand.
+- Before an outside image becomes a `styleImages` or `reference` path,
+  suggest `pixelkiln unzoom --from <file>`: upscaled pixel art (every art
+  pixel a block of screen pixels) degrades every reference-taking PixelLab
+  endpoint, and the result is opaque, so a cut-out needs its background
+  removed again.
 - ComfyUI needs explicit bindings for a revision: its workflow needs
   `sourceImage`; inpaint also needs `maskImage`; declared strength needs a
   `strength` binding. It has no binding for `numColors`/`paletteImage`/

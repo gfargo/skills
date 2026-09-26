@@ -26,6 +26,7 @@ providers, or before any PixelLab account operation.
 | `imagePro` | A larger or non-square background/scene, or real style transfer | **40 generations flat**, any size |
 | `character` | A character in 4 or 8 directions, its poses (`state`), and its loops (`animation`) | 1 per standard base, 6 per pro-flash base at 64px (1 from a `reference`), 20–40 per pose, 1 per template loop per direction |
 | `uiAsset` | A UI panel, button, health bar, or other chrome, from precise `pieces` and/or named `elements` | **20 generations, measured once** (256×192); the borrowed canvas-tier estimate still predicts 40 |
+| `uiElement` | One UI element (button, slot, bar, dialogue box) from the prompt, 16px and up, with an optional concept image | 20–40 generations, **unmeasured** |
 
 `tiles` is not limited to top-down ground: `tileType` selects the projection
 (`isometric` — the API default —, `oblique`, `hex`, `hex_pointy`, `octagon`,
@@ -210,12 +211,13 @@ endpoint and are not modeled yet; pixelkiln's own `palette`/`enforcePalette`
 post-processing already works generically on the downloaded tile if a
 closed palette is what's actually needed.
 
-`uiAsset` wraps `/create-ui-asset`, the **only** callable endpoint a broad
-OpenAPI path search ("ui-asset", "element", "split", "template") turned up
-for UI generation — no separate batch-icon endpoint, no states endpoint, no
-nine-slice endpoint, whatever the tutorials or the `delete_ui_asset` MCP
-tool's own description ("a UI panel and, for a template, its split elements
-+ their states") might suggest about PixelLab's internal product model.
+`uiAsset` wraps `/create-ui-asset`, the panel-layout UI endpoint. An earlier
+OpenAPI path search ("ui-asset", "element", "split", "template") missed the
+second UI endpoint, `/generate-ui-v2`, now wrapped as `uiElement` (below);
+there is still no batch-icon, states, or nine-slice endpoint, whatever the
+tutorials or the `delete_ui_asset` MCP tool's own description ("a UI panel
+and, for a template, its split elements + their states") might suggest
+about PixelLab's internal product model.
 `width`/`height` default to 256×256 and are otherwise non-square capable
 like `imagePro`, subject to the endpoint's own aspect-gated tiers (square up
 to 512×512, 16:9 up to 688×384, 9:16 up to 384×688, 4:3 up to 600×448, 3:4 up
@@ -246,6 +248,15 @@ that formula's own top tier. The measured call disproves the formula for
 this generator (it billed the floor price at an area where `1dir`/`tiles`
 would bill the ceiling), but the estimate is left as-is, an intentional
 over-read for `--budget`, until a second size is measured.
+
+`uiElement` wraps `/generate-ui-v2` ("Generate UI (Pro)"): one element from
+the prompt, no `pieces`/`elements` layout, sizes from 16×16 (up to 792 wide,
+688 tall, aspect-gated upstream). A style's one `styleImages` entry becomes
+the `concept_image` (design guidance); `uiColorPalette` is sent as
+`color_palette`. Reach for it over `uiAsset` for icons, slots, and small
+widgets under `uiAsset`'s 192px floor. Unmeasured: the plan borrows the
+20/25/40 canvas tiers, and the completed job's shape has not been observed
+live.
 
 Do not confuse pixelkiln's `map` generator with PixelLab's own "Map
 Workshop": `map` returns one static prop, icon, or building in a single
@@ -293,6 +304,22 @@ character holds an item — a weapon, a tool, anything gripped. For a
 held-item character, skip the template and write a custom v3 loop with an
 explicit prompt naming the held item and the motion (e.g. "knight holding a
 sword, walking loop") instead of expecting the template to carry it.
+
+PixelLab's own tutorials describe a recent quality jump for named templates
+("Skeleton V3"): the same idle/walking/running/full-sprint-style templates
+existed before, but PixelLab did not recommend relying on them because
+result quality was inconsistent; with the updated model backing them, it now
+does — "the movement is much more usable... much more stable." Prefer a
+named template over a custom v3 loop by default for a body it fits, rather
+than defaulting to a custom loop out of habit; the held-item caveat above is
+the one case that still argues for skipping the template.
+
+A pose-only `state` edit (a walk mid-step, a hurt pose) can turn the
+character sideways or away from the camera by default, even on a prompt that
+never mentions rotating — PixelLab's own tutorial hits this on a plain
+"mid-walk state" prompt. State the facing explicitly (e.g. add "front-facing"
+to the prompt) rather than assuming the parent's own camera angle carries
+over automatically.
 
 A loop costs per direction, and a sprite facing one way is the sprite facing
 the opposite way flipped — this holds for the east/west pair and for both
@@ -353,7 +380,9 @@ An asset that declares `revision` against a PixelLab style calls `inpaint`
 (palette quantize, `/reduce-colors`), `correct-pixelart` (edge/noise
 cleanup, `/correct-pixelart`), `animate` (`/animate-with-text-v3`), or
 `animate-pixminimax` (`/animate-pixminimax`, beta, tier 1 subscription or
-higher); `outpaint` is refused, since PixelLab has no canvas-expansion
+higher), `interpolate` (`/interpolation-v2`, in-betweens from the parent to
+a required `lastFrame` keyframe), or `edit-animation` (`/edit-animation-v2`,
+one edit across a whole frame set); `outpaint` is refused, since PixelLab has no canvas-expansion
 endpoint. `reduce-colors`/`correct-pixelart` send no prompt to PixelLab at
 all — they are mechanical, not described — and complete synchronously with
 no background job, unlike every other PixelLab call this adapter makes.
@@ -363,11 +392,35 @@ review, not a single image — the one revision mode shape that isn't "one
 image in, one image out." Neither animate endpoint's completed-job response
 shape has ever been observed; `pollAnimateRevision` guesses defensively
 rather than assume one. Read `docs/REVISIONS.md`'s PixelLab section before
-using any of these. `reduce-colors`/`correct-pixelart` cost is **confirmed
+using any of these. A parent written as a set (a character's directions, an
+animation's frames) goes to `reduce-colors`, `correct-pixelart`, and
+`edit-animation` whole, in one call, so every member shares one palette or
+edit; the other modes refuse a set parent. `reduce-colors`/`correct-pixelart` cost is **confirmed
 live**: a flat 0.1 generations each (not the schema's dollar-denominated
 example), at least at a 32×32 source — `animate`/`animate-pixminimax` remain
 schema-only and unexercised, taken from PixelLab's live OpenAPI document
-rather than an observed call. For a style aimed at a specific look (a
+rather than an observed call.
+
+`animate-pixminimax`'s `direction` + `enhancePrompt` combination has a
+measured-in-practice gotcha, not just a schema quirk: PixelLab's own tutorial
+states plainly that `enhancePrompt` can expand the motion description with
+camera-relative language ("towards the camera") that fights the requested
+world-facing `direction`, and the failure is direction-specific — cardinal
+directions came out fine, an off-cardinal one (north-east) did not. When a
+multi-directional PixMiniMax animation goes wrong at one or two directions
+but not others, suspect the enhanced prompt's own wording before the model or
+the `direction` value. The same tutorial states outright that PixMiniMax
+"allows up to 40 frames," a second, independent (though still not
+live-billed) confirmation of the ceiling above.
+
+PixelLab ships a further image-generation tier beyond what this adapter
+models: "Pro Flash" for plain image create/edit/inpaint, the same
+`gpt-image-2.5-flare` model `character`/`objectPro` pro-flash already use,
+now exposed for images with no character or object involved — see
+[pixellab-roadmap.md](./pixellab-roadmap.md) for the confirmed shape and
+cost.
+
+For a style aimed at a specific look (a
 retro/console feel or a
 high-fidelity showcase asset) rather than a default, read
 [pixellab-fidelity.md](./pixellab-fidelity.md) before choosing `size`,

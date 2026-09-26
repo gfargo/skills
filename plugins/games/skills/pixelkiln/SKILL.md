@@ -48,7 +48,9 @@ hashes.
   dependent asset the same way: one `pixelkiln gen` runs the waves in order
   and stops when the budget cannot cover the next one. Before declaring the
   east-facing loop of a character, check whether a `mirror` of the west one
-  does the job for nothing; before drawing a base from text, ask whether the
+  does the job for nothing (an animation's `directions` list declares the
+  generated sides once and mirrors the rest; `--only <shorthand id>`
+  selects the whole family); before drawing a base from text, ask whether the
   user has a south-facing sprite to `reference` instead (1 generation on
   `pro-flash` at 64px). Mirrors swap handedness.
 - Treat every ComfyUI output as source material until it passes the native-grid,
