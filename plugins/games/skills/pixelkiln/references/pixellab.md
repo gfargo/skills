@@ -332,14 +332,17 @@ held-item character, skip the template and write a custom v3 loop with an
 explicit prompt naming the held item and the motion (e.g. "knight holding a
 sword, walking loop") instead of expecting the template to carry it.
 
-PixelLab's own tutorials describe a recent quality jump for named templates
-("Skeleton V3"): the same idle/walking/running/full-sprint-style templates
-existed before, but PixelLab did not recommend relying on them because
-result quality was inconsistent; with the updated model backing them, it now
-does — "the movement is much more usable... much more stable." Prefer a
-named template over a custom v3 loop by default for a body it fits, rather
-than defaulting to a custom loop out of habit; the held-item caveat above is
-the one case that still argues for skipping the template.
+PixelLab's own tutorials announce "Skeleton V3" as the quality jump for named
+templates, and that is the `skeleton-v3` mode above, not a change to plain
+`template`: the tutorial says the original templates were not recommended
+for quality, and the new model is — "the movement is much more usable...
+much more stable." For a body the skeleton fits, prefer `skeleton-v3` over
+both a plain template and a custom v3 loop when the account is Tier 1+ and
+2 to 4 generations a direction is acceptable; plain `template` stays the
+1-generation option at its earlier quality. The held-item caveat above was
+written about plain templates, and whether `skeleton-v3` shares it is
+unmeasured. PixelLab has announced a further Skeleton V3 revision, so recheck
+`animate_character`'s tool schema before assuming today's behaviour.
 
 A pose-only `state` edit (a walk mid-step, a hurt pose) can turn the
 character sideways or away from the camera by default, even on a prompt that

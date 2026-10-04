@@ -81,16 +81,19 @@ Read this reference when an asset declares `revision`.
   changed input must stop the run before provider work begins.
 - In candidate review, compare the source beside every output. Reject
   silhouette or layout drift before post-processing.
-- `pixelkiln gallery --edit` can create an `image-to-image` revision directly
-  from a parent's drawer ("+ New revision" under "Revisions from this
-  asset"), once the parent has usable pixels. On a single PixelLab sprite,
-  "+ Skeleton animation" creates an `animate-skeleton` revision: poses from a
-  project file, pasted JSON, or "Estimate poses" (one confirmed, un-budgeted
-  PixelLab call), edited in a drag-to-edit pose editor over the sprite,
-  written into the project on save. "Edit poses" on an existing
-  `animate-skeleton` record reopens the editor on its keypoints file. It does not offer `inpaint` (needs a mask upload), `outpaint`,
-  `reduce-colors`, `correct-pixelart`, `animate`, `animate-pixminimax`,
-  `interpolate`, or `edit-animation` yet, so add those by hand.
+- `pixelkiln gallery --edit` can create a revision directly from a parent's
+  drawer ("+ New revision" under "Revisions from this asset"), once the parent
+  has usable pixels: on a PixelLab sprite `image-to-image`, `animate`,
+  `animate-pixminimax`, `reduce-colors`, or `correct-pixelart`; on a PixelLab
+  frame set (or a character's directions) `edit-animation`, `reduce-colors`,
+  or `correct-pixelart`; on other providers `image-to-image`. On a single
+  PixelLab sprite, "+ Skeleton animation" creates an `animate-skeleton`
+  revision: poses from a project file, pasted JSON, or "Estimate poses" (one
+  confirmed, un-budgeted PixelLab call), edited in a drag-to-edit pose editor
+  over the sprite, written into the project on save. "Edit poses" on an
+  existing `animate-skeleton` record reopens the editor on its keypoints file.
+  It does not offer `inpaint` (needs a mask upload), `outpaint`, or
+  `interpolate` (needs an ending keyframe), so add those by hand.
 - Before an outside image becomes a `styleImages` or `reference` path,
   suggest `pixelkiln unzoom --from <file>`: upscaled pixel art (every art
   pixel a block of screen pixels) degrades every reference-taking PixelLab
