@@ -20,11 +20,15 @@ schemas remain unverified. Require a one-asset smoke before widening a batch.
   existing Scenario asset and must not trigger another generation.
 - Treat `scenario://` job and asset references as the recovery contract.
   Temporary signed Scenario URLs must not remain in a settled lockfile.
-- Verify the chosen model returns PNG. The MVP rejects other media formats,
-  style-image uploads, animation, and tiles.
+- Verify the chosen model returns PNG. The adapter rejects other media
+  formats, animation, and tiles.
+- Style images and `image-to-image` revisions are uploaded once (free) and sent
+  as the model's `referenceImages` input; set `referenceParameter` and
+  `referenceArray` for a model that names it differently. Other revision modes
+  and `strength` are refused.
 
-Scenario model parameters vary. The MVP supplies prompt, 128–2048px dimensions
-in multiples of 16, one to four outputs, and optional seed. Put only documented
+Scenario model parameters vary. The MVP supplies prompt, 16–4096px dimensions
+(each model has tighter bounds, reported by the free dry run), one to four outputs, and optional seed. Put only documented
 model inputs in `parameters`; PixelKiln rejects attempts to override its prompt,
 dimensions, seed, output count, project routing, or CU ceiling.
 

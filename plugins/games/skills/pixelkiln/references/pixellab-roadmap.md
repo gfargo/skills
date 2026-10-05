@@ -275,6 +275,16 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   automates. Neither `animate-with-skeleton-v3` nor `estimate-skeleton` has
   been exercised against a live account; request field names come from the
   MCP tool schema, not an observed call.
+- **Remove background** (`/remove-background`, a transparent cutout of one
+  image up to 400x400, `simple` or `complex` task, optional foreground text
+  hint) — closed by the `revision` asset shape's `remove-background` mode.
+  Cost is the measured 1 generation from docs/ENDPOINTS.md's utilities
+  table; the `complex` task and the text hint have not been exercised live.
+- **The legacy `/animate-with-skeleton`** (no `-v3`) is deliberately not
+  wrapped: its live schema takes exactly 3 skeleton frames per call (other
+  counts are a 422), plus view, direction, init-image and inpainting
+  parameters, while v3 takes 3 to 15 frames. `animate-skeleton` covers the
+  same job.
 
 - **Fonts** (`/generate-font-pro`, an 80-glyph atlas plus a `.ttf` from a
   style description) — no tutorial demonstrated it in depth, so demand is

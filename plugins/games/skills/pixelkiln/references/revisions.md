@@ -17,6 +17,10 @@ Read this reference when an asset declares `revision`.
   5 generations up to 96px, 6 up to 208px, 9 beyond (provisional quotes),
   against 20–40. The parent must be 32–256px per side in multiples of 4, and
   `strength` is refused. Other modes reject `engine`.
+- `remove-background` (PixelLab, one image up to 400x400, `removalTask`
+  `simple` or `complex`, optional `description` hint) cuts the background out
+  to transparency and leaves a locked palette intact; 1 generation measured.
+  It refuses a set parent.
 - `reduce-colors` and `correct-pixelart` send no prompt to the provider — the
   asset's `prompt` stays a manifest-only label. `numColors`/`paletteImage`
   are mutually exclusive; a `paletteImage` has no size relationship to the
@@ -83,17 +87,19 @@ Read this reference when an asset declares `revision`.
   silhouette or layout drift before post-processing.
 - `pixelkiln gallery --edit` can create a revision directly from a parent's
   drawer ("+ New revision" under "Revisions from this asset"), once the parent
-  has usable pixels: on a PixelLab sprite `image-to-image`, `animate`,
-  `animate-pixminimax`, `reduce-colors`, or `correct-pixelart`; on a PixelLab
-  frame set (or a character's directions) `edit-animation`, `reduce-colors`,
-  or `correct-pixelart`; on other providers `image-to-image`. On a single
-  PixelLab sprite, "+ Skeleton animation" creates an `animate-skeleton`
+  has usable pixels: on a PixelLab sprite `image-to-image`, `inpaint` (a
+  paint-over-the-sprite mask editor that writes the mask PNG into the project),
+  `animate`, `animate-pixminimax`, `interpolate` (another same-size sprite as
+  the ending keyframe), `reduce-colors`, `correct-pixelart`, or
+  `remove-background`; on a PixelLab frame set (or a character's directions)
+  `edit-animation`, `reduce-colors`, or `correct-pixelart`; on ComfyUI
+  `image-to-image` or `inpaint`; on other providers `image-to-image`. On a
+  single PixelLab sprite, "+ Skeleton animation" creates an `animate-skeleton`
   revision: poses from a project file, pasted JSON, or "Estimate poses" (one
   confirmed, un-budgeted PixelLab call), edited in a drag-to-edit pose editor
   over the sprite, written into the project on save. "Edit poses" on an
   existing `animate-skeleton` record reopens the editor on its keypoints file.
-  It does not offer `inpaint` (needs a mask upload), `outpaint`, or
-  `interpolate` (needs an ending keyframe), so add those by hand.
+  Only `outpaint` is not offered; no provider implements it.
 - Before an outside image becomes a `styleImages` or `reference` path,
   suggest `pixelkiln unzoom --from <file>`: upscaled pixel art (every art
   pixel a block of screen pixels) degrades every reference-taking PixelLab

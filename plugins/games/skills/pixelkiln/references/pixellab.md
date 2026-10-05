@@ -408,7 +408,9 @@ contained a generated signature-like glyph.
 An asset that declares `revision` against a PixelLab style calls `inpaint`
 (masked), `image-to-image` (whole-image, no mask), `reduce-colors`
 (palette quantize, `/reduce-colors`), `correct-pixelart` (edge/noise
-cleanup, `/correct-pixelart`), `animate` (`/animate-with-text-v3`),
+cleanup, `/correct-pixelart`), `remove-background` (transparent cutout,
+`/remove-background`, one image up to 400x400, 1 generation measured),
+`animate` (`/animate-with-text-v3`),
 `animate-pixminimax` (`/animate-pixminimax`, beta, tier 1 subscription or
 higher), `animate-skeleton` (`/animate-with-skeleton-v3`, also beta/tier
 1+ — poses the source frame-by-frame from a supplied 18-joint skeleton per
@@ -416,8 +418,9 @@ frame, via a committed `keypointsFile` rather than a text motion
 description), `interpolate` (`/interpolation-v2`, in-betweens from the parent
 to a required `lastFrame` keyframe), or `edit-animation` (`/edit-animation-v2`,
 one edit across a whole frame set); `outpaint` is refused, since PixelLab has
-no canvas-expansion endpoint. `reduce-colors`/`correct-pixelart` send no
-prompt to PixelLab at all — they are mechanical, not described — and complete
+no canvas-expansion endpoint. `reduce-colors`/`correct-pixelart`/
+`remove-background` send no prompt (`remove-background` sends only its
+optional `description` as a foreground hint) to PixelLab at all — they are mechanical, not described — and complete
 synchronously with no background job, unlike every other PixelLab call this
 adapter makes. `animate`/`animate-pixminimax`/`animate-skeleton` DO send the
 asset's own prompt, as the motion description (`animate-skeleton` calls it
