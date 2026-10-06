@@ -2,8 +2,10 @@
 
 Read this reference when an asset declares `revision`.
 
-- Treat the parent and child as separate assets. `revision.from` must name a
-  parent in the same style.
+- Treat the parent and child as separate assets. `revision.from` names the
+  parent, in the child's own style unless `revision.fromStyle` names another, so
+  a chain can generate with one provider and refine with another. A `quality`
+  profile gates its own style; put it on the last style of a chain.
 - Run `pixelkiln plan --only <child>` first. If it reports `blocked`, do not try
   to submit the child or work around the gate.
 - A generated parent must be current and downloaded. When the parent has a

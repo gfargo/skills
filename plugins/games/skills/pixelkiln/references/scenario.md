@@ -32,6 +32,16 @@ Scenario model parameters vary. The MVP supplies prompt, 16–4096px dimensions
 model inputs in `parameters`; PixelKiln rejects attempts to override its prompt,
 dimensions, seed, output count, project routing, or CU ceiling.
 
+Chain models across styles with `revision.fromStyle`; put any `quality` profile
+on the last style. For large or illustrative art, render at four times the
+target size (GPT Image 2 `quality: medium` is a flat 11 CU, FLUX.2 Klein 9b
+1 CU), then Pixelate, Birefnet cutout, and `pixelkiln refine`. Pixelate's
+`pixelGridSize` is not literal on inputs wider than about 512 px (120 asked gave
+a 240-cell grid on a 960 px image): check one image's blocks first. Do not use
+the chain for small native-size sprites. The adapter handles images only;
+sound effects (MM Audio 1 CU, ElevenLabs 30 CU) go through the API directly.
+See `docs/SCENARIO.md` for settings and measurements.
+
 PixelKiln validates the job, bytes, hashes, and recovery path. It does not prove
 the output is good pixel art. Inspect one result at 1× before approving a batch.
 
