@@ -27,7 +27,7 @@ schemas remain unverified. Require a one-asset smoke before widening a batch.
   `referenceArray` for a model that names it differently. Other revision modes
   and `strength` are refused.
 
-Scenario model parameters vary. The MVP supplies prompt, 16–4096px dimensions
+Scenario model parameters vary. The adapter supplies prompt, 16–4096px dimensions
 (each model has tighter bounds, reported by the free dry run), one to four outputs, and optional seed. Put only documented
 model inputs in `parameters`; PixelKiln rejects attempts to override its prompt,
 dimensions, seed, output count, project routing, or CU ceiling.
@@ -44,6 +44,15 @@ See `docs/SCENARIO.md` for settings and measurements.
 
 PixelKiln validates the job, bytes, hashes, and recovery path. It does not prove
 the output is good pixel art. Inspect one result at 1× before approving a batch.
+
+When calling Scenario outside PixelKiln (audio, say), the free dry run is only the
+query parameter `?dryRun=true`: a `dryRun: true` in the JSON body is ignored and
+submits and bills a real job. LoRA models need the legacy `/generate/txt2img`
+endpoint (10 CU, JPEG output, not callable by the adapter). The adapter cannot read
+the CU balance; check the dashboard and budget with a margin (a hand tally ran about
+5% under the dashboard). A reference image keeps an existing design (silhouette
+overlap 0.93 to 1.00 against 0.39 to 0.66 from text alone), though some models shift
+its colours; use it before a text-only prompt when the look must be kept.
 
 See `docs/SCENARIO.md` for setup, manifest examples, unsupported account
 operations, and the live validation checklist.
