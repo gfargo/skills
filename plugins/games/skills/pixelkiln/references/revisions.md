@@ -17,7 +17,7 @@ Read this reference when an asset declares `revision`.
 - On PixelLab, `"engine": "pro-flash"` sends an `image-to-image` or `inpaint`
   revision to the Pro Flash edit/inpaint endpoints instead of the Pro ones:
   5 generations up to 96px, 6 up to 208px, 9 beyond (provisional quotes),
-  against 20–40. The parent must be 32–256px per side in multiples of 4, and
+  against 10–25. The parent must be 32–256px per side in multiples of 4, and
   `strength` is refused. Other modes reject `engine`.
 - `remove-background` (PixelLab, one image up to 400x400, `removalTask`
   `simple` or `complex`, optional `description` hint) cuts the background out
@@ -71,7 +71,7 @@ Read this reference when an asset declares `revision`.
   `edit-animation` applies one prompt across a whole frame set (a cape added
   to every frame of a walk); its frame ceiling falls with frame size (16 up
   to 64px, 9 up to 80px, 4 up to 256px). Both land in candidate review and
-  are unmeasured; their plan cost borrows the 20/25/40 Pro tiers.
+  are unmeasured; their plan cost borrows the 10/15/25 Pro tiers.
 - Both PixelLab and ComfyUI can back a `revision`, not just ComfyUI.
   PixelLab's `reduce-colors`/`correct-pixelart` calls its own
   `/reduce-colors`/`/correct-pixelart` endpoints synchronously (no background

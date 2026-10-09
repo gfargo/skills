@@ -22,15 +22,15 @@ providers, or before any PixelLab account operation.
 |---|---|---:|
 | `map` | One prop, icon, building, or landmark, up to 400×400 | 1 generation |
 | `pixflux` | Closed palettes or full-bleed backgrounds up to 400×400 | 1 generation |
-| `1dir` | Reference-guided work or several candidates | 20–40 generations |
-| `tiles` | Ground variations or connected structures | 20–40 generations |
-| `terrain` | A two-terrain Wang tileset for elevation (grass-to-water, floor-to-cliff) | Unmeasured; borrows the same 20–40 canvas tiers |
-| `imagePro` | A larger or non-square background/scene, or real style transfer | **40 generations flat**, any size |
+| `1dir` | Reference-guided work or several candidates | 10–25 generations |
+| `tiles` | Ground variations or connected structures | 10–25 generations |
+| `terrain` | A two-terrain Wang tileset for elevation (grass-to-water, floor-to-cliff) | Unmeasured; borrows the same 10–25 canvas tiers |
+| `imagePro` | A larger or non-square background/scene, or real style transfer | **10–25 generations** by canvas (64px billed 10; a flat 40 before October 2026) |
 | `character` | A character in 4 or 8 directions, its poses (`state`), its loops (`animation`), bust `portrait`s, and `outfit` transfers onto a loop | 1 per standard base, 6 per pro-flash base at 64px (1 from a `reference`), 20–40 per pose or portrait, 1 per template loop per direction (2–4 as `skeleton-v3`), 20 per outfit (measured once) |
 | `objectPro` | A prop, creature, or vehicle that needs rotations, states, or loops but has no character rig | 6 per base at 64px (1 from a `reference`), **unmeasured**; assumed to match `character` pro-flash |
 | `isometricTile` | One standalone isometric tile (a raised mesa, a cliff block), 16–64px | **1 generation, measured once** (32px `block`) |
 | `uiAsset` | A UI panel, button, health bar, or other chrome, from precise `pieces` and/or named `elements` | **20 generations, measured once** (256×192); the borrowed canvas-tier estimate still predicts 40 |
-| `uiElement` | One UI element (button, slot, bar, dialogue box) from the prompt, 16px and up, with an optional concept image | 20–40 generations, **unmeasured** |
+| `uiElement` | One UI element (button, slot, bar, dialogue box) from the prompt, 16px and up, with an optional concept image | 10–25 generations, **unmeasured** |
 | `imageProFlash` | A styled still on the Pro Flash model (style image + `styleTraits`), 16–256px in multiples of 4; also the natural source for a Pro Flash character's south sprite | 5–9 generations, PixelLab's provisional quote |
 
 `tiles` is not limited to top-down ground: `tileType` selects the projection
@@ -140,9 +140,10 @@ ceiling in a corner also depends on aspect ratio, e.g. 512×512 for square or
 688×384 for 16:9), where `pixflux` tops out at 400×400 with no style
 reference at all. Set the asset's `width`/`height` for anything other than
 the style's default square. Unlike every other multi-candidate generator
-here, its cost is a **flat 40 generations regardless of size** (measured;
-`docs/ENDPOINTS.md`, "Single-image generators, measured") — `1dir` and
-`tiles` scale with canvas area, this does not. One call still returns
+here, it was a flat 40 generations at any size until PixelLab's October 2026
+Pro price cut; it now tiers by canvas at 10/15/25 like the other Pro tools,
+and a 64×64 call billed exactly 10 (`docs/ENDPOINTS.md`, "October 2026 Pro
+price cut"). One call still returns
 several candidates to pick from by the same size tiering as `1dir` (up to
 42px: 64, 43–85px: 16, 86–170px: 4, above 170px: 1), reached through the
 generic background-job endpoint the same way a `revision` is. Reference
@@ -260,7 +261,7 @@ the prompt, no `pieces`/`elements` layout, sizes from 16×16 (up to 792 wide,
 the `concept_image` (design guidance); `uiColorPalette` is sent as
 `color_palette`. Reach for it over `uiAsset` for icons, slots, and small
 widgets under `uiAsset`'s 192px floor. Unmeasured: the plan borrows the
-20/25/40 canvas tiers, and the completed job's shape has not been observed
+10/15/25 canvas tiers, and the completed job's shape has not been observed
 live.
 
 `imageProFlash` wraps `/create-image-pro-flash`, the Pro Flash model as a plain
@@ -270,7 +271,7 @@ provisional `/pro-flash/cost` quotes). Its lock entry keeps PixelLab's
 byte-for-byte that still's file is sent the id instead of the upload (same
 price, no re-encode). The same model edits and inpaints through a revision's
 `"engine": "pro-flash"` (`image-to-image`/`inpaint` only, 32–256px in multiples
-of 4, no `strength`), at the Pro Flash tier instead of the Pro endpoints' 20–40.
+of 4, no `strength`), at the Pro Flash tier instead of the Pro endpoints' 10–25.
 
 Do not confuse pixelkiln's `map` generator with PixelLab's own "Map
 Workshop": `map` returns one static prop, icon, or building in a single
@@ -466,12 +467,16 @@ reference-image method, palette correction, inpaint's output-method choice,
 and inpainting with surrounding `context_image`. See
 [pixellab-roadmap.md](./pixellab-roadmap.md) for the confirmed shape.
 
-Three commands call PixelLab on loose files, outside the manifest and
+Four commands call PixelLab on loose files, outside the manifest and
 lockfile. `pixelkiln unzoom --from <file> --out <file>` returns upscaled
 pixel art to its native grid; run it before outside art becomes a
 `reference` or `styleImages` entry (input at least 256×256, result opaque,
-cost unmeasured). `pixelkiln font --description <text> --out <base>` writes a
-`.ttf` and an 80-glyph atlas for PixelLab's documented 25 generations, and
+cost unmeasured). `pixelkiln pixelate --from <file> --out <file>` converts a
+photo, painting, or render into pixel art with Image to Pixel Art Pro Flash:
+PixelLab picks the output size, the result keeps transparency, an optional
+`--description` steers the style, and it costs a flat 6 generations
+(measured) after asking first. `pixelkiln font --description <text> --out <base>` writes a
+`.ttf` and an 80-glyph atlas for PixelLab's documented 15 generations, and
 asks first. `pixelkiln estimate-skeleton <image> --out <file>` starts an
 `animate-skeleton` keypoints file, and `pixelkiln skeleton-preview <asset>`
 draws its poses over the source for free. See `docs/CLI.md`, "PixelLab utilities".

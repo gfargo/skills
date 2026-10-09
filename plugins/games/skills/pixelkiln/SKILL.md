@@ -56,7 +56,10 @@ hashes.
 - Before an outside or upscaled sprite becomes a `reference` or `styleImages`
   path, run `pixelkiln unzoom --from <file> --out <file>` to bring it back to
   its native pixel grid. Upscaled input degrades every PixelLab endpoint that
-  takes a reference, and the unzoomed result is opaque.
+  takes a reference, and the unzoomed result is opaque. For outside art that
+  was never pixel art (a photo, painting, or render), `pixelkiln pixelate
+  --from <file> --out <file>` converts it with PixelLab's Image to Pixel Art
+  Pro Flash for 6 generations and asks first.
 - Treat every ComfyUI output as source material until it passes the native-grid,
   final-palette, prompt-coverage, and human 1× checks in the ComfyUI reference.
   A successful PNG or high-confidence grid result is not quality approval.
@@ -111,7 +114,7 @@ Read only the reference needed for the current decision:
 
 - For PixelLab configuration, generators (including `uiElement` for single UI
   pieces and `imageProFlash` for styled stills), costs, alpha behavior,
-  account operations, or the `unzoom`, `font`, `estimate-skeleton`, and
+  account operations, or the `unzoom`, `pixelate`, `font`, `estimate-skeleton`, and
   `skeleton-preview` utilities, read [references/pixellab.md](references/pixellab.md). For a
   PixelLab style aimed at a specific resolution or fidelity tier (retro,
   high-detail, or matching an existing set's look), read

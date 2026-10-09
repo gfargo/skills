@@ -55,7 +55,7 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   — a real gap, not a docs fix: `tiles`'s own `tileFeature: "tileset"` draws
   one terrain's edges, not two named, connected terrain levels with their own
   transition prompt. Closed by the `terrain` generator; see
-  `pixellab.md`. Cost is unmeasured (borrows the same 20/25/40 canvas tiers
+  `pixellab.md`. Cost is unmeasured (borrows the same 10/15/25 canvas tiers
   already confirmed for `tiles` and `1dir`); `/create-tileset-sidescroller`,
   reference images, `color_image`, and the `pro` pipeline's own tunables
   beyond `spreadX`/`slopeSize`/`raggedness` remain unmodeled.
@@ -161,7 +161,7 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   now wrapped too, as the `interpolate` revision mode (parent = start
   keyframe, required `lastFrame` = end keyframe), alongside
   `/edit-animation-v2` as `edit-animation` (one text edit across a whole
-  frame set). Both unmeasured, both borrowing the 20/25/40 Pro canvas tiers.
+  frame set). Both unmeasured, both borrowing the 10/15/25 Pro canvas tiers.
   Real demonstrated demand for Interpolate: "Level Up Your Game: Custom
   Sprite Animation Tutorial" used it
   repeatedly, in Aseprite via PixelLab's own extension, as the fix for an
@@ -291,16 +291,30 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   unconfirmed beyond the endpoint's existence. Closed by `pixelkiln font`, a
   standalone command rather than a generator: a font has no style suffix,
   candidates, or image-shaped primary output for the lockfile to track. The
-  documented 25-generation price is unmeasured.
+  documented price (15 since October 2026, 25 before) is unmeasured.
 - **Unzoom** (`/unzoom`, recover the native grid of upscaled pixel art) —
   PixelLab's own API overview calls upscaled reference art "the most common
   cause of disappointing output" from every reference-taking endpoint.
   Closed by `pixelkiln unzoom`, a standalone command on a loose file, since
   the art it is for comes from outside the manifest. Its result is opaque
   (transparency is composited onto white first). Cost unmeasured.
+- **Image to Pixel Art Pro Flash** (`/image-to-pixelart-pro-flash`, added in
+  PixelLab 0.4.128, October 2026) — converts a photo, painting, or render
+  into pixel art, choosing the output size itself. Closed by `pixelkiln
+  pixelate`, a standalone command on a loose file like `unzoom`, since its
+  input comes from outside the manifest. Billed a flat 6 generations live,
+  and unlike `image-to-pixelart` it keeps transparency
+  (docs/ENDPOINTS.md, "Image to Pixel Art Pro Flash, measured").
+- **October 2026 Pro price cut** — PixelLab 0.4.128 moved every Pro tool from
+  20/25/40 to 10/15/25 generations. Cost estimates now use the new prices,
+  and `imagePro` (`generate-image-v2`) is tiered instead of a flat 40: a
+  64x64 call billed 10 live. Re-measured `inpaint-v3` calls (256, 288, 352,
+  and 384px billed 10, 15, 25, 25) show the breakpoints did not move, despite
+  the release notes putting 352-384px in the middle tier (docs/ENDPOINTS.md,
+  "October 2026 Pro price cut").
 - **Pro Flash for plain image create, edit, and inpaint** — a third image
   tier, distinct from `pixflux`/`map`'s 1-generation endpoints and
-  `imagePro`'s flat-40 `generate-image-v2`, on the same model
+  `imagePro`'s `generate-image-v2` (a flat 40 then, 10–25 since October 2026), on the same model
   `character`/`objectPro` already use for their `pro-flash` engine
   (`gpt-image-2.5-flare`), confirmed against PixelLab's MCP tool schemas.
   Demonstrated in "Pixel Art Animation Tutorial: Images Pro Flash, Skeleton
@@ -348,6 +362,18 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   generations to its 20–40. Its one unique field, `style_object_id` (style
   from an existing 8-direction object's sprites), is not worth a second,
   pricier engine on its own.
+
+## Create VFX (experimental, no API yet)
+
+PixelLab 0.4.128 (October 2026) added Create VFX, an experimental web tool
+for pixel-art visual effects (`pixellab.ai/create-vfx`). As of that release it
+has no endpoint in `/v2/openapi.json` and no MCP tool; PixelLab's release
+notes say it "will be added for MCP". Effects are a real gap for game work
+(hit sparks, spell bursts, dust puffs), and pixelkiln's closest substitutes
+are an `animate` revision or an `objectPro` animation, neither built for it.
+Revisit once an endpoint appears: check its request shape, whether the
+result is a frame set or a sheet, and its cost, then decide between a
+generator (frames into a `pack`able set) and a loose-file command.
 
 ## Map Workshop (scene composition)
 
