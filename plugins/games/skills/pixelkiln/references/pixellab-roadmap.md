@@ -302,9 +302,22 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   PixelLab 0.4.128, October 2026) — converts a photo, painting, or render
   into pixel art, choosing the output size itself. Closed by `pixelkiln
   pixelate`, a standalone command on a loose file like `unzoom`, since its
-  input comes from outside the manifest. Billed a flat 6 generations live,
-  and unlike `image-to-pixelart` it keeps transparency
-  (docs/ENDPOINTS.md, "Image to Pixel Art Pro Flash, measured").
+  input comes from outside the manifest. Billed a flat 6 generations live;
+  the result is opaque on a near-white background (docs/ENDPOINTS.md,
+  "Image to Pixel Art Pro Flash, measured").
+- **Create VFX** (PixelLab 0.4.128, October 2026) — animated pixel-art
+  effects (spells, hits, explosions, auras, weather). Offered only as the
+  `vfx_workbench` MCP tool, with no REST endpoint as of October 2026, and free on a
+  subscription because it renders a recipe rather than generating. Closed by
+  `pixelkiln vfx`, which calls PixelLab's MCP server directly with the same
+  API key. It starts from a preset, a saved effect, or a recipe file, adds
+  parts, downloads the sheet, GIF, atlas, and optional game pack, and saves
+  the recipe so the effect re-renders byte for byte (docs/ENDPOINTS.md, "VFX
+  workbench (MCP only), measured"). Effects are also a manifest generator,
+  `vfx`, planned, locked, and packed like every other asset (see
+  docs/GENERATORS.md). Still open there: a sprite named by asset rather than
+  by file, the game pack's per-piece clips, and the effect's anchor in the
+  sheet formats.
 - **October 2026 Pro price cut** — PixelLab 0.4.128 moved every Pro tool from
   20/25/40 to 10/15/25 generations. Cost estimates now use the new prices,
   and `imagePro` (`generate-image-v2`) is tiered instead of a flat 40: a
@@ -362,18 +375,6 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   generations to its 20–40. Its one unique field, `style_object_id` (style
   from an existing 8-direction object's sprites), is not worth a second,
   pricier engine on its own.
-
-## Create VFX (experimental, no API yet)
-
-PixelLab 0.4.128 (October 2026) added Create VFX, an experimental web tool
-for pixel-art visual effects (`pixellab.ai/create-vfx`). As of that release it
-has no endpoint in `/v2/openapi.json` and no MCP tool; PixelLab's release
-notes say it "will be added for MCP". Effects are a real gap for game work
-(hit sparks, spell bursts, dust puffs), and pixelkiln's closest substitutes
-are an `animate` revision or an `objectPro` animation, neither built for it.
-Revisit once an endpoint appears: check its request shape, whether the
-result is a frame set or a sheet, and its cost, then decide between a
-generator (frames into a `pack`able set) and a loose-file command.
 
 ## Map Workshop (scene composition)
 
