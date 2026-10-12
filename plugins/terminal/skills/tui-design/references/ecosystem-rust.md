@@ -31,7 +31,7 @@ Ratatui dominates Rust TUI development — thousands of crates build on it. Fork
 | Rich panic/error reports | **color-eyre** |
 | Fancy modern wizards (Clack-style) | **cliclack** |
 
-**Default: Ratatui + Crossterm + clap + color-eyre.** Use `ratatui/templates` as a starting point — it includes Tokio integration, panic hooks, and the component pattern.
+**Default: Ratatui + Crossterm + clap + color-eyre.** Start from `cargo generate ratatui/templates` and pick one of its six templates by app size: `simple` or `event-driven` for sync apps, `simple-async` or `event-driven-async` when you need Tokio, and `component` (Tokio, action channel, config, logging) only for large multi-pane apps.
 
 ---
 
@@ -43,9 +43,9 @@ The mental model is **"UI = f(state)"**. You manage app state, the event loop, a
 
 **Canonical app structure:**
 
-```rust
+```rust check=rust/canonical
 use ratatui::{prelude::*, widgets::*, DefaultTerminal};
-use ratatui::crossterm::event::{self, Event, KeyCode, KeyEventKind};
+use ratatui::crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
 use color_eyre::Result;
 
 fn main() -> Result<()> {
@@ -83,7 +83,11 @@ impl App {
         if let Event::Key(key) = event::read()? {
             if key.kind == KeyEventKind::Press {
                 match key.code {
-                    KeyCode::Char('q') => self.should_quit = true,
+                    KeyCode::Char('q') | KeyCode::Esc => self.should_quit = true,
+                    // raw mode delivers Ctrl+C as a key event, not SIGINT
+                    KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        self.should_quit = true
+                    }
                     KeyCode::Char('+') | KeyCode::Right => self.counter += 1,
                     KeyCode::Char('-') | KeyCode::Left => self.counter -= 1,
                     _ => {}
@@ -110,7 +114,7 @@ Ratatui owns rendering and terminal setup, but not the application event loop, s
 
 Following Ratatui's official [external-editor recipe](https://ratatui.rs/recipes/apps/spawn-vim/):
 
-```rust
+```rust check=rust/editor-handoff
 use std::{io::stdout, process::{Command, ExitStatus}};
 use ratatui::crossterm::{execute, terminal::{enable_raw_mode, EnterAlternateScreen}};
 use color_eyre::eyre::eyre;
@@ -149,23 +153,24 @@ Reentry steps are not transactional (see the fallible-setup warning below), and 
 - **`Scrollbar`** — pair with any scrollable widget.
 - **`Clear`** — paints over an area; use for popup hole-punching.
 - **`Calendar`** — monthly calendar.
+- **`Fill`** — paints an area with one repeated symbol and style (0.30.1+).
 
 **Custom widgets** implement the `Widget` trait (one-shot) or `StatefulWidget` (with associated state). Both are zero-cost — they're just `(area, buf)` consumers.
 
 **Third-party widgets worth knowing:**
-- **`tui-textarea`** — multi-line editor with vim/emacs bindings.
+- **`ratatui-textarea`** — multi-line editor with vim/emacs-style bindings. It is the Ratatui org's fork of `tui-textarea` and supports Ratatui 0.30; `tui-textarea` itself is unmaintained and its last release (0.7) requires Ratatui 0.29. Install it from crates.io or `github.com/ratatui/ratatui-textarea`: a malicious GitHub fork with the same name was removed in March 2026.
 - **`tui-input`** — single-line input.
 - **`tui-tree-widget`** — hierarchical tree.
-- **`tui-big-text`** — banner text.
-- **`tui-popup`** — modal popups.
+- **`tui-big-text`** (banner text), **`tui-popup`** (modal popups), **`tui-scrollview`** (scrollable viewport) — maintained together in `ratatui/tui-widgets`, also available as the `tui-widgets` bundle crate.
 - **`tui-logger`** — in-app log pane.
 - **`throbber-widgets-tui`** — spinners.
+- **`tachyonfx`** — shader-like effects and transitions, from the Ratatui org.
 
 ### Layout
 
 Constraint-based using Cassowary (the same algorithm as iOS Auto Layout):
 
-```rust
+```rust check=rust/layout
 use ratatui::layout::{Layout, Constraint};
 
 let [header, body, status] = Layout::vertical([
@@ -192,7 +197,7 @@ Layouts cache by default — split once and reuse the resulting `Rect`s in the s
 
 ### Styling
 
-```rust
+```rust check=rust/styling
 use ratatui::style::{Color, Modifier, Style, Stylize};
 
 // Direct API
@@ -205,7 +210,7 @@ let style = Style::default()
 let span = "Hello".bold().yellow().on_black();
 ```
 
-**Colors:** 16 ANSI named colors (`Color::Red`, `Color::LightRed`, …), `Color::Indexed(u8)` for 256-color, `Color::Rgb(r, g, b)` for truecolor. Detect terminal capability via `crossterm::style::available_color_count()` if you want to gate features.
+**Colors:** 16 ANSI named colors (`Color::Red`, `Color::LightRed`, …), `Color::Indexed(u8)` for 256-color, `Color::Rgb(r, g, b)` for truecolor. Detect terminal capability via `ratatui::crossterm::style::available_color_count()` if you want to gate features.
 
 **Modifiers:** `BOLD`, `DIM`, `ITALIC`, `UNDERLINED`, `SLOW_BLINK`, `RAPID_BLINK`, `REVERSED`, `HIDDEN`, `CROSSED_OUT`. Avoid blink and crossed-out — poorly supported.
 
@@ -214,6 +219,7 @@ let span = "Hello".bold().yellow().on_black();
 - **Crossterm** — default, cross-platform (Linux/macOS/Windows), pure Rust, MIT. Use this unless you have a specific reason not to.
 - **Termion** — Unix-only, older, smaller. Choose only if you want Unix-only and minimal dependencies.
 - **Termwiz** — cross-platform, advanced features (Sixel, kitty image protocol). Choose if you need terminal graphics protocols. Authored by the WezTerm developer.
+- **Termina** — `termina` feature (`TerminaBackend`, Ratatui 0.30.2+), built on the Helix editor's terminal library, which sits between Crossterm and Termwiz and targets newer VT extensions such as the kitty keyboard protocol. `ratatui::init()` is Crossterm-only, so set up raw mode and cleanup through Termina yourself. Newer and less proven than Crossterm; choose it only when you need what it exposes.
 - **mousefood** — `embedded-graphics` backend over `ratatui-core`, taking Ratatui's `no_std` support to embedded hardware displays.
 
 **Crossterm version conflicts** are a foot-gun: pulling two semver-incompatible Crossterm majors causes separate event queues and broken raw-mode tracking. Always run `cargo tree -p crossterm` and verify only one version. Crossterm 0.29 (April 2025) is the current stable; 0.28 is the legacy pin. Ratatui 0.30 exposes per-version feature flags (`crossterm_0_28`, `crossterm_0_29`) so widget-library authors can pin a specific Crossterm without forcing it on downstream apps; the default is 0.29, and if both flags end up enabled (feature unification) it is not an error — `crossterm_0_29` takes precedence. In app code, import Crossterm through the re-export (`use ratatui::crossterm`) rather than a separate `crossterm` dependency, so you always get the exact version Ratatui uses.
@@ -222,7 +228,7 @@ let span = "Hello".bold().yellow().on_black();
 
 **1. Monolithic App struct** (simplest, used in most examples):
 
-```rust
+```rust check=rust/app-struct
 struct App {
     items: Vec<Item>,
     list_state: ListState,
@@ -234,22 +240,22 @@ struct App {
 
 **2. Elm Architecture** (Model + Message + update + view):
 
-```rust
+```rust check=rust/elm
 enum Msg { Increment, Decrement, Quit }
 
-fn update(model: &mut Model, msg: Msg) -> Option<Cmd> { /* ... */ }
+fn update(model: &mut Model, msg: Msg) -> Option<Cmd> { todo!() }
 fn view(model: &Model, frame: &mut Frame) { /* ... */ }
 ```
 
 Useful when state is complex and you want testable update logic.
 
-**3. Component pattern** — each component implements an `init`/`handle_events`/`update`/`draw` interface and communicates via `mpsc::UnboundedSender<Action>`. The official `ratatui/templates` repo uses this with Tokio. Best for larger apps. If you'd rather adopt a framework than roll your own, **tui-realm** formalizes this pattern on top of Ratatui (components, subscriptions, message-based events).
+**3. Component pattern** — each component implements an `init`/`handle_events`/`update`/`draw` interface and communicates via `mpsc::UnboundedSender<Action>`. The official `component` template in `ratatui/templates` uses this with Tokio. Best for larger apps. If you'd rather adopt a framework than roll your own, **tui-realm** (crate `tuirealm`) formalizes this pattern on top of Ratatui (components, subscriptions, message-based events).
 
 ## Async with Tokio
 
 The standard pattern: a cancellable task reads Crossterm's `EventStream` into an `mpsc` channel; the main loop `select!`s over that channel and a tick interval, and calls `terminal.draw` each pass. `EventStream` needs Crossterm's `event-stream` feature, which Ratatui does not enable: add `crossterm = { version = "0.29", features = ["event-stream"] }` matching Ratatui's Crossterm version so Cargo unifies them, and keep importing through `ratatui::crossterm`.
 
-```rust
+```rust check=rust/async-input
 use std::time::Duration;
 use futures::StreamExt;
 use ratatui::crossterm::event::{Event, EventStream};
@@ -279,7 +285,10 @@ let mut tick = tokio::time::interval(Duration::from_millis(250));
 while !app.should_quit {
     terminal.draw(|f| app.draw(f))?;
     tokio::select! {
-        Some(event) = rx.recv() => app.handle(event),
+        event = rx.recv() => match event {
+            Some(event) => app.handle(event),
+            None => break, // reader ended (EOF or error); stop instead of ticking with no input
+        },
         _ = tick.tick() => app.on_tick(),
     }
 }
@@ -295,7 +304,7 @@ For sync-only apps, `event::poll(Duration::from_millis(250))` then `event::read(
 
 `TestBackend` lets you assert against rendered output:
 
-```rust
+```rust check=rust/test-backend
 use ratatui::{backend::TestBackend, Terminal};
 
 let backend = TestBackend::new(20, 5);
@@ -312,9 +321,11 @@ terminal.backend().assert_buffer_lines([
 
 Pair with **`insta`** for snapshot testing — `insta::assert_snapshot!(terminal.backend())`. Snapshots are stored as text files and reviewed via `cargo insta review`. This is the officially documented recipe (ratatui.rs → Recipes → Testing), with one caveat straight from that page: **snapshots capture text only — color and style are not asserted.** When color matters (selected-row highlight, error styling), compare `Buffer`s instead: build the expected buffer with `Buffer::with_lines(...)`, apply `set_style` to the regions you care about, and `assert_eq!` against the backend's buffer — the official counter-app tutorial demonstrates exactly this.
 
+For the lifecycle layer TestBackend can't reach (event loop, key handling, raw-mode setup and teardown, exit code), the same official recipe now shows a PTY end-to-end test with `termlens`: spawn `env!("CARGO_BIN_EXE_<app>")` at a fixed size, wait for visible text, send keys, and snapshot `terminal.screen()` with insta. Keep it to one or two flows, and pin termlens's version because the crate is new (2026).
+
 **Test at multiple sizes.** Resize bugs live at the edges, so run the same render across the contract sizes — 80×24, 60 columns (e.g. 60×24), and your declared hard minimum — snapshotting each under a size-suffixed name (`app_60x24`). Parameterizing per-size with `rstest` (which ratatui itself uses for its own tests) is a natural fit, though that combination is community practice rather than an official recipe. Extracting layout math into a pure `fn compute_layout(area: Rect) -> ...` makes per-size assertions cheap — no terminal needed at all.
 
-Real-world anchors: **gitui**'s first insta + TestBackend snapshots (PR #2411) were reverted because the refactor that made the main loop testable dropped the initial notify event, so the app opened blank for one tick interval; the re-landed version (PR #2813, merged April 2026) restores that event. The caution: when you restructure an event loop so tests can drive it, the app's own startup path is what regresses, so cover first-draw behavior in the same tests. **openai/codex** makes insta snapshot coverage *mandatory* for any change that affects visible TUI output (workflow: `cargo insta pending-snapshots`, `cargo insta accept`).
+Real-world anchors: **gitui**'s first insta + TestBackend snapshots (PR #2411) were reverted because the refactor that made the main loop testable dropped the initial notify event, so the app opened blank for one tick interval; the re-landed version (PR #2813, merged April 2026) restores that event. The caution: when you restructure an event loop so tests can drive it, the app's own startup path is what regresses, so cover first-draw behavior in the same tests. **openai/codex** keeps its Ratatui TUI (`codex-rs/tui`) under broad insta coverage, about 200 snapshot files of rendered output, so any change to visible TUI output surfaces as a snapshot diff to review (`cargo insta pending-snapshots`, `cargo insta accept`).
 
 ## Debugging
 
@@ -322,15 +333,15 @@ Real-world anchors: **gitui**'s first insta + TestBackend snapshots (PR #2411) w
 
 - **Log to a file and tail it** (official recipe): `tracing` + `tracing-subscriber` (env-filter) writing to a plain file with ANSI disabled, then `tail -f app.log` in a second terminal.
 - **In-app debug pane** (official recipe): keep `show_debug: bool` in app state, split off a column when toggled, and render `format!("{state:#?}")` into it.
-- **tui-logger** (0.18.x, actively maintained) — the ready-made in-app log widget, with `log`/`slog`/`tracing` support behind feature flags; the official debug recipe points to it as an alternative.
+- **tui-logger** (0.18.x, actively maintained) — the ready-made in-app log widget, built on `log`, with `slog` and `tracing` support behind the `slog-support` and `tracing-support` features; the official debug recipe points to it as an alternative.
 - **Debuggers:** attach from a *second* terminal (`lldb -p <pid>` / `gdb -p`) or use an IDE debugger so the debug console is separate from the app's terminal — stopping the process in its own terminal leaves you at a prompt that's still in raw mode + alt screen. (Convention rather than official doctrine, but it follows directly from the raw-mode behavior.)
 
-**Profiling:** `cargo flamegraph` is the standard tool — ratatui.rs's own Recipes and FAQ have no profiling entry, so there's no official recipe to follow here. One real gotcha worth knowing: `cargo flamegraph` stops recording by forwarding Ctrl+C as SIGINT to the wrapped `perf`/`dtrace` process, but `crossterm::terminal::enable_raw_mode()` intercepts Ctrl+C before it becomes a signal — it arrives as an ordinary key event your app's loop has to interpret instead. In practice, either give your app a quit key that calls `disable_raw_mode()` and exits normally (a clean process exit works fine with `flamegraph`'s wrapper), or bypass the wrapper entirely and run `perf record -p $(pgrep app) -- sleep 30` against an already-running process. For async task time in a Ratatui+Tokio app, `tokio-console` (via the `console-subscriber` crate) shows per-task poll/wake/busy time live. The recurring real-world slow path, seen across several ratatui GitHub issues (high CPU in `terminal.draw`, a `Table` widget laggy at 15k rows): it's rarely widget construction itself — Ratatui's immediate-mode model rebuilding widgets every frame is by design and meant to be cheap — the actual cost is accidental O(n) work smuggled into the render closure, like eagerly collecting a large `Vec` or recomputing string widths on every draw instead of caching outside the loop.
+**Profiling:** `cargo flamegraph` (perf on Linux, xctrace on macOS) is the standard tool, and its README suggests `samply` as an alternative with better macOS support; ratatui.rs has no profiling recipe. One real gotcha: you normally end a recording with Ctrl+C, which the terminal sends as SIGINT to the whole foreground process group (flamegraph ignores it so it can still write the graph). Under `crossterm::terminal::enable_raw_mode()`, Ctrl+C is an ordinary key event your app's loop has to interpret, and no SIGINT is sent. Either give your app a quit key that restores the terminal and exits normally (flamegraph then finishes as usual), or attach to an already-running process with `flamegraph --pid <pid>` (`samply record -p <pid>` is Linux-only in samply 0.13.1). For async task time in a Ratatui+Tokio app, `tokio-console` (via the `console-subscriber` crate) shows per-task poll/wake/busy time live. The recurring real-world slow path, seen across several ratatui GitHub issues (high CPU in `terminal.draw`, a `Table` widget laggy at 15k rows): it's rarely widget construction itself — Ratatui's immediate-mode model rebuilding widgets every frame is by design and meant to be cheap — the actual cost is accidental O(n) work smuggled into the render closure, like eagerly collecting a large `Vec` or recomputing string widths on every draw instead of caching outside the loop.
 
 ## Companion crates
 
 - **clap** — argument parsing. Derive API:
-  ```rust
+  ```rust check=rust/clap-derive
   use clap::{Parser, Subcommand};
 
   #[derive(Parser)]
@@ -348,7 +359,7 @@ Real-world anchors: **gitui**'s first insta + TestBackend snapshots (PR #2411) w
       List,
   }
   ```
-  Best-in-class argparse with auto-generated help, shell completions, and validation.
+  Best-in-class argparse with auto-generated help and validation; shell completions come from the companion `clap_complete` crate.
 
 - **color-eyre** — installs a panic hook that prints rich error reports with span traces and backtraces. Install it before `ratatui::init()` or `ratatui::run()`; Ratatui then wraps the reporting hook and restores terminal state before delegating to it.
 
@@ -368,7 +379,7 @@ Real-world anchors: **gitui**'s first insta + TestBackend snapshots (PR #2411) w
 
 A Ratatui app that exits badly can leave the user in raw mode + alt screen + no cursor. On current Ratatui, prefer `ratatui::run()` for the complete managed lifecycle or `ratatui::init()` when the application needs to own the loop. Install any reporting hook first, then let Ratatui wrap it:
 
-```rust
+```rust check=rust/run
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
     ratatui::run(|terminal| App::default().run(terminal))
@@ -377,7 +388,7 @@ fn main() -> color_eyre::Result<()> {
 
 If you construct `Terminal` and configure Crossterm raw/alternate-screen state manually, you own both normal and panic cleanup. In that case, wrap the existing reporting hook yourself:
 
-```rust
+```rust check=rust/panic-hook
 color_eyre::install()?;
 let report_hook = std::panic::take_hook();
 std::panic::set_hook(Box::new(move |info| {
@@ -390,12 +401,12 @@ Do not add that custom wrapper on top of `ratatui::run()` or `ratatui::init()`; 
 
 ## Alternatives to Ratatui
 
-**Cursive** (`cursive`) — callback-driven, retained-mode, ncurses-like. Widget-rich (Dialog, EditView, SelectView, TextArea, LinearLayout, StackView, etc.). Best for form-heavy apps with dialogs and menus where you want a higher-level API. Less popular than Ratatui but stable and well-documented.
+**Cursive** (`cursive`) — callback-driven, retained-mode, ncurses-like. Widget-rich (Dialog, EditView, SelectView, TextArea, LinearLayout, StackView, etc.). Best for form-heavy apps with dialogs and menus where you want a higher-level API. Less popular than Ratatui but well-documented. The `cursive` crate has had no release since 0.21.1 (August 2024) even though its repo is active, and it depends on crossterm 0.28, so mixing it with Ratatui-ecosystem crates puts two crossterm versions in one build.
 
-```rust
-use cursive::{Cursive, views::TextView};
+```rust check=rust/cursive
+use cursive::views::TextView;
 
-let mut siv = Cursive::default();
+let mut siv = cursive::default(); // a runnable Cursive on the default backend
 siv.add_layer(TextView::new("Hello, world!"));
 siv.add_global_callback('q', |s| s.quit());
 siv.run();
@@ -435,7 +446,7 @@ siv.run();
 - **systemctl-tui** — systemd manager.
 - **gpg-tui** — GPG key manager.
 - **kdash** — Kubernetes TUI.
-- **tenere** — chatGPT TUI.
+- **tenere** — chat TUI for LLMs; uses `ratatui-textarea` for input.
 - **helix** — modal editor; custom renderer but Ratatui-adjacent patterns.
 - **zellij** — terminal multiplexer.
 
