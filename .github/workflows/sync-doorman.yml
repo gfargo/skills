@@ -61,20 +61,30 @@ jobs:
 
       - name: Commit and tag
         if: steps.check.outputs.up_to_date == 'false'
+        env:
+          TAG: security-v${{ steps.bump.outputs.new_version }}
         run: |
+          # Each bundle tags with its own prefix (terminal-v*, devops-v*, security-v*,
+          # games-v*). Bare v* tags were shared across bundles and collided, which
+          # failed the tag push after main had already moved.
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" > /dev/null; then
+            echo "::error::Tag ${TAG} already exists on origin; not committing a sync that cannot be tagged."
+            exit 1
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add "${DEST_SKILL_PATH}" "${PLUGIN_JSON}" "${MARKETPLACE_JSON}"
           git commit -m "sync: doorman ${{ steps.check.outputs.latest }} (security v${{ steps.bump.outputs.new_version }})"
-          git tag "v${{ steps.bump.outputs.new_version }}"
-          git push origin HEAD:main
-          git push origin "v${{ steps.bump.outputs.new_version }}"
+          git tag "${TAG}"
+          # Atomic: main and the tag land together or not at all.
+          git push --atomic origin HEAD:main "refs/tags/${TAG}"
 
       - name: Create release
         if: steps.check.outputs.up_to_date == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: security-v${{ steps.bump.outputs.new_version }}
         run: |
-          gh release create "v${{ steps.bump.outputs.new_version }}" \
+          gh release create "${TAG}" \
             --title "security v${{ steps.bump.outputs.new_version }} — doorman ${{ steps.check.outputs.latest }}" \
             --notes "Synced security:doorman to [gfargo/doorman@${{ steps.check.outputs.latest }}](https://github.com/${SOURCE_REPO}/releases/tag/${{ steps.check.outputs.latest }})"
