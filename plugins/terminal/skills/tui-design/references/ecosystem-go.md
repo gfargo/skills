@@ -101,7 +101,7 @@ Bubble Tea v2 owns the terminal for the whole `Program.Run()` call. Keep resumab
 
 The low-level `Program.ReleaseTerminal()` / `RestoreTerminal()` pair is a temporary handoff escape hatch, not final cleanup. Prefer [`ExecProcess`](https://github.com/charmbracelet/bubbletea/blob/v2.1.0/exec.go) for editors and shells; Bubble Tea's [tagged lifecycle source](https://github.com/charmbracelet/bubbletea/blob/v2.1.0/tea.go) defines signal, interrupt, suspend, and restoration semantics together.
 
-**Frame-level declarations live on the view, not the program.** `tea.WithAltScreen()`, `tea.WithMouseCellMotion()`, and `tea.WithMouseAllMotion()` were removed in v2 — set `v.AltScreen = true` and `v.MouseMode = tea.MouseModeCellMotion` (or `tea.MouseModeAllMotion` for hover) in `View()`.
+**Frame-level declarations live on the view, not the program.** `tea.WithAltScreen()`, `tea.WithMouseCellMotion()`, and `tea.WithMouseAllMotion()` were removed in v2 — set `v.AltScreen = true` and `v.MouseMode = tea.MouseModeCellMotion` (or `tea.MouseModeAllMotion` for hover) in `View()`. Inline is the default, and because these fields are read every frame, an app can switch between inline and the alternate screen at runtime.
 
 **Important options:**
 - `tea.WithInput(reader)` / `tea.WithOutput(writer)` — useful for testing or Wish.
@@ -131,7 +131,6 @@ return m, fetchData
 - Goroutines never call `View()` directly — send via `program.Send(msg)`.
 - CJK/emoji width in the v2 stack is computed by `charmbracelet/x/ansi` with grapheme clustering — trust `lipgloss.Width()`, never `len()`.
 - Don't `fmt.Println` while the program runs — it corrupts the frame. For permanent lines above an inline UI, return `tea.Println(...)`/`tea.Printf(...)` (no-ops on the alt screen). For diagnostics, use `tea.LogToFile("debug.log", "DEBUG")` (see **Debugging** below).
-- Cobra + Bubble Tea: `PreRun` output isn't lost — the alt screen preserves the main buffer, so it reappears at exit. The rule is no stdout writes while `Run` is active.
 
 ---
 
@@ -262,7 +261,7 @@ func (k keyMap) FullHelp() [][]key.Binding { return [][]key.Binding{{k.Up, k.Dow
 
 ## Huh (charmbracelet/huh)
 
-Forms library on top of Bubble Tea. Best for one-shot interactive prompts (multi-step wizards) and embeddable form panes inside larger TUIs. Huh v2 (`charm.land/huh/v2`, released March 2026) is built on Bubble Tea v2 — built-in themes are now `func(isDark bool) *Styles`; wrap one as a `huh.Theme` with `form.WithTheme(huh.ThemeFunc(huh.ThemeCharm))`. Huh supplies `isDark` itself from the `tea.BackgroundColorMsg` it receives, but v2.0.3 never requests one, so an embedding parent must return `tea.RequestBackgroundColor` from its own `Init` and forward the reply to the form.
+Forms library on top of Bubble Tea. Best for one-shot interactive prompts (multi-step wizards) and embeddable form panes inside larger TUIs. Huh v2 (`charm.land/huh/v2`, released March 2026) is built on Bubble Tea v2 — built-in themes are now `func(isDark bool) *Styles`; wrap one as a `huh.Theme` with `form.WithTheme(huh.ThemeFunc(huh.ThemeCharm))`. Huh supplies `isDark` itself from the `tea.BackgroundColorMsg` it receives, but v2.0.3 never requests one, so an embedding parent must return `tea.RequestBackgroundColor` from its own `Init` and forward the reply to the form. A standalone `form.Run()` has no parent to ask, so it always renders the light variant ([huh#834](https://github.com/charmbracelet/huh/issues/834)). Detect the background before running it (`lipgloss.HasDarkBackground(os.Stdin, os.Stdout)` is safe here because no Bubble Tea program is running yet) and pin the variant with `huh.ThemeFunc(func(bool) *huh.Styles { return huh.ThemeCharm(isDark) })`. Huh's own upgrade guide shows `.WithTheme(huh.ThemeCharm(isDark))`, which does not compile against v2.0.3, because `*Styles` is not a `Theme`.
 
 ```go check=go/huh-form
 form := huh.NewForm(
@@ -288,7 +287,16 @@ err := form.Run()
 
 Field types: `NewInput`, `NewText` (multi-line), `NewSelect[T]`, `NewMultiSelect[T]`, `NewConfirm`, `NewFilePicker`, `NewNote` (display-only).
 
-**Accessibility:** `form.WithAccessible(true)` switches to plain prompts (line-by-line, no alt-screen) for screen readers and limited terminals — a genuinely thoughtful feature.
+**Dynamic forms:** huh's real mechanism is **`Group.WithHideFunc(func() bool)`** — it hides/shows an entire group (a step's worth of fields) based on a predicate re-evaluated as form state changes. This operates at *group* granularity; per-field hiding is not shipped (open feature requests only) — don't present it as available. For recomputing one field from another's value, huh has `OptionsFunc`/`TitleFunc`/`DescriptionFunc`, which take a callback plus the fields they depend on and re-run automatically:
+
+```go check=go/huh-options-func
+huh.NewSelect[string]().
+    OptionsFunc(func() []huh.Option[string] {
+        return huh.NewOptions(statesForCountry(country)...)
+    }, &country) // recomputed whenever `country` changes
+```
+
+**Accessibility:** `form.WithAccessible(true)` bypasses Bubble Tea and asks each field as a plain line-by-line prompt: a numbered list for `Select` (the user types the number), numbers toggled one at a time and `0` to finish for `MultiSelect`, `y`/`n` for `Confirm`, and validation errors printed before the prompt repeats. Huh turns it on by itself only for `TERM=dumb`, so expose your own switch. The README reads an `ACCESSIBLE` environment variable, and gh's `GH_ACCESSIBLE_PROMPTER` drives exactly this mode. Bubble Tea and Bubbles have nothing comparable, so the rest of the app needs its own linear mode; see `visual-patterns.md` → *Accessibility*.
 
 **Full-screen:** `tea.WithAltScreen()` is gone in v2 — declare it on the view instead: `form.WithViewHook(func(v tea.View) tea.View { v.AltScreen = true; return v })`.
 
@@ -522,6 +530,7 @@ Bubble Tea, tview, and gocui all work on Linux, macOS, and Windows (Terminal, co
 - Older `cmd.exe` doesn't support all ANSI; target Windows Terminal (Windows 10+).
 - `Ctrl+Z` (SIGTSTP) doesn't exist on Windows; that's fine, just don't rely on suspend behavior universally.
 - Mouse events differ slightly; libraries abstract this but test on Windows if it's a target.
+- Environment differences (signals, `WT_SESSION`, Unicode output, multiplexer keys): `interaction-patterns.md` → *Terminal environments*.
 
 For SSH-served TUIs, **Wish** is the right answer — it handles per-session terminal capabilities (the client's truecolor support, not the server's) and gives you middleware for auth, logging, rate limiting.
 

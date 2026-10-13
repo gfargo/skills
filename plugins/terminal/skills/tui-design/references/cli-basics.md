@@ -72,11 +72,7 @@ Prefer flags when meaning is ambiguous. Heroku's example: `heroku fork --from FR
 
 Prompt only when an interactive input channel is available—normally a TTY, or an explicitly opened `/dev/tty` for a composable picker. When input is piped or the process is in CI, fail with a message naming the documented flag, environment variable, or stdin contract that makes the operation non-interactive; there is no universal `--no-input` spelling. Confirm destructive actions; allow a documented `-y`/`--yes` or `-f`/`--force` override. For severe actions, require typed confirmation (`--confirm=name-of-thing`).
 
-**Never accept secrets via `--password=…`** — leaks via `ps`, shell history, `docker inspect`, debug logs. Use:
-- `--password-file path/to/secret`
-- `--password-stdin` (read from stdin)
-- OS keychains (macOS Keychain, libsecret, Windows Credential Manager)
-- `git-credential-*` helpers
+Never accept a secret as a flag value; see *Secrets — what NOT to do*.
 
 ---
 
@@ -384,7 +380,7 @@ Never accept secrets via `--password=`, `--token=`, etc. on the command line. Th
 - Process accounting.
 
 **Use instead:**
-- Credential files with restrictive permissions.
+- Credential files with restrictive permissions (`--password-file path/to/secret`).
 - Stdin (`--password-stdin`).
 - AF_UNIX sockets.
 - OS keychains (gh uses macOS Keychain / libsecret / Windows Credential Manager).
@@ -475,7 +471,11 @@ If you check for updates: check async, cache the result (once a day is the norm 
 
 ### Telemetry, if you collect it
 
-`DO_NOT_TRACK=1` is a real, named convention, but adoption is thin: netdata, tilt, and since 2026 the GitHub CLI honor it, while Homebrew, Gatsby, Syncthing, and the .NET SDK each rejected patches to add it and kept their own variables (`HOMEBREW_NO_ANALYTICS`, `GATSBY_TELEMETRY_DISABLED`, `DOTNET_CLI_TELEMETRY_OPTOUT`), and Next.js, Vercel CLI, Prisma, and Netlify CLI ignore it too. Its own author disowned the proposal in 2024. The practical pattern: ship your own clearly-named opt-out (an env var plus a `tool telemetry disable` subcommand, as Next.js does; gh uses `GH_TELEMETRY` plus a `telemetry` config key, and `GH_TELEMETRY` overrides `DO_NOT_TRACK`), auto-skip in CI, and honor `DO_NOT_TRACK=1` as a cheap courtesy on top — it costs one env lookup. Disclose before collecting: Homebrew shows its analytics notice before analytics are ever sent, so a user can opt out before any data leaves the machine. And never let an opt-out be silently overridden — Netlify CLI once fired a telemetry event *reporting that the user had disabled telemetry*, undermining the opt-out it was supposed to respect. Treat an opt-out flag as an absolute veto, checked first, no exceptions.
+`DO_NOT_TRACK=1` is a named convention with thin adoption: netdata, tilt, and the GitHub CLI honor it, while Homebrew, Gatsby, and the .NET SDK rejected it for their own variables (`HOMEBREW_NO_ANALYTICS`, `GATSBY_TELEMETRY_DISABLED`, `DOTNET_CLI_TELEMETRY_OPTOUT`). So:
+- Ship your own opt-out: an env var plus a `tool telemetry disable` subcommand. gh uses `GH_TELEMETRY` and a `telemetry` config key, and `GH_TELEMETRY` overrides `DO_NOT_TRACK`.
+- Skip telemetry in CI, and honor `DO_NOT_TRACK=1` as a courtesy; it costs one env lookup.
+- Disclose before sending anything. Homebrew shows its analytics notice before the first event, so users can opt out first.
+- Treat the opt-out as an absolute veto, checked first. Netlify CLI once sent an event reporting that the user had disabled telemetry.
 
 ---
 

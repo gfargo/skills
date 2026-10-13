@@ -1,7 +1,7 @@
 # TypeScript / JavaScript ecosystem — Ink, Clack, Inquirer
 
 The Node.js ecosystem splits along two axes:
-- **Pretty CLI** (argparse + color + prompts/spinners) vs **full TUI**.
+- **Pretty CLI** (argument parsing + color + prompts/spinners) vs **full TUI**.
 - **Imperative/retained-mode** vs **declarative/React-style**.
 
 **Ink has effectively won the high-end TUI space.** It powers Claude Code, GitHub Copilot CLI, Gemini CLI, Cloudflare Wrangler, Gatsby CLI, Prisma, Shopify CLI, Linear's internal CLI, Canva CLI, and tap. Anthropic's Claude Code is publicly TypeScript + React + Ink + Yoga + Bun.
@@ -27,11 +27,11 @@ The Node.js ecosystem splits along two axes:
 | Prompt-heavy CLI (many questions) | **@inquirer/prompts** (the modern modular rewrite) |
 | Single elegant spinner | **ora** |
 | Hierarchical task runner | **listr2** |
-| Argparse, simple | **commander** (de facto default) |
-| Argparse, validation-heavy | **yargs** |
+| Argument parsing, simple | **commander** (de facto default) |
+| Argument parsing, validation-heavy | **yargs** |
 | Heroku-class plugin CLI | **oclif** (Salesforce's framework) |
-| Argparse, TS-first, lightweight | **citty** (UnJS) |
-| Tiny argparse | **cac** (one ~20 KB file, no deps) or `node:util.parseArgs` |
+| Argument parsing, TS-first, lightweight | **citty** (UnJS) |
+| Tiny argument parser | **cac** (one ~20 KB file, no deps) or `node:util.parseArgs` |
 | Terminal colors, performance-critical | **picocolors** |
 | Terminal colors, classic API | **chalk** |
 | Single boxed message | **boxen** |
@@ -202,7 +202,7 @@ Each file exports a default React component plus optional `args`/`options` Zod s
 - Yoga flexbox is genuinely good for terminal layout.
 - Render-to-string and `stdin.write` input tests work with ink-testing-library (await after each write); add PTY tests for end-to-end keyboard flows.
 - React Devtools work (`DEV=true` env var).
-- Native alternate-screen mode since Ink 7: `render(<App />, {alternateScreen: true})` enters the alt screen and restores the terminal on exit. Historically Ink's biggest gap — previously papered over with `fullscreen-ink` hacks.
+- Native alternate-screen mode since Ink 7: `render(<App />, {alternateScreen: true})` enters the alt screen and restores the terminal on exit. Inline stays the default, and the option applies only in interactive mode; it is ignored in CI or with piped stdout. Historically Ink's biggest gap — previously papered over with `fullscreen-ink` hacks.
 - Used by some of the most-deployed CLIs in the world.
 
 **Weaknesses:**
@@ -210,7 +210,7 @@ Each file exports a default React component plus optional `args`/`options` Zod s
 - **ESM-only since Ink 4** (March 2023), and unlike chalk or commander it can't be `require()`d even on Node 22: Yoga's top-level await makes `require('ink')` throw `ERR_REQUIRE_ASYNC_MODULE` (Ink 6.8–8). From CommonJS, use `await import('ink')` or a bundler.
 - **Node 22 floor** on Ink 7 and 8 (React ≥ 19.2 on Ink 7, ≥ 19.3 on Ink 8); Ink 6 is the last major for the end-of-life Node 20.
 - **High-frequency re-renders used to flicker.** Ink 6.7+ ships synchronized updates (plus an opt-in Kitty keyboard protocol), which largely fixed this. When streaming LLM tokens or tailing logs, still prefer `useDeferredValue` (fully functional only with `render(<App />, {concurrent: true})`) or manual debounce; `<Static>` exists specifically to handle large append-only logs without re-rendering them. Ink 8's `incrementalRendering: true` rewrites only the changed part of each line, and a lower `maxFps` (default 30) cuts churn further.
-- **Screen-reader support is improving but terminal-bound.** Ink 6.2 added `aria-label` / `aria-hidden` / `aria-role` / `aria-state` props on `<Box>`/`<Text>` and screen-reader-aware rendering; as of 8.0.0 that mode is still opt-in via `render(..., {isScreenReaderEnabled: true})` or `INK_SCREEN_READER=true` — but a browser UI remains the stronger accessibility story.
+- **Screen-reader support is opt-in and partial.** Ink 6.2 added `aria-label` and `aria-hidden` (on `<Box>` and `<Text>`), `aria-role` and `aria-state` (on `<Box>`, from fixed lists), and a screen-reader renderer that turns on only through `render(..., {isScreenReaderEnabled: true})` or `INK_SCREEN_READER=true`. Nothing detects a screen reader; `useIsScreenReaderEnabled()` only reports that flag. The renderer prints linear text without borders or color and replaces children with their `aria-label`, but it still erases and rewrites the whole live region on every change. In that mode, move finished output into `<Static>`, keep the live part small, and stop per-tick spinners and timers; Gemini CLI's `--screen-reader` mode also swaps in a separate layout and a static spinner. Design guidance: `visual-patterns.md` → *Accessibility*.
 
 ## Pitfalls
 
@@ -334,7 +334,7 @@ Recommendation: **picocolors for libraries / internal tools, chalk for user-faci
 | **citty** | Growing | TS-first, declarative | UnJS ecosystem (Nuxt, Nitro, unbuild) |
 | **cac** | Niche | One ~20 KB file, no deps | Vite uses it; ESM-only since v7 |
 | **oclif** | Plugin marketplace | Class-per-command | Heroku, Salesforce, Shopify CLI; heaviest startup of the group |
-| **node:util.parseArgs** | stdlib | Argparse only | Experimental in Node 18, stable since Node 20; zero-dep; Mocha 12 moved to it from yargs |
+| **node:util.parseArgs** | stdlib | Argument parsing only | Experimental in Node 18, stable since Node 20; zero-dep; Mocha 12 moved to it from yargs |
 
 **Startup overhead** grows from the stdlib parser and cac, through commander and yargs, to oclif's plugin loader at the heavy end. Measure your own binary with `hyperfine 'mycli --version'` rather than trusting published numbers; for frequently-invoked CLIs the difference matters.
 
@@ -410,7 +410,7 @@ Retained-mode classics, pre-Ink era.
 
 ## Stack recommendations by project shape
 
-**Simple non-interactive CLI** (~50ms cold start, ~30 KB deps):
+**Simple non-interactive CLI** (~50ms cold start, 19 packages and under 1 MB installed):
 ```
 commander + picocolors + ora
 ```

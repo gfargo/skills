@@ -14,6 +14,7 @@ A deep dive into how users interact with TUIs — keybinding philosophy, focus m
 - [Mouse support — the real trade-off](#mouse-support--the-real-trade-off)
 - [Undo / redo](#undo--redo) · [Confirmation patterns](#confirmation-patterns)
 - [Forms and settings screens](#forms-and-settings-screens)
+- [Terminal modes and protocols](#terminal-modes-and-protocols) (paste, keyboard, mouse, focus, sync output, cursor, title, progress, color queries, terminal environments)
 - [Talking to the terminal emulator — OSC 8, 52, 9](#talking-to-the-terminal-emulator--osc-8-52-9)
 - Named patterns: [fzf](#the-fzf-pattern-in-detail) · [lazygit](#the-lazygit-pattern--multi-pane-with-numeric-tabs) · [k9s](#the-k9s-pattern--command-driven) · [helix](#the-helix-pattern--selection-first-modal-editing)
 - [Common interaction pitfalls](#common-interaction-pitfalls)
@@ -217,7 +218,7 @@ You're in a mode (NORMAL, INSERT, etc.). Keystrokes interpreted differently per 
 
 **Requires:**
 - Persistent mode indicator (status bar color or label).
-- Distinct cursor shapes per mode (block in NORMAL, bar in INSERT, underline in REPLACE).
+- Distinct cursor shapes per mode (block in NORMAL, bar in INSERT, underline in REPLACE), reset on exit (see *Terminal modes and protocols* → *Output*).
 - A way to learn modes — usually a tutorial or readme.
 
 **Trade-offs:**
@@ -355,7 +356,7 @@ Don't require mouse for:
 - Power-user actions.
 - Anything that should work over a serial console or restricted SSH.
 
-**Document the selection bypass** for your users' terminals, since the modifier isn't always Shift, and offer a way to turn mouse capture off. When mouse capture is on, regular click-drag selects via the app, not via the terminal. Users learn this pattern from one app and transfer it.
+**Document the selection bypass** for your users' terminals, since the modifier isn't always Shift, and offer a way to turn mouse capture off. Inside tmux 3.8+, the bypass is needed even for apps that never enable the mouse (*Terminal environments*). When mouse capture is on, regular click-drag selects via the app, not via the terminal. Users learn this pattern from one app and transfer it.
 
 ---
 
@@ -422,16 +423,7 @@ None of huh, Textual, or Clack/Inquirer ship a built-in "required field" visual 
 
 ### Dynamic/conditional fields
 
-huh's real mechanism is **`Group.WithHideFunc(func() bool)`** — it hides/shows an entire group (a step's worth of fields) based on a predicate re-evaluated as form state changes. This operates at *group* granularity; per-field hiding is not shipped (open feature requests only) — don't present it as available. For recomputing one field from another's value, huh has `OptionsFunc`/`TitleFunc`/`DescriptionFunc`, which take a callback plus the fields they depend on and re-run automatically:
-
-```go check=go/huh-options-func
-huh.NewSelect[string]().
-    OptionsFunc(func() []huh.Option[string] {
-        return huh.NewOptions(statesForCountry(country)...)
-    }, &country) // recomputed whenever `country` changes
-```
-
-Textual's equivalent is the `watch_<name>` convention on a `reactive()` attribute — when the reactive value changes, Textual calls `watch_<name>(old, new)`, and the idiomatic way to hide a dependent widget inside it is `widget.display = False` (removes from layout) or `.visible = False` (hides without reflowing).
+Show or hide dependent fields as earlier answers change, and recompute choices from those answers. Check what your framework ships before designing around it: Huh hides whole groups, not single fields (`ecosystem-go.md` → *Huh*), and Textual hides a dependent widget from a reactive watcher (`ecosystem-python.md` → *Reactive state*).
 
 ### Settings-screen behavior — be honest about what's settled
 
@@ -442,6 +434,64 @@ There's no single widely adopted TUI convention for settings persistence. Choose
 - **Defer to `$EDITOR`** (lazygit): no in-app settings form at all — press `e` in the Status panel to open the raw config file in the user's editor. Since v0.44, lazygit reloads the changed file when its terminal regains focus; only a few settings (refresh and fetch intervals, update checks) still need a restart, and lazygit says which. If you take this route, reload on focus or file change rather than demanding a restart.
 
 There is no settled convention for Esc-to-discard on a dirty form. Design and document it explicitly, and match confirmation friction to the cost of losing the edits.
+
+---
+
+## Terminal modes and protocols
+
+Full-screen apps switch terminal modes on with DECSET (`CSI ? n h`) and must switch each one off (`CSI ? n l`) on every exit path, including errors, panics, and suspend. That is the lifecycle contract in `SKILL.md`. Frameworks restore what they enable, but nothing you enable yourself: Ratatui's `restore()` undoes only raw mode and the alternate screen. Treat every capability query as optional. A terminal or multiplexer may answer late or never, so render a working default first and wait for replies with a timeout. xterm's [control sequences](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html) define the classic modes; newer ones have their own specs, linked below.
+
+### What each framework turns on
+
+| Mode | Bubble Tea v2 | crossterm / Ratatui | Textual | Ink 8 |
+|---|---|---|---|---|
+| Bracketed paste (2004) | On | Off | On | While a paste hook is mounted |
+| Kitty keyboard | On (disambiguate), plus `modifyOtherKeys` | Off | On (disambiguate, all keys, associated text) | Opt-in |
+| Mouse reporting | Off | Off | On, all motion | None |
+| Focus reports (1004) | Off | Off | On | None |
+| Synchronized output (2026) | When the terminal reports it; not queried over SSH unless `TERM` names a known terminal | The app's job | When reported; never inline | Always, on a TTY |
+| Grapheme clusters (2027) | Same query and SSH rule as 2026 | None | None | None |
+
+The ecosystem references own the API names.
+
+### Input
+
+- **Bracketed paste (2004).** The terminal wraps a paste in `CSI 200~` … `CSI 201~`, so the app can tell pasted text from typing. Without it, kitty and Ghostty turn a pasted newline into Enter, and the app may run half a paste as commands. Enable it for any free-text input, and decide per field what a multi-line paste means: a single-line field should keep the first line or refuse, never submit. xterm, kitty, Ghostty, and foot neutralize escape characters inside a paste so it cannot end itself early; don't assume every terminal does.
+- **Kitty keyboard protocol.** Push enhancement flags with `CSI > flags u` and pop them with `CSI < u` on exit; `CSI ? u` asks whether the terminal supports it ([spec](https://sw.kovidgoyal.net/kitty/keyboard-protocol/)). The first flag, "disambiguate", makes Shift+Enter, Ctrl+Enter, Ctrl+Tab, and Ctrl+I distinct from their legacy twins and sends plain Esc as its own code, so the app no longer guesses whether Esc starts an Alt sequence. Flag 2 adds key-release events. kitty, foot, Alacritty 0.13+, Ghostty, Windows Terminal 1.25+, and WezTerm (with `enable_kitty_keyboard`) support it; xterm's `modifyOtherKeys` (`CSI > 4 ; 2 m`) covers some of the same keys. Treat the extra keys as accelerators. Every action still needs a binding that works in the legacy encoding, which is what reaches you inside tmux, whose `extended-keys` option is off by default.
+- **Mouse reporting.** Mode 1000 reports clicks, 1002 adds drags, and 1003 adds every pointer move. Pair any of them with 1006 (SGR encoding), which reports releases and columns past 223. Enable the smallest mode the UI needs, since 1003 sends an event on every pointer move. crossterm's `EnableMouseCapture` turns on all of them at once. Any mouse mode takes over the terminal's own text selection; see *Mouse support* for the bypass and the off switch.
+- **Focus reports (1004).** The terminal sends `CSI I` and `CSI O` when its window gains or loses focus. Use them to pause animation and polling in the background and to refresh stale data on return; lazygit dims its panels on focus loss and refreshes on focus. tmux forwards them only with `focus-events on`, which is off by default.
+
+### Output
+
+- **Synchronized output (2026).** Wrap each frame in `CSI ? 2026 h` … `CSI ? 2026 l` so the terminal paints it at once instead of tearing mid-redraw ([spec](https://github.com/contour-terminal/vt-extensions/blob/05050a11e793c8f4362bf4e34a59ed3f7e5105fe/synchronized-output.md)), and detect support with DECRQM (`CSI ? 2026 $ p`). Always send the end sequence, error paths included; a terminal releases a stuck frame only after its own timeout (150 ms in Alacritty, 1 s in Ghostty, 2 s in kitty). kitty, WezTerm, foot, Alacritty, Ghostty, iTerm2, Windows Terminal 1.23.20211+, and tmux 3.7+ support it. Without it, write each frame in one `write`, send only changed cells, and hide the cursor while drawing.
+- **Cursor shape (DECSCUSR, `CSI n SP q`).** Pair shapes with modes (block in normal mode, bar in insert; see *Modal vs modeless*), and reset with `CSI 0 SP q` on exit. Windows Terminal, foot, and Ghostty read 0 as the user's configured cursor, but xterm reads it as a blinking block; only xterm patch 411 and later restore the user's choice, with `CSI 7 SP q`. The current shape can't be reliably queried, so it can't be saved. Ratatui's `restore()` doesn't touch the shape, so an app that sets one resets it.
+- **Window title (OSC 2).** Set a title only when it helps users find the window, for example the open file or the remote host. Push the old title with `CSI 22 ; 0 t` before setting yours and pop it with `CSI 23 ; 0 t` on exit. xterm, kitty, foot, iTerm2, Alacritty, and tmux keep that stack; WezTerm, Ghostty, and Windows Terminal ignore it, so the user's title is lost there. Bubble Tea clears the title on exit rather than restoring it.
+- **Progress (OSC 9;4).** `OSC 9 ; 4 ; state ; percent ST` shows progress on the tab or taskbar; state 0 removes it, 1 is normal, 2 error, 3 indeterminate, and 4 paused ([ConEmu](https://conemu.github.io/en/AnsiEscapeCodes.html#ConEmu_specific_OSC), [Windows Terminal](https://learn.microsoft.com/en-us/windows/terminal/tutorials/progress-bar-sequences)). Windows Terminal, Ghostty 1.2+, kitty, iTerm2, and tmux 3.7+ understand it. A terminal that knows only OSC 9 notifications may pop it up as a notification, so send it where you know it is supported, and clear it with state 0 on every exit. Bubble Tea's view-level progress bar sends it without checking.
+- **Shell-integration marks (OSC 133).** Prompt marks (`A` prompt, `B` input, `C` output, `D;exit-code` end) let a terminal jump between prompts, select one command's output, and show its exit status ([proposal](https://gitlab.freedesktop.org/Per_Bothner/specifications/-/blob/6b555699e41ab47ce210610d1a17cfc1662ec8d7/proposals/semantic-prompts.md)). A REPL should mark its own prompts, adding `aid=` when it runs inside a shell that marks them too; a full-screen TUI should not.
+- **Grapheme clusters (2027).** With mode 2027 on, the terminal sizes cells by grapheme cluster, so emoji sequences and combining marks take the width the app computed ([spec](https://github.com/contour-terminal/contour/blob/b719d05aed54f29ee7d629f5dd7d760b2f4b4320/docs/vt-extensions/unicode-core.md)). Bubble Tea turns it on when the terminal reports support; the other frameworks don't. Where it is off, app and terminal can still disagree; kitty, for one, segments graphemes without implementing 2027. Test emoji-heavy rows on the terminals you support.
+
+### Color and appearance
+
+- **Color depth.** `COLORTERM=truecolor` (or `24bit`) is the [convention](https://github.com/termstandard/colors/blob/caf0bb949ad64307d938a055f7fbec76ce65d91e/README.md#truecolor-detection) for 24-bit color; `TERM` alone proves little, since most terminals call themselves `xterm-256color`. Libraries read it differently: chalk 6 accepts only `truecolor` (with `24bit` it falls back to whatever `TERM` suggests), and crossterm consults `TERM` only when `COLORTERM` is unset. The variable is also the first thing lost over SSH. OpenSSH forwards no environment variables by default, and only recent Debian and Ubuntu releases send and accept `COLORTERM` at both ends. tmux 3.6+ sets `COLORTERM=truecolor` in its panes and downsamples for the outer terminal. To recover truecolor remotely, ask the terminal (XTGETTCAP `RGB`, which Bubble Tea's capability request sends) or let users set it; otherwise fall back to 256 colors over the 16-color theme from `visual-patterns.md` → *Color in depth*.
+- **Background color (OSC 11).** `OSC 11 ; ? ST` returns the background as `rgb:rrrr/gggg/bbbb`. The Linux console, PuTTY, mosh, GNU Screen, and ConEmu never answer, so follow it with a query every terminal answers (DA1, `CSI c`, or the status report `CSI 5 n`). If that reply arrives first, no background reply is coming. Cap the wait anyway (Neovim uses 100 ms, lazygit 500 ms for slow SSH, Lip Gloss 2 s), render with a default palette meanwhile, and switch when the answer arrives. tmux 3.4+ answers OSC 11 itself with the attached client's colors.
+- **Dark/light changes (2031).** After `CSI ? 2031 h`, the terminal reports a theme switch as `CSI ? 997 ; 1 n` (dark) or `CSI ? 997 ; 2 n` (light), and `CSI ? 996 n` asks for the current theme ([spec](https://github.com/contour-terminal/contour/blob/ab57ab3288c3dca5ff727311cb3f1401bac30549/docs/vt-extensions/color-palette-update-notifications.md)). kitty 0.38.1+, Ghostty, foot 1.23+, and iTerm2 3.7+ support it; WezTerm does not; tmux 3.8 forwards the outer terminal's theme. Probe with DECRQM before enabling it, re-query OSC 11 when a report arrives instead of trusting the report alone, as lazygit and Neovim do, and turn the mode off before handing the terminal to a child process. Bubble Tea passes the parsed reports through without enabling the mode; Textual, Ink, and Ratatui don't handle it.
+
+### Terminal environments
+
+The same app runs inside multiplexers, over SSH, and on Windows consoles. Each changes which keys arrive and which modes work:
+
+| Environment | What breaks | Detect | Fallback |
+|---|---|---|---|
+| tmux | The prefix `Ctrl+B` never reaches the app. A lone Esc waits `escape-time` before delivery (500 ms before 3.5, 10 ms since). Since 3.8 the `mouse` option defaults to on: unless the app enables mouse reporting, a plain drag starts tmux's copy-mode selection and the wheel enters copy mode (except on the alternate screen), while Ctrl-drag, Alt-drag, and Alt+right-click always belong to tmux | `$TMUX`, `TERM_PROGRAM=tmux` | Never make `Ctrl+B` the only path to an action; document the `tmux.conf` options below |
+| GNU screen | The prefix `Ctrl+A` never reaches the app. Truecolor is dropped unless `truecolor on` (5.0+); OSC sequences other than titles and colors are discarded; the alternate screen is off by default. The default flow control (`auto`) still passes Ctrl+S and Ctrl+Q to raw-mode apps on Linux, but `flow on` swallows them | `$STY`, `TERM=screen*` | 256-color theme; no OSC-dependent feature without a fallback; clear the screen on exit |
+| Zellij | Its default mode captures `Ctrl+G/P/T/N/H/S/O/Q/B` and many Alt keys. The Unlock-First preset (0.41+) frees the Ctrl keys but keeps its Alt bindings | `$ZELLIJ` | Keep a non-Ctrl, non-Alt path to every action; point users at Unlock-First |
+| SSH | Every capability query costs a network round trip; `COLORTERM` usually doesn't arrive; the remote may lack terminfo for the local terminal (kitty's `xterm-kitty`, Ghostty's entry); OSC 52 is the only clipboard path | `$SSH_TTY`, `$SSH_CONNECTION` | Bounded query timeouts, truecolor from a query or a user setting, `TERM=xterm-256color` when terminfo is missing (kitty's `kitten ssh` and Ghostty's SSH integration copy it over) |
+| Windows | No SIGTSTP, SIGWINCH, or SIGCONT: no job-control suspend, and resize arrives as console events. The legacy console has no VT processing before the Windows 10 Anniversary Update. Windows Terminal sets no `TERM` or `COLORTERM` | `WT_SESSION` (Windows Terminal) | A non-suspend path to the shell; target Windows Terminal, the default since Windows 11 22H2. Go, Rust, and Python write Unicode through the wide console API, so no `chcp 65001` is needed |
+| CI, pipes | No TTY: no prompts, no full-screen UI | `CI`, stdout not a terminal | `cli-basics.md` → *Interactivity* and *Output design* |
+
+Sources: [tmux.1](https://github.com/tmux/tmux/blob/3.8/tmux.1) and [CHANGES](https://github.com/tmux/tmux/blob/3.8/CHANGES) at 3.8, [screen.1](https://git.savannah.gnu.org/cgit/screen.git/tree/src/doc/screen.1?h=v.5.0.2) at 5.0.2, [Zellij's keybinding presets](https://zellij.dev/documentation/keybinding-presets.html), [Microsoft's console VT notes](https://devblogs.microsoft.com/commandline/new-experimental-console-features/), and the [Windows 11 default-terminal announcement](https://devblogs.microsoft.com/commandline/windows-terminal-is-now-the-default-in-windows-11/).
+
+**tmux options.** tmux answers or forwards most of these itself: synchronized output and progress (3.7+), hyperlinks (3.4+), the clipboard (`set-clipboard`), focus reports (`focus-events on`), extended keys (`extended-keys`), and the dark/light theme (3.8). Notifications and image protocols need DCS passthrough (`ESC P tmux; … ESC \` with every inner ESC doubled) and `allow-passthrough on`, which is off by default ([tmux.1](https://github.com/tmux/tmux/blob/3.8/tmux.1)). Several of these depend on options that are off by default, so document the `tmux.conf` lines your app needs.
 
 ---
 
@@ -477,8 +527,9 @@ Some interactions aren't between the user and your app — they're between your 
 
 ### The rest of the family, in one line each
 
-- **OSC 11** — query the terminal's background color (`OSC 11 ; ? ST`); the standard light/dark detection trick, covered under Theming in `visual-patterns.md`.
-- **Bracketed paste (mode 2004)** — the terminal wraps pastes in `ESC [200~ … ESC [201~` so apps can tell paste from typing; any prompt reading free text should enable it (frameworks generally do).
+- **OSC 11** (background color) and **mode 2031** (dark/light changes) — see *Terminal modes and protocols* → *Color and appearance*.
+- **OSC 9;4** (progress) and **OSC 133** (prompt marks) — see *Terminal modes and protocols* → *Output*.
+- **Bracketed paste (mode 2004)** — see *Terminal modes and protocols* → *Input*.
 
 ---
 
@@ -495,12 +546,7 @@ The pattern:
 5. **Enter** to confirm; **Esc** to cancel.
 6. **Optional preview pane** (right side) showing detail of hovered result.
 
-Implementation rules:
-- **Sub-100ms updates** as the user types.
-- **Match count visible** — `123/45678`.
-- **Highlight matched substring** within each result.
-- **Smart-case** by default (lowercase = case-insensitive).
-- **Sensible result ranking** — exact matches first, then prefix, then substring.
+Implementation rules: everything in *Search and filter* → *Filter* (sub-100ms updates, match count, highlighting, smart case), plus **sensible result ranking** — exact matches first, then prefix, then substring.
 
 For Go: `sahilm/fuzzy` or `lithammer/fuzzysearch`. For Rust: `nucleo` (used by helix) or `skim`'s matcher. For Python: `rapidfuzz`. For TS/JS: `fuse.js` or `fzy.js`.
 

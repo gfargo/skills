@@ -12,9 +12,11 @@ A deep dive into the visual design choices that make TUIs feel professional. The
 - [Responsive design — breakpoints and the floor](#responsive-design--breakpoints-and-the-floor)
 - [Visual hierarchy in monospace](#visual-hierarchy-in-monospace)
 - [Tables and lists](#tables-and-lists)
+- [Localization](#localization) (translation growth, right-to-left text, ambiguous-width characters, locale formatting)
 - [Status bars, headers, footers](#status-bars-headers-footers)
 - [Progress indicators](#progress-indicators) (includes disconnected/stale-data and timeout/cancel UX)
 - [Theming systems](#theming-systems) (includes [icons and Nerd Fonts](#icons-and-nerd-fonts--there-is-no-detection-only-opt-in))
+- [Accessibility](#accessibility) (screen readers, the plain-mode contract, framework support, motion)
 - [Common visual pitfalls](#common-visual-pitfalls)
 
 ---
@@ -135,7 +137,7 @@ Appears over the shell, does one thing, exits.
 
 **Implementation notes:**
 - Buffer choice (inline vs alt screen) and the exit contract are covered in full below — see *Inline, alt-screen, or overlay*.
-- Sub-100ms startup is non-negotiable — users summon these dozens of times a day.
+- Startup time is part of the design, because users summon these dozens of times a day; budgets are in `cli-basics.md` → *Startup time*.
 
 ### 7. Tabbed within panel
 
@@ -166,10 +168,7 @@ Before choosing a layout, choose a screen buffer. The **alternate screen** is a 
 
 ### Mechanics per framework
 
-- **Bubble Tea v2** — inline is the default. Alt screen is a declarative field on the view: `v := tea.NewView(...); v.AltScreen = true`. Because it's set per-frame, an app can switch between inline and alt-screen at runtime.
-- **Ink** — inline by default. Since Ink 7, the `alternateScreen: true` render option gives a vim-style alt screen that restores the previous terminal content on exit (interactive mode only — ignored in CI or with piped stdout).
-- **Textual** — `app.run(inline=True)` (since 0.55). Height is controlled with CSS on `Screen`: `Screen { &:inline { height: 50vh; } }`. Inline mode is not supported on Windows.
-- **Ratatui** — `Viewport::Inline(height)` via `Terminal::with_options`. To emit permanent log/output lines above the live UI, `Terminal::insert_before` is the sanctioned pattern: inserted lines push the viewport down, then scroll into scrollback above it.
+All four frameworks support both modes. How each enters the alternate screen or stays inline, and how it prints permanent lines above an inline UI, is in its ecosystem reference: `ecosystem-go.md`, `ecosystem-rust.md`, and `ecosystem-python.md` → *Lifecycle and terminal handoff*, and `ecosystem-typescript.md` → *Strengths and weaknesses*.
 
 ### The fzf model — bounded inline viewport
 
@@ -245,7 +244,7 @@ For legacy SSH, Windows conhost, `TERM=dumb`, or any system where Unicode might 
 - Heavy → `=|+++` (or just bold the ASCII)
 - Rounded `╭╮╰╯` → `+`
 
-Detect via the first set of `$LC_ALL` → `$LC_CTYPE` → `$LANG` containing UTF-8, and via terminal capability queries. Provide a config option (`--ascii`, `MYAPP_ASCII=1`) for explicit override.
+Detect it from the first non-empty variable among `$LC_ALL`, `$LC_CTYPE`, and `$LANG` (does it name UTF-8?), and via terminal capability queries. The ASCII set also sidesteps ambiguous-width box drawing; see *Localization*. Provide a config option (`--ascii`, `MYAPP_ASCII=1`) for explicit override.
 
 ---
 
@@ -253,7 +252,7 @@ Detect via the first set of `$LC_ALL` → `$LC_CTYPE` → `$LANG` containing UTF
 
 ### The three tiers
 
-Design in three layers: monochrome, 16 ANSI, then 256/truecolor. Use truecolor only when the terminal advertises it (`COLORTERM=truecolor` or `24bit`, or your framework's color-profile detection); `COLORTERM` often doesn't survive ssh or sudo, so let users force a tier. SKILL.md → *Meaning and access* sets the token and `NO_COLOR` rules this section builds on. The depth worth adding here: the user's terminal theme is sacred. The 16 ANSI colors are *theme variables* — the user's `red` might be `#ef5350` (Material), `#dc322f` (Solarized), or `#f38ba8` (Catppuccin). You design in terms of "red means error," not "use #ff0000 for errors."
+Design in three layers: monochrome, 16 ANSI, then 256/truecolor. Use truecolor only when the terminal advertises it (`COLORTERM=truecolor` or `24bit`, or your framework's color-profile detection); `COLORTERM` often doesn't survive ssh or sudo, so let users force a tier (detection details: `interaction-patterns.md` → *Terminal modes and protocols* → *Color and appearance*). SKILL.md → *Meaning and access* sets the token and `NO_COLOR` rules this section builds on. The depth worth adding here: the user's terminal theme is sacred. The 16 ANSI colors are *theme variables* — the user's `red` might be `#ef5350` (Material), `#dc322f` (Solarized), or `#f38ba8` (Catppuccin). You design in terms of "red means error," not "use #ff0000 for errors."
 
 ### Semantic tokens
 
@@ -473,11 +472,7 @@ Show which column is currently sorted: `▲` ascending, `▼` descending. Place 
 
 ### Filtering
 
-When filtering a list:
-
-- Show count: `123/45678` (the fzf convention).
-- Highlight matched substring within results.
-- Sub-100ms response — anything slower feels broken.
+Filter behavior (response time, match count, highlighting, smart case) is defined in `interaction-patterns.md` → *Search and filter*.
 
 ### Wide tables on narrow terminals
 
@@ -501,6 +496,19 @@ Detail-on-Enter is the highest-leverage pattern: you can show fewer columns, and
 - **Ink** needs an explicitly windowed slice or viewport for a changing collection. `<Static>` is only for finalized append-only history; it does not virtualize selectable, filtered, or otherwise mutable rows.
 
 The naive "render all rows, scroll viewport" approach degrades horribly at 10k+ items.
+
+---
+
+## Localization
+
+Terminal layouts assume a fixed number of cells per string, so translated text breaks them in ways a GUI would absorb.
+
+- **Budget for growth.** Translations run longer than English, and short strings grow most. IBM's globalization guidelines allow 100–200% extra space for strings up to 10 characters and 30% past 70 ([IBM](https://public.dhe.ibm.com/systems/power/docs/systemi/v5r2/en_US/rbagsmstp3.pdf), p. 16), and Microsoft's pseudo-localization lengthens text by 40% ([Microsoft](https://learn.microsoft.com/en-us/globalization/methodology/pseudolocalization)). Footer hints, column headers, and button labels are exactly those short strings. Size columns from the rendered text rather than the English labels, and let labels truncate before data does, with the full text in help.
+- **Test with a pseudo-locale.** Before any translation exists, run the UI with every string lengthened by about half and wrapped in markers, as Windows' `qps-ploc`, Android's `en-XA`, and ICU's `en_XA` do, then pressure-test the floor from *Responsive design*. A 60-column split with long labels is where layouts fail. General catalog tools such as gettext's `en@boldquot` and Translate Toolkit's `podebug` produce the strings.
+- **Right-to-left text.** Most terminals don't implement bidi. kitty, Alacritty, Ghostty, and Windows Terminal show Arabic and Hebrew in logical order, left to right; VTE (GNOME Terminal) and Konsole reorder lines by default, and WezTerm and iTerm2 only experimentally. The [terminal-wg recommendation](https://terminal-wg.pages.freedesktop.org/bidi/recommendation/basic-modes.html) has full-screen apps turn off the terminal's reordering (`CSI 8 l` on entry, `CSI 8 h` on exit), which leaves visual order to the app. Either way, keep right-to-left strings in their own field or line, never mix directions inside one cell, and don't promise correct shaping.
+- **Ambiguous-width characters.** Unicode's East Asian Ambiguous class ([UAX #11](https://www.unicode.org/reports/tr11/tr11-46.html)) is narrow by default and wide only in East Asian legacy contexts, and terminals expose the choice as a setting: iTerm2, VTE, and Windows Terminal 1.25+. Nearly all box drawing, including the rounded corners, is ambiguous, and so are `…`, `·`, `•`, `●`, `★`, and the arrows `←↑→↓`. When the app and the terminal disagree, borders and markers misalign. go-runewidth switches to wide under any `ja`, `ko`, or `zh` locale, while most other width libraries default to narrow. Test with the terminal's ambiguous-wide setting on, prefer narrow-class markers where they fit (`▸ ▾ ✓ ✗ ⋯` and the Braille spinner frames), and keep the ASCII border set from *ASCII fallback* one switch away.
+- **Numbers, dates, and units.** Format human output with the user's locale, because separators, grouping, and even digits differ: 1234567.891 is `1 234 567,891` in French and `12,34,567.891` in Indian English. Use the platform's locale library (`Intl`, Babel, `golang.org/x/text/message`, ICU4X) rather than hand-built strings. Keep machine output (`--json`, `--plain`) locale-independent: under a comma-decimal locale, POSIX `printf` both prints and parses numbers with commas, so pin `LC_NUMERIC=C` for anything a script will read. Fixed-width ISO-8601 dates remain the right choice inside tables.
+- **Locale detection.** Read `LC_ALL`, then the category variable (`LC_CTYPE` for encoding, `LC_NUMERIC` and `LC_TIME` for formats), then `LANG`, skipping empty values ([POSIX](https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap08.html)). `C.UTF-8` is a glibc name rather than a POSIX one, and CI may run in either the C locale or a full one (GitHub's macOS runners set `LC_ALL=en_US.UTF-8`), so tests should pin the locale they expect.
 
 ---
 
@@ -534,18 +542,12 @@ Some apps merge status and footer into one line. Some skip the header. Complex f
 
 - Ephemeral feedback: "Saved", "3 files changed", "Connecting...".
 - Auto-fade after a few seconds (or replace with idle state).
-- Vim-style mode indicators with **distinct cursor shapes**: block in NORMAL, bar in INSERT, underline in REPLACE.
+- The current mode, for modal apps (label and cursor shape: `interaction-patterns.md` → *Modal (vim-style)*).
 - Color-coded: green = OK / saved, yellow = pending, red = error.
 
 ### Footer hint bar
 
-For an action-rich full-screen app, use `key action · key action · key action`. Use `·` (middle dot) or `|` as separator. Show 3–5 shortcuts, updated per context (panel, mode). A small inline prompt can show its complete controls adjacent to the prompt instead.
-
-Examples:
-- htop: `F1Help F2Setup F3Search F4Filter F5Tree F6SortBy F7Nice- F8Nice+ F9Kill F10Quit`
-- lazygit: per-pane, e.g., in Files panel `space stage · c commit · P push · p pull · ?`
-
-Why this bar matters and how to auto-generate it from your keymap: `references/interaction-patterns.md` → *Layer 1: Always-visible footer hints*.
+Lay hints out as `key action · key action · key action`, with `·` (middle dot) or `|` as the separator; htop's `F1Help F2Setup F3Search …` strip is the classic form. Which shortcuts to show, how many, and how to generate them from your keymap: `interaction-patterns.md` → *Layer 1: Always-visible footer hints*.
 
 ---
 
@@ -565,6 +567,7 @@ Ten frames at ~80ms per frame (cli-spinners' `dots`) = smooth rotation. `cli-spi
 - Show only after ~100–200ms — instant work shouldn't flash a spinner.
 - Stop with a final state symbol: `✓` (success), `✗` (failure), or just disappear.
 - Suppress entirely on non-TTY. CI logs shouldn't have spinners.
+- In plain, screen-reader, or reduced-motion mode, print one static line instead (see *Accessibility*).
 
 ### Determinate progress bars
 
@@ -605,9 +608,10 @@ Ambient indication of background work without commanding attention. lazygit's au
 
 **Error states:** what failed and how to recover. "Connection refused. Press `r` to retry."
 
-**Disconnected/stale-data states, for anything backed by a live connection:** k9s ships real retry/backoff config for this (`apiServerTimeout`, `maxConnRetry`) — connection loss is a designed-for case, not an afterthought. Keeping the last-known-good view visible (dimmed, with a "stale" or "reconnecting" indicator) rather than blanking the screen is the reasonable approach and what the retry mechanics imply, though it's worth being honest that this exact visual treatment isn't independently documented anywhere — treat it as the sensible inference, not a cited standard. What *is* independently confirmed as a failure mode to avoid: btop has an open bug where a temporarily-unavailable GPU permanently rewrites the user's saved widget configuration instead of just hiding the metric until it reappears — a concrete example of *not* degrading gracefully. Don't let transient unavailability mutate persistent config.
-
-**Timeout and cancellation for a hung operation:** worth doing — show elapsed time once a wait crosses a second or two, and let `Esc` cancel an in-flight request — but be aware this isn't an established convention you can point to; even lazygit and gh only have partial, inconsistently-applied versions of it (spinners without a documented cancel contract, progress meters added feature-by-feature rather than systemically). There's also no TUI-specific sourced number for "give up and show an error after N seconds" — if you need one, the general web-UI guidance (indicator at 1s, determinate indicator past 3s) is a reasonable default to borrow, but say so rather than presenting it as TUI precedent. Prioritize showing elapsed time and allowing cancellation over picking a specific auto-timeout.
+**Disconnected, stale, or hung states:**
+- Keep the last-known-good view visible, dimmed, with a "stale" or "reconnecting" marker instead of blanking the screen. k9s's retry and backoff settings (`apiServerTimeout`, `maxConnRetry`) treat connection loss as a designed-for case.
+- Never let a transient failure rewrite persistent config. btop has an open bug where a temporarily unavailable GPU permanently rewrites the user's saved widget layout instead of hiding the metric until it returns.
+- Show elapsed time once a wait passes a second or two, and let `Esc` cancel the in-flight request. There is no TUI convention for an automatic give-up time, so prefer elapsed time and cancel over picking one.
 
 ---
 
@@ -656,11 +660,64 @@ The fallback ladder — Nerd Font glyphs → plain Unicode symbols → ASCII —
 
 ### Light/dark detection
 
-- OSC `]11;?` query — many terminals respond with their background color.
+- OSC `]11;?` query — many terminals respond with their background color; others never answer, so bound the wait. Mode 2031 reports later theme switches where supported. The query, timeout, and sentinel details are in `interaction-patterns.md` → *Terminal modes and protocols* → *Color and appearance*.
 - `$COLORFGBG` env var — set by some terminals (rxvt-derivatives).
 - Lipgloss v2's `LightDark` (`AdaptiveColor` in v1/compat) and Textual's runtime theme switching abstract this.
 
 If you support both light and dark, default to "auto" and let users override with `--theme dark`.
+
+---
+
+## Accessibility
+
+Be honest about the medium. Screen readers announce what changed on screen. NVDA finds new text in a terminal by diffing its contents, and Windows Terminal reports text as it is written ([NVDA user guide](https://download.nvaccess.org/releases/2026.2/documentation/userGuide.html#DiffAlgo), [Windows Terminal accessibility notes](https://github.com/microsoft/terminal/blob/e90f9a534cae047fccddacc1ee813a82929662d5/doc/terminal-a11y-2023.md)). A full-screen UI repaints constantly, so a spinner frame, a re-highlighted menu row, or a redrawn panel is heard as new text, and the layout itself carries no structure a listener can navigate. No TUI framework fixes that. The dependable answer is a linear mode offered alongside the full-screen UI.
+
+### What works for screen-reader users
+
+These rules come from Sampath, Merrick, and Macvean's study of blind developers using CLIs ([CHI '21](https://doi.org/10.1145/3411764.3445544)) and from the screen-reader modes that current agent CLIs ship:
+
+- **Append; don't repaint.** Report a state change as a new line (`Saved notes.txt`) instead of redrawing a status bar, and keep output in scrollback rather than on the alternate screen.
+- **Say it in words.** End every command with a status line, because silent success leaves users guessing. Make progress an occasional line (`Uploaded 3 of 10`), not spinner frames or a bar, which are read out character by character.
+- **Flatten structure.** Turn table rows into labelled `Header: value` lines or offer `--format csv|json`; aligned columns force users to memorize column order. Drop borders, box drawing, and ASCII art, which are heard as symbol noise.
+- **Number the choices.** An arrow-key menu is re-read whenever the highlight moves; print a numbered list and read a typed answer.
+- **Label lines.** Prefix output kinds (`error:`, `warning:`, speaker names in a chat) so a listener knows what a line is before hearing it.
+- **Write errors to be spoken.** Say what failed and what to do next, without regexes or symbol-dense jargon.
+- **Keep the cursor on the focus.** Screen readers and magnifiers follow the terminal cursor, which full-screen apps usually hide. Leave it on the focused field or row, or return it to the prompt after printing.
+
+[Claude Code's screen-reader mode](https://code.claude.com/docs/en/accessibility) is the most complete published example: flat text without box drawing, `Header: value` tables, numbered menus, labelled lines, no fullscreen, and the terminal bell when it needs input.
+
+### The plain-mode contract
+
+`SKILL.md` requires a `--no-tui`-style mode when automation or accessibility needs linear output. Treat it as part of the product, not a degraded fallback. It must meet these terms:
+
+- It reaches every action the TUI offers; nothing is TUI-only.
+- It follows the rules above and the stream contract in `cli-basics.md` → *Stdin / stdout / stderr discipline*. Results go to stdout; prompts and progress go to stderr.
+- Meaning never depends on color, column position, or layout.
+- Every prompt has a flag or config equivalent, so the mode can run unattended.
+- Users turn it on once, through a flag, an environment variable, or a persistent setting, and it starts automatically when stdout is not a terminal. Don't count on detecting a screen reader. Ink, Gemini CLI, and Claude Code all require an explicit opt-in. gh's `GH_ACCESSIBLE_PROMPTER` and `GH_SPINNER_DISABLED`, with matching config keys, are the model.
+
+### Framework support
+
+None of these makes a full-screen app accessible by itself. Check the ecosystem reference before relying on a feature:
+
+| Stack | What exists | Details |
+|---|---|---|
+| Huh (Go) | Accessible mode: plain line-by-line prompts with numbered choices and no full-screen redraw. The app switches it on, and Huh does so itself only for `TERM=dumb` | `ecosystem-go.md` → *Huh* |
+| Bubble Tea, Bubbles | Nothing screen-reader-specific. Build the linear mode yourself and use Huh's accessible mode for prompts, as gh does | `ecosystem-go.md` → *Huh* |
+| Ink | `aria-*` props and an opt-in screen-reader renderer that prints linear text without borders or color; the live region is still rewritten on every change | `ecosystem-typescript.md` → *Strengths and weaknesses* |
+| Textual | No screen-reader support, and `textual serve` adds none. Built-in animations honor a reduced-motion level | `ecosystem-python.md` → *Dev tools* |
+| Ratatui | Nothing in the library; accessibility is an open tracking issue | `ecosystem-rust.md` → *Pitfalls* |
+
+### Motion
+
+- Treat animation as decoration with an off switch, and default it off in plain and screen-reader modes. No cross-tool reduced-motion variable exists, so name yours and document it, as gh (`GH_SPINNER_DISABLED`) and Textual (`TEXTUAL_ANIMATIONS=none`) do.
+- With motion off, print one static line (`Working…`) and then the final status, rather than a frozen spinner frame.
+- Never blink text (see *Typography in monospace*), and don't animate content the user is reading.
+
+### Keyboard, focus, and color
+
+- Every action is keyboard-reachable (`SKILL.md`), and focus shows through at least one cue besides color (border weight, reverse video, or a marker), combined as `interaction-patterns.md` → *Focus indicators* describes.
+- Color rules live in *Color and accessibility* and *Honor `NO_COLOR`* above. Keep a 16-color theme: those colors follow the user's terminal palette, including high-contrast palettes, while truecolor values override it.
 
 ---
 
