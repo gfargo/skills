@@ -84,6 +84,16 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   15 up to 32px and 25 at 64px, standard 4 (the top of its quoted 1 to 4),
   sidescroller 3. What is still open is in
   [Pro tilesets](#pro-tilesets-what-is-left-after-04130) below.
+- **Older terrain fields as identity.** `terrainMode`,
+  `terrainTransitionSize`, `terrainRaggedness`, `terrainShapeStyle`,
+  `terrainView`, the deprecated `terrainSpreadX`/`terrainSlopeSize`, and
+  the descriptions as sent (the prompt wrapped in the style's prefix and
+  suffix) never entered `specHash`, and hashing them would have made every
+  existing terrain entry stale at once. Closed without a migration: submit
+  records them on the entry as `terrainSettings` (kept through history and
+  `restore --generation`), and the plan marks a set stale naming each one
+  that changed. An entry from before the record has none and stays current
+  until it is next regenerated. The 0.4.130 fields stay hashed (when set).
 - **Pro-tier full-bleed background generation** (`generate-image-v2`, PixelLab's
   Pro image tier) at arbitrary custom aspect ratios (not just square) —
   already measured at 40 generations in `docs/ENDPOINTS.md`, but `pixflux`
@@ -444,11 +454,6 @@ connecting different tilesets") are now mostly covered; see the closed
   `/create-tileset-sidescroller` has no `mode` field, and its tile size is
   16 or 32. pixelkiln's sidescroller sets use whatever model that endpoint
   runs.
-- **Older terrain fields are not identity.** `terrainMode`,
-  `terrainTransitionSize`, `terrainRaggedness`, `terrainShapeStyle`, and
-  `terrainView` never entered `specHash`, so changing one does not mark a set stale. The 0.4.130 fields
-  are hashed (when set). Hashing the older ones would make every existing
-  terrain lock entry stale at once, so it needs a deliberate migration.
 - **Wall-continuation twins export as duplicates.** The 25-tile layout has
   21 distinct corner combinations. Four tiles share corners with a twin and
   differ only in `pattern_4x4`, which pixelkiln records but cannot express in
@@ -456,9 +461,12 @@ connecting different tilesets") are now mostly covered; see the closed
 - **Measured once:** a Pro 32px set billed exactly 15, and a second set
   connected to it through `lower_base_tile_id` billed exactly 15 and shared
   its sand (docs/ENDPOINTS.md). `terrainRoundness: 2` with
-  `terrainConnectDiagonals` gave clean 45° edges. **Unexercised live:**
-  Pro at 64px, standard sets, `upper_base_tile_id`, and the other shape
-  controls. Sidescroller tile counts at transition
+  `terrainConnectDiagonals` gave clean 45° edges. A second round confirmed
+  Pro at 64px (exactly 25, and 25 tiles at transition 0.5), edge slope and
+  an uneven boundary (15 at 32px), standard sets (3 each, under the planned
+  4), and connecting through `upper_base_tile_id`. **Still open:** a
+  standard set cannot connect to a Pro set, because connected sets share a
+  style and a style fixes the mode. Sidescroller tile counts at transition
   sizes other than 0.25 are assumed to be 16. The one sidescroller call
   returned `metadata.transition_size: 0.0` although 0.25 was sent.
 - **Prompting advice** lives in the skill reference: end each terrain on

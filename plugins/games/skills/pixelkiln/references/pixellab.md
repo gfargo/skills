@@ -24,7 +24,7 @@ providers, or before any PixelLab account operation.
 | `pixflux` | Closed palettes or full-bleed backgrounds up to 400×400 | 1 generation |
 | `1dir` | Reference-guided work or several candidates | 10–25 generations |
 | `tiles` | Ground variations or connected structures | 10–25 generations |
-| `terrain` | A two-terrain Wang tileset for elevation (grass-to-water, floor-to-cliff), or a sidescroller platform set | Sidescroller **3**, measured. Pro **15** at 32px, measured (a connected second set also billed 15). Pro 25 at 64px and standard 4 (quoted 1–4) are PixelLab's quotes |
+| `terrain` | A two-terrain Wang tileset for elevation (grass-to-water, floor-to-cliff), or a sidescroller platform set | Sidescroller **3**, measured. Pro **15** at 32px, measured (a connected second set also billed 15). Pro **25** at 64px and standard **3** measured too; standard plans at 4, the top of PixelLab's quoted 1–4 |
 | `imagePro` | A larger or non-square background/scene, or real style transfer; takes the style `palette` as a hard constraint | **10–25 generations** by canvas (64px billed 10; a flat 40 before October 2026) |
 | `character` | A character in 4 or 8 directions, its poses (`state`), its loops (`animation`), bust `portrait`s, and `outfit` transfers onto a loop | 1 per standard base, 6 per pro-flash base at 64px (1 from a `reference`), 20–40 per pose or portrait, 1 per template loop per direction (2–4 as `skeleton-v3`), 20 per outfit (measured once) |
 | `objectPro` | A prop, creature, or vehicle that needs rotations, states, or loops but has no character rig | 6 per base at 64px (1 from a `reference`), **unmeasured**; assumed to match `character` pro-flash |
@@ -127,6 +127,16 @@ reads it:
 both now, so leave them out. Reference images, a forced palette, and the
 remaining tunables (`tileStrength`, `tilesetAdherence`) are not modeled.
 
+Changing any terrain setting marks the set stale. The Pro shape controls
+are in `specHash`; the older ones (`terrainMode`, `terrainTransitionSize`,
+`terrainRaggedness`, `terrainShapeStyle`, `terrainView`, the deprecated
+pair) and the style's `promptPrefix`/`promptSuffix` are recorded on the
+lock entry as `terrainSettings` instead, and `plan` names the one that
+changed ("terrainTransitionSize changed from 0.25 to 0.5"). A setting is
+compared as written: adding `terrainMode: "standard"` to a style that left
+it out is a change, even though it is the default. A set generated before
+this record existed has none and stays current until it is regenerated.
+
 **Connected sets.** An asset's `connect` makes one of its terrains the very
 terrain of another set in the same style, so ocean, sand, and grass paint on
 one map: `"connect": { "lower": { "of": "coast", "terrain": "upper" } }` is
@@ -136,7 +146,8 @@ the next wave), PixelLab draws the shared terrain from its base tile, and
 regenerating the other set makes this one stale. Sharing a terrain makes it
 available, not blendable: two terrains with no set of their own between
 them still meet with a hard (in PixelLab's map tool, black) edge, so plan a
-set for every pair that touches.
+set for every pair that touches. Connected sets share one style, and a style
+fixes `terrainMode`, so a standard set cannot connect to a Pro one.
 
 **Sidescroller sets.** `terrainOrientation: "sidescroller"` switches to
 `/create-tileset-sidescroller`: a platform seen from the side. The prompt is
