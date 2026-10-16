@@ -23,6 +23,16 @@ Read this reference when an asset declares `revision`.
   `simple` or `complex`, optional `description` hint) cuts the background out
   to transparency and leaves a locked palette intact; 1 generation measured.
   It refuses a set parent.
+- `normal-map` (PixelLab `/normal-map`, 8–512px per side, PNG only,
+  optional `convention` `opengl` or `directx`) makes lighting data, not art:
+  0.5 generation per call, unmeasured. A loop's frames go as one strip
+  (`frames: N`, up to 32) so the light stays steady, and come back cut into
+  the parent's `-frame-NN` files; a character's directions are refused (one
+  revision per direction instead). It is refused in a style with
+  `enforcePalette` or `quality`, since snapping or grid repair would wreck
+  the normals: put it in a plain style and point at the parent with
+  `fromStyle`. A mirror of a normal map is refused too. For a loose file,
+  `pixelkiln normal-map --from <png> [--frames N]` asks before spending.
 - `reduce-colors` and `correct-pixelart` send no prompt to the provider — the
   asset's `prompt` stays a manifest-only label. `numColors`/`paletteImage`
   are mutually exclusive; a `paletteImage` has no size relationship to the
@@ -93,8 +103,10 @@ Read this reference when an asset declares `revision`.
   paint-over-the-sprite mask editor that writes the mask PNG into the project),
   `animate`, `animate-pixminimax`, `interpolate` (another same-size sprite as
   the ending keyframe), `reduce-colors`, `correct-pixelart`, or
-  `remove-background`; on a PixelLab frame set (or a character's directions)
-  `edit-animation`, `reduce-colors`, or `correct-pixelart`; on ComfyUI
+  `remove-background`, or `normal-map`; on a PixelLab frame set (or a
+  character's directions) `edit-animation`, `reduce-colors`, or
+  `correct-pixelart`, plus `normal-map` on a loop (never in a style with
+  `enforcePalette` or `quality`); on ComfyUI
   `image-to-image` or `inpaint`; on other providers `image-to-image`. On a
   single PixelLab sprite, "+ Skeleton animation" creates an `animate-skeleton`
   revision: poses from a project file, pasted JSON, or "Estimate poses" (one

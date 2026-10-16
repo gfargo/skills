@@ -24,14 +24,14 @@ providers, or before any PixelLab account operation.
 | `pixflux` | Closed palettes or full-bleed backgrounds up to 400×400 | 1 generation |
 | `1dir` | Reference-guided work or several candidates | 10–25 generations |
 | `tiles` | Ground variations or connected structures | 10–25 generations |
-| `terrain` | A two-terrain Wang tileset for elevation (grass-to-water, floor-to-cliff) | Unmeasured; borrows the same 10–25 canvas tiers |
-| `imagePro` | A larger or non-square background/scene, or real style transfer | **10–25 generations** by canvas (64px billed 10; a flat 40 before October 2026) |
+| `terrain` | A two-terrain Wang tileset for elevation (grass-to-water, floor-to-cliff), or a sidescroller platform set | Sidescroller **3**, measured. Pro **15** at 32px, measured (a connected second set also billed 15). Pro 25 at 64px and standard 4 (quoted 1–4) are PixelLab's quotes |
+| `imagePro` | A larger or non-square background/scene, or real style transfer; takes the style `palette` as a hard constraint | **10–25 generations** by canvas (64px billed 10; a flat 40 before October 2026) |
 | `character` | A character in 4 or 8 directions, its poses (`state`), its loops (`animation`), bust `portrait`s, and `outfit` transfers onto a loop | 1 per standard base, 6 per pro-flash base at 64px (1 from a `reference`), 20–40 per pose or portrait, 1 per template loop per direction (2–4 as `skeleton-v3`), 20 per outfit (measured once) |
 | `objectPro` | A prop, creature, or vehicle that needs rotations, states, or loops but has no character rig | 6 per base at 64px (1 from a `reference`), **unmeasured**; assumed to match `character` pro-flash |
 | `isometricTile` | One standalone isometric tile (a raised mesa, a cliff block), 16–64px | **1 generation, measured once** (32px `block`) |
 | `uiAsset` | A UI panel, button, health bar, or other chrome, from precise `pieces` and/or named `elements` | **20 generations, measured once** (256×192); the borrowed canvas-tier estimate still predicts 40 |
 | `uiElement` | One UI element (button, slot, bar, dialogue box) from the prompt, 16px and up, with an optional concept image | 10–25 generations, **unmeasured** |
-| `vfx` | An animated effect (explosion, aura, lightning, status icons) from a `vfx` block: a `preset` or `recipe`, `parts`, an optional `sprite` to build around; cut into an ordered frame set | **free** (a renderer, not a model) |
+| `vfx` | An animated effect (explosion, aura, lightning, status icons) from a `vfx` block: a `preset` or `recipe`, `parts`, an optional `sprite` to build around; cut into an ordered frame set. Or a `description` (+ `artist`: `lite`/`pro`, a local PNG `sprite`) for PixelLab's paid VFX artist | workbench **free** (a renderer, not a model); `description`: lite 1–5, pro 6–28 by sprite size, billed up to 2× the quote, which is what plan counts (a lite effect with no sprite billed its quote of 1, measured once) |
 | `imageProFlash` | A styled still on the Pro Flash model (style image + `styleTraits`), 16–256px in multiples of 4; also the natural source for a Pro Flash character's south sprite | 5–9 generations, PixelLab's provisional quote |
 
 `tiles` is not limited to top-down ground: `tileType` selects the projection
@@ -92,26 +92,72 @@ into the three fields before the call, with the style's `promptPrefix`/
 `promptSuffix` wrapped around each one individually rather than the whole
 string once.
 
-A set is always 16 tiles, or 25 when `terrainTransitionSize` is exactly 1
-(the "cliff" layout, where the visual step between levels is tallest and
-corners take a third "transition" value); it always resolves straight to a
-finished asset with one output file per tile, never a candidate sheet to
-pick from, the same as a connectable `tiles` set. `terrainTileSize` sets the
-tile edge (16 or 32 in both modes, 64 needs `terrainMode: "pro"`, default
-16). `terrainMode: "standard"` (the default) is the classic Wang pipeline,
+A set is 16 tiles, or 25 in the tall layout: `terrainTransitionSize` 1 on
+standard, or anything above 0.4 on Pro (so 0.5 is already 25 tiles). There
+the step between levels is a wall and corners take a third "transition"
+value. A set always resolves straight to a finished asset with one output
+file per tile, never a candidate sheet to pick from, the same as a
+connectable `tiles` set. `terrainTileSize` sets the tile edge (16 or 32 in
+both modes, 64 needs `terrainMode: "pro"`, default 16).
+`terrainTransitionSize` is 0, 0.25, 0.5, or 1 without `terrainShapeStyle`
+(any value 0–1 with it, though above 0.5 switches to an extended 32-tile
+layout pixelkiln does not model). Pro reads it as wall height: 0 flat, 0.25
+a low bank, 0.5 or 1 a proper wall. `terrainView` picks `low top-down` or
+`high top-down` (API default). The style's `outline`/`shading`/`detail`
+apply here too.
+
+`terrainMode: "standard"` (the default) is the classic Wang pipeline,
 optionally with `terrainShapeStyle` (`square` or `round`) for a fixed
-procedural boundary; `terrainMode: "pro"` swaps that for its own shape
-controls — `terrainSpreadX` (0 = steep, 1 = gradual boundary), `terrainSlopeSize`
-(slope on three sides as a fraction of wall height), and `terrainRaggedness`
-(0 = smooth, 1 = rough boundary noise) — and rejects `terrainShapeStyle`
-outright. `terrainTransitionSize` (0, 0.25, 0.5, or 1 without `terrainShapeStyle`;
-any value 0–1 with it, though above 0.5 switches to an extended 32-tile
-layout pixelkiln does not yet model) controls how pronounced the elevation
-step looks. `terrainView` picks `low top-down` or `high top-down` (API
-default). The style's existing `outline`/`shading`/`detail` apply here too.
-Reference images, a forced palette, and the `pro` pipeline's own tunables
-beyond the three above (`tileStrength`, `tilesetAdherence`, and the rest)
-are not modeled yet; open an issue if a real project needs one of them.
+procedural boundary. `terrainMode: "pro"` rejects `terrainShapeStyle` and
+shapes the border with its own controls, each refused outside the mode that
+reads it:
+
+- `terrainRaggedness` (0–1): boundary noise, half strength on tall sets.
+- `terrainRoundness` (0–2): 0 square corners, 1 round, 2 cut at 45°. Pro or
+  a shape style; above 1 needs Pro. Defaults 0.85 (Pro), 0.6 (shape style).
+- `terrainBoundaryAmplitude` (0–0.3) and `terrainBoundarySeed` (integer):
+  how far the border meanders, and which meander. Pro, or a shape style.
+- `terrainStepSlope` (0–2): 0 a cliff to 2 a gentle slope. Pro at
+  `terrainTransitionSize` 0.25 only.
+- `terrainConnectDiagonals` (boolean): joins the two diagonal tiles'
+  upper corners into one area. Pro only. With `terrainRoundness: 2` it is
+  the fix for 45° paths and coastlines that break into one island per step.
+
+`terrainSpreadX` and `terrainSlopeSize` are deprecated: PixelLab ignores
+both now, so leave them out. Reference images, a forced palette, and the
+remaining tunables (`tileStrength`, `tilesetAdherence`) are not modeled.
+
+**Connected sets.** An asset's `connect` makes one of its terrains the very
+terrain of another set in the same style, so ocean, sand, and grass paint on
+one map: `"connect": { "lower": { "of": "coast", "terrain": "upper" } }` is
+"this set's lower terrain is `coast`'s upper". The other set generates
+first (the connected one is blocked until it is downloaded, and follows in
+the next wave), PixelLab draws the shared terrain from its base tile, and
+regenerating the other set makes this one stale. Sharing a terrain makes it
+available, not blendable: two terrains with no set of their own between
+them still meet with a hard (in PixelLab's map tool, black) edge, so plan a
+set for every pair that touches.
+
+**Sidescroller sets.** `terrainOrientation: "sidescroller"` switches to
+`/create-tileset-sidescroller`: a platform seen from the side. The prompt is
+`"1). mossy stone bricks texture 2). green grass texture"`, the platform
+body and the layer on top of it; the other side of every edge is empty air.
+16 or 32px tiles, `terrainTransitionSize` (the top layer's height) 0, 0.25,
+0.5, or 1, and none of the mode, view, or shape controls. It billed 3
+generations for 16 tiles. A sidescroller set connects only its platform
+(`lower`) terrain. PixelLab's Pro sidescroller (64px, taller top layers) is
+web-app only.
+
+Prompt each terrain as a short material ending on the word "texture" ("deep
+ocean water texture", "plain smooth sand texture"). PixelLab's "Pro
+Tilesets: Full Guide" shows that without it, Pro sometimes scatters rocks,
+shells, or plants over the surface. Pro needs no long prompts. Put style
+words in the style's `promptPrefix`/`promptSuffix` so they wrap each
+terrain: color, season, and outline words ("autumn", "frosty", "bold black
+outlines with cel shading", "four-color green palette") change the set the
+most, so try two or three at a time. With `terrainTransitionSize` above 0.4
+on Pro, the third numbered description is the wall itself ("crumbling
+dungeon brick wall").
 
 `1dir`'s own candidate mechanic (the size-tiered table above) normally
 returns N variations of one prompt. `/create-1-direction-object` also takes
@@ -147,7 +193,13 @@ and a 64×64 call billed exactly 10 (`docs/ENDPOINTS.md`, "October 2026 Pro
 price cut"). One call still returns
 several candidates to pick from by the same size tiering as `1dir` (up to
 42px: 64, 43–85px: 16, 86–170px: 4, above 170px: 1), reached through the
-generic background-job endpoint the same way a `revision` is. Reference
+generic background-job endpoint the same way a `revision` is. The style's
+`palette` goes out as the beta `target_palette` (PixelLab 0.4.130): every
+pixel of every candidate lands on those 2–256 colours, at no extra cost.
+`paletteName` (needs `palette`) names it, and `maxColors` (2–64) caps each
+candidate's colours, with or without a palette. PixelLab's `smart` palette
+mapping is not wrapped: it is "single images only", and this endpoint
+returns a grid of candidates below 171px. Reference
 images and a style image (`reference_images`, `style_image` +
 `style_options`, up to 4 subject references plus one style reference) exist
 on this endpoint but are not modeled yet, and the completed job's exact
@@ -412,6 +464,9 @@ An asset that declares `revision` against a PixelLab style calls `inpaint`
 (palette quantize, `/reduce-colors`), `correct-pixelart` (edge/noise
 cleanup, `/correct-pixelart`), `remove-background` (transparent cutout,
 `/remove-background`, one image up to 400x400, 1 generation measured),
+`normal-map` (`/normal-map`, lighting normals for a sprite or a loop sent as
+one strip, 0.5 generation per call from the docs, a background job; refused
+on a set of directions and in a style with `enforcePalette` or `quality`),
 `animate` (`/animate-with-text-v3`),
 `animate-pixminimax` (`/animate-pixminimax`, beta, tier 1 subscription or
 higher), `animate-skeleton` (`/animate-with-skeleton-v3`, also beta/tier
@@ -463,12 +518,42 @@ the `direction` value. The same tutorial states outright that PixMiniMax
 "allows up to 40 frames," a second, independent (though still not
 live-billed) confirmation of the ceiling above.
 
+Try `vfx` first for an effect: the workbench is free and re-renders the same
+pixels. When presets and parts do not get there and the person would rather
+describe the effect, a `vfx` `description` asks PixelLab's paid VFX artist
+(`POST /vfx`) instead: it cannot be mixed with `preset`/`recipe`/`parts`/`fps`,
+its `sprite` must be a local PNG up to 512px (no `character:` references), and
+every regeneration is a new, re-billed effect. Tell the person the price
+before running it.
+Generate one instead when the effect is a drawn object or a character's own
+motion, such as a water hammer that bursts into a splash, a sword turning
+into lightning, or a mage casting. PixelLab's "How to Make Animated Pixel
+Art VFX" tutorial gives a pattern for that which maps onto what exists. Draw a sheet of different effects in
+one `imagePro` call by listing one effect per frame in the prompt (64×64
+returns 16 candidates), pick one, and animate it with `animate-pixminimax`.
+Pin the ending with `lastFrame` when the motion should arrive somewhere: a
+crystal cluster grown from a few hand-placed blue pixels, a splash after a
+hammer strike, or the same sprite edited by a `"engine": "pro-flash"`
+revision ("make it a lightning-enhanced version") so the clip transforms one
+into the other. Describe motion, not appearance, and ask a loop to "return to
+its original state at the end." Give a growing effect room: the tutorial
+pads most sources onto a larger canvas first, which here means a hand-padded
+`source` file, since a revision sends its parent at its own size. Then clean
+up: `driftThreshold` or a `reduce-colors` revision over the frame set for
+color flicker, `correct-pixelart` or `pixelkiln edit` for stray pixels, and
+check a loop's last frame against its first for a duplicate.
+
+Budget `animate-pixminimax` above what `plan` prints for long clips. The MCP
+tool prices it by generation time (64×64 at 16 frames is 2, at 40 frames is
+6), while pixelkiln's placeholder estimate gives 1 and 3. Tell the person the
+plan may under-read before a long PixMiniMax run.
+
 Parts of Pro Flash image editing are still outside this adapter: `edit`'s
 reference-image method, palette correction, inpaint's output-method choice,
 and inpainting with surrounding `context_image`. See
 [pixellab-roadmap.md](./pixellab-roadmap.md) for the confirmed shape.
 
-Five commands call PixelLab on loose files, outside the manifest and
+Six commands call PixelLab on loose files, outside the manifest and
 lockfile. `pixelkiln unzoom --from <file> --out <file>` returns upscaled
 pixel art to its native grid; run it before outside art becomes a
 `reference` or `styleImages` entry (input at least 256×256, result opaque,
@@ -476,14 +561,20 @@ cost unmeasured). `pixelkiln pixelate --from <file> --out <file>` converts a
 photo, painting, or render into pixel art with Image to Pixel Art Pro Flash:
 PixelLab picks the output size, the result is opaque on near-white, an optional
 `--description` steers the style, and it costs a flat 6 generations
-(measured) after asking first. `pixelkiln vfx --preset <name> --out <base>`
+(measured) after asking first. `pixelkiln normal-map --from <png> [--frames
+N] [--convention opengl|directx]` writes a sprite's normal map, or a strip's
+(N equal frames side by side, up to 32), for 0.5 generation after asking
+first. `pixelkiln vfx --preset <name> --out <base>`
 builds an animated effect (explosion, heal pillar, lightning strike, aura,
 and more; `pixelkiln vfx presets` and `vfx parts` list them) with PixelLab's
 VFX workbench, which is free and reached through PixelLab's MCP server. Add
 `--part <name>` to layer parts, `--sprite <file|character:<id>:<dir>>` to
 build around a character, and `--game-pack` for per-piece clips. It writes a
 spritesheet, GIF, atlas JSON, and a `.vfx.json` record whose recipe
-re-renders the same effect with `--recipe`. `pixelkiln font --description <text> --out <base>` writes a
+re-renders the same effect with `--recipe`. `pixelkiln vfx --description
+<text> [--artist pro] --out <base>` asks the paid VFX artist instead, prints
+the quote and its 2× ceiling, and asks first; with `--effect <id>` it changes
+that saved effect in place. `pixelkiln font --description <text> --out <base>` writes a
 `.ttf` and an 80-glyph atlas for PixelLab's documented 15 generations, and
 asks first. `pixelkiln estimate-skeleton <image> --out <file>` starts an
 `animate-skeleton` keypoints file, and `pixelkiln skeleton-preview <asset>`
