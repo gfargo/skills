@@ -388,7 +388,11 @@ character with PixelLab's skeleton video model instead of redrawing each
 frame: the steadiest template loop, 2 to 4 generations and 3 to 5 minutes
 per direction (plan budgets 4), beta, Tier 1 plans and up. Prefer it over a
 plain template loop when identity drift matters and the account qualifies;
-plain `template` stays the 1-generation option.
+plain `template` stays the 1-generation option. It needs a base with a
+stored 3D skeleton: a `v3` base has one (measured, 3 generations); a
+`standard` base has none, so PixelLab answers a bare 500 and pixelkiln
+refuses the loop at `plan`/`validate`, pointing at `mode: "template"`. `pro`
+and `pro-flash` bases are not refused but are unverified.
 
 A named `template` loop (`walk`, `breathing-idle`, and similar) is trained
 mostly on characters with empty hands, and reliably struggles once a
