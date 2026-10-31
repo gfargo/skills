@@ -31,6 +31,23 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
 
 ## Already closed since this catalog's research began
 
+- **Sentence-driven skeleton-v3 loops** — a character loop with
+  `mode: "skeleton-v3"`, no `template`, and a `prompt` animates the sentence
+  on `/characters/animations` (`action_description`, 3 to 15 `frames`). Billed
+  exactly 3 generations for 8 frames at 64px, frames back at 96×96; the plan
+  budgets 4. See `docs/CHARACTERS.md`, "Loops from a sentence".
+- **Shared motion across the directions of a sentence loop** — the first
+  direction of `directions` is submitted as a new animation; each later one
+  follows in the next wave with the leader's recorded `animation_group_id` and
+  the group's `animation_name`, so every direction is drawn from one 3D motion
+  (`animation.motionFrom`, lock `motionShare`). Adding a direction to a
+  generated loop appends into its group, a regenerated leader marks followers
+  stale, and a leader with no recorded group falls back to one request per
+  direction. **A live append is verified** (adding `west` to a generated `south`
+  loop billed 3, joined the leader's group, and moved with the same timing).
+  Still unverified: that deleting one direction leaves the group and the
+  others' motion intact.
+
 - **Skeleton-v3 template loops** — `/characters/animations`'
   `mode: "skeleton-v3"` poses a template with the skeleton video model
   (2 to 4 generations and 3 to 5 minutes per direction, beta, Tier 1 and
@@ -297,8 +314,9 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   is wrapped too, but deliberately kept outside the manifest pipeline — a
   standalone `pixelkiln estimate-skeleton` CLI command, not a
   `resolveSpecs`/`estimate()`-time call — so `animate-skeleton`'s submission
-  composes exactly one never-tested-live PixelLab endpoint, not two chained
-  together. **Correcting this catalog's own prior research**: this entry
+  composes exactly one PixelLab endpoint, not two chained together. Both
+  endpoints have since run live once (8 frames billed exactly 3), and the
+  run found that `description` is required, which `plan` now enforces. **Correcting this catalog's own prior research**: this entry
   used to also claim a distinct "animation to animation" endpoint existed,
   for transferring an existing walk cycle's motion onto a different
   character. Checked against the live `animate_with_skeleton_v3` MCP tool
