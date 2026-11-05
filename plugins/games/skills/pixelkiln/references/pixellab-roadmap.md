@@ -401,6 +401,21 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   candidates below 171px. **Measured once**: a 64×64 call with the Game Boy
   palette billed exactly 10, and the picked candidate used only those four
   colours.
+  **Rolled out** to the other wrapped tools that take it: `imageProFlash`,
+  `objectPro` bases, states and `pro` animations, `1dir`, `tiles`, `uiAsset`,
+  `uiElement`, Pro and Pro Flash character bases, states, portraits and
+  outfits, top-down Pro `terrain`, and `interpolate`/`edit-animation`
+  revisions, through one helper (`targetPaletteBody`). `paletteName` and
+  `maxColors` are style fields on those generators, hashed only when set; an
+  existing style `palette` keeps its hash and is simply sent on regeneration.
+  **Mocked tests only, costs unmeasured** outside `imagePro`. **Not done**:
+  standard character bases and every character animation (their verified
+  `color_image` + `force_colors` swatch stays, and the schema does not say it
+  combines), the standard terrain set (the field is "mode='pro' only"), the
+  `v3` object animation (`pro` only), `/create-tileset-sidescroller` and the
+  `animate*` revisions (no field), `pixelkiln pixelate` (no style), and the
+  unwrapped `/create-8-direction-object`, `/generate-with-style-v2`,
+  `/image-to-pixelart-pro`, `/animate-with-text-v2`, `/tilesets`.
 - **October 2026 Pro price cut** — PixelLab 0.4.128 moved every Pro tool from
   20/25/40 to 10/15/25 generations. Cost estimates now use the new prices,
   and `imagePro` (`generate-image-v2`) is tiered instead of a flat 40: a

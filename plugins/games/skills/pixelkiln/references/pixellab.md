@@ -208,7 +208,15 @@ generic background-job endpoint the same way a `revision` is. The style's
 `palette` goes out as the beta `target_palette` (PixelLab 0.4.130): every
 pixel of every candidate lands on those 2–256 colours, at no extra cost.
 `paletteName` (needs `palette`) names it, and `maxColors` (2–64) caps each
-candidate's colours, with or without a palette. PixelLab's `smart` palette
+candidate's colours, with or without a palette. The same `target_palette`
+now also goes out for `imageProFlash`, `objectPro` (bases, states, `pro`
+animations), `1dir`, `tiles`, `uiAsset`, `uiElement`, Pro and Pro Flash
+characters (bases, states, portraits, outfits), top-down Pro `terrain`, and
+`interpolate`/`edit-animation` revisions, with `paletteName`/`maxColors`
+accepted on those generators' styles. Standard characters and character
+animations keep their `color_image` swatch, `pixflux` its own, and the
+costs are unmeasured outside `imagePro` (see `docs/GENERATORS.md#target-palette`).
+PixelLab's `smart` palette
 mapping is not wrapped: it is "single images only", and this endpoint
 returns a grid of candidates below 171px. Reference
 images and a style image (`reference_images`, `style_image` +
