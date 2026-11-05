@@ -46,7 +46,8 @@ Two engine-specific data points worth the same treatment:
   pro engine at the same canvas ("even at 256×256, we can generate eight
   animation frames, which we didn't have before even with the pro tools") —
   consistent with pixelkiln's documented `character` cost model, where v3
-  scales `ceil(size²×8/65536)` and pro sits in the flat 20–40 tier regardless.
+  scales `ceil(size²×8/65536)` and pro sits in the flat 10–25 tier regardless (20–40 before PixelLab's
+  October 2026 cut).
   Prefer v3 over pro for a loop unless pro's quality is specifically needed.
 - `portrait-character-pro` (not part of this adapter) renders sizes 128 and
   160 at "2K" internal resolution versus "1K" for 16–64, at a measured cost

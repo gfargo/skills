@@ -26,11 +26,11 @@ providers, or before any PixelLab account operation.
 | `tiles` | Ground variations or connected structures | 10–25 generations |
 | `terrain` | A two-terrain Wang tileset for elevation (grass-to-water, floor-to-cliff), or a sidescroller platform set | Sidescroller **3**, measured. Pro **15** at 32px, measured (a connected second set also billed 15). Pro **25** at 64px and standard **3** measured too; standard plans at 4, the top of PixelLab's quoted 1–4 |
 | `imagePro` | A larger or non-square background/scene, or real style transfer; takes the style `palette` as a hard constraint | **10–25 generations** by canvas (64px billed 10; a flat 40 before October 2026) |
-| `character` | A character in 4 or 8 directions, its poses (`state`), its loops (`animation`), bust `portrait`s, and `outfit` transfers onto a loop | 1 per standard base, 6 per pro-flash base at 64px (1 from a `reference`), 20–40 per pose or portrait, 1 per template loop per direction (2–4 as `skeleton-v3`), 20 per outfit (measured once) |
-| `objectPro` | A prop, creature, or vehicle that needs rotations, states, or loops but has no character rig | 6 per base at 64px (1 from a `reference`), **unmeasured**; assumed to match `character` pro-flash |
+| `character` | A character in 4 or 8 directions, its poses (`state`), its loops (`animation`), bust `portrait`s, and `outfit` transfers onto a loop | 1 per standard base, 6 per pro-flash base at 64px (1 from a `reference`), 10–25 per pose or portrait (20–40 before the October 2026 cut), 1 per template loop per direction (2–4 as `skeleton-v3`), 20 per outfit (measured once, before the cut) |
+| `objectPro` | A prop, creature, or vehicle that needs rotations, states, or loops but has no character rig | 6 per base (billed 6 at 32px, November 2026; 1 from a `reference`, unmeasured); states and animations assumed to match `character` pro-flash |
 | `isometricTile` | One standalone isometric tile (a raised mesa, a cliff block), 16–64px | **1 generation, measured once** (32px `block`) |
-| `uiAsset` | A UI panel, button, health bar, or other chrome, from precise `pieces` and/or named `elements` | **20 generations, measured once** (256×192); the borrowed canvas-tier estimate still predicts 40 |
-| `uiElement` | One UI element (button, slot, bar, dialogue box) from the prompt, 16px and up, with an optional concept image | 10–25 generations, **unmeasured** |
+| `uiAsset` | A UI panel, button, health bar, or other chrome, from precise `pieces` and/or named `elements` | **20 generations, measured once** (256×192, before the October 2026 cut); the borrowed canvas-tier estimate still predicts the 25 ceiling |
+| `uiElement` | One UI element (button, slot, bar, dialogue box) from the prompt, 16px and up, with an optional concept image | 10–25 generations (a 32×32 call billed 10; 64 candidates at 32×32) |
 | `vfx` | An animated effect (explosion, aura, lightning, status icons) from a `vfx` block: a `preset` or `recipe`, `parts`, an optional `sprite` to build around; cut into an ordered frame set. Or a `description` (+ `artist`: `lite`/`pro`, a local PNG `sprite`) for PixelLab's paid VFX artist | workbench **free** (a renderer, not a model); `description`: lite 1–5, pro 6–28 by sprite size, billed up to 2× the quote, which is what plan counts (a lite effect with no sprite billed its quote of 1, measured once) |
 | `imageProFlash` | A styled still on the Pro Flash model (style image + `styleTraits`), 16–256px in multiples of 4; also the natural source for a Pro Flash character's south sprite | 5–9 generations, PixelLab's provisional quote |
 
@@ -243,11 +243,12 @@ target `south` — passing any other direction, or `directions` at all to the
 API for a 1-direction object, is what the endpoint itself 400s on.
 Regenerating an already-animated direction is simpler than `character`'s
 own "find and delete the prior take" dance: `/objects/{id}/animations` has
-its own `replace_existing` flag, which PixelKiln always passes. **Cost is
-not independently measured** — `objectProCost()` assumes it prices
-identically to `character` pro-flash's own measured formula
-(`proFlashCharacterCost`), since the request bodies are near-identical minus
-`template_id`; treat it as a working assumption pending a live check.
+its own `replace_existing` flag, which PixelKiln always passes. **Cost: the
+base is measured** (32px billed 6 and returned 8 files, November 2026) —
+`objectProCost()` prices it identically to `character` pro-flash's own
+measured formula (`proFlashCharacterCost`), since the request bodies are
+near-identical minus `template_id`. States and `pro` animations are still
+that assumption, pending a live check.
 `objectPro`'s own place in `pixelkiln adopt` is not modeled yet. (N distinct
 objects from one call, PixelLab's Object Creator "pack", is the `1dir`
 `batch` field above.) `pixelkiln gallery --edit` offers "+ New state" and
@@ -317,10 +318,11 @@ dedicated "state" mechanism — it is a plain `revision` (image-to-image) of
 the base panel, the same mechanism every other generator already has.
 **Cost: confirmed live at one data point.** A real 256×192 call against a
 Tier 2 account billed exactly 20 generations (balance 4979.8 → 4959.8),
-matching the low end of the `create_ui_asset` MCP tool's "20–40 generations"
-claim. No dedicated cost branch exists, so pixelkiln still estimates it with
-the same canvas-tier formula `1dir`/`tiles` use — which predicts the 40
-ceiling for every valid `uiAsset` size, since the 192px floor already clears
+matching the low end of the `create_ui_asset` MCP tool's then "20–40
+generations" claim (PixelLab cut it to 10–25 in October 2026). No dedicated
+cost branch exists, so pixelkiln still estimates it with the same
+canvas-tier formula `1dir`/`tiles` use — which predicts the 25 ceiling
+for every valid `uiAsset` size, since the 192px floor already clears
 that formula's own top tier. The measured call disproves the formula for
 this generator (it billed the floor price at an area where `1dir`/`tiles`
 would bill the ceiling), but the estimate is left as-is, an intentional
@@ -331,9 +333,10 @@ the prompt, no `pieces`/`elements` layout, sizes from 16×16 (up to 792 wide,
 688 tall, aspect-gated upstream). A style's one `styleImages` entry becomes
 the `concept_image` (design guidance); `uiColorPalette` is sent as
 `color_palette`. Reach for it over `uiAsset` for icons, slots, and small
-widgets under `uiAsset`'s 192px floor. Unmeasured: the plan borrows the
-10/15/25 canvas tiers, and the completed job's shape has not been observed
-live.
+widgets under `uiAsset`'s 192px floor. A 32×32 call billed 10 and returned
+64 candidates (November 2026); the plan borrows the 10/15/25 canvas tiers and
+counts candidates by size (`uiElementCandidateCount`), and sizes other than
+32px are unbilled.
 
 `imageProFlash` wraps `/create-image-pro-flash`, the Pro Flash model as a plain
 still: priced 5 up to 96px, 6 up to 208px, 9 beyond (PixelLab's own

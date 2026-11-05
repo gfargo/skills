@@ -153,11 +153,11 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   rotation, states, or animation for a plain object. Closed by the
   `objectPro` generator; see `pixellab.md`. It reuses `character`'s own
   `asset.state`/`asset.animation` authoring shapes and mirror handling
-  rather than inventing parallel ones. **Cost is not independently
-  measured**: assumed identical to `character` pro-flash's own measured
-  formula, since the request bodies are near-identical minus `template_id` —
-  a real assumption pending a live check, not a confirmed number the way
-  `isometricTile`'s now is. Batch "pack" generation (N distinct objects from
+  rather than inventing parallel ones. **The base is measured**: a 32px
+  base billed 6 and returned 8 files (November 2026), matching `character`
+  pro-flash's formula, which the estimate assumes since the request bodies
+  are near-identical minus `template_id`. States and `pro` animations remain
+  that assumption pending a live check. Batch "pack" generation (N distinct objects from
   one call) is covered on `1dir` by its `batch` field — see below.
 - **Pixel correction** (`/correct-pixelart`, a dedicated cleanup pass distinct
   from `image-to-pixelart` — the latter is documented, docs/ENDPOINTS.md, as
@@ -209,17 +209,21 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   `pixellab.md`. `lastFrame` covers both the "pin an ending pose" and the
   "chain from a prior animation's final frame" cases — it is just a
   manifest-relative image, which can be any earlier asset's own generated
-  output file. **Neither endpoint's cost or completed-response shape is
-  measured against a live account** — cost borrows `character`'s own
-  measured v3-loop formula, and the frame list is extracted defensively from
-  several plausible field names rather than one confirmed shape, the way
-  `pollRevision` already handles `image-to-image`/`inpaint`. The dedicated
+  output file. **Both ran live in November 2026**: `animate` at 64×64 and 4 frames
+  billed 1 (5 frames back, input included), `animate-pixminimax` billed 1 at 8
+  frames and 2 at 16 (9 and 17 frames back), and the completed jobs were read
+  correctly. `animate`'s cost borrows `character`'s measured v3-loop formula;
+  `animate-pixminimax` follows PixelLab's published table. The frame list is
+  still extracted defensively from several plausible field names. The dedicated
   **Interpolate** endpoint (`/interpolation-v2`, a separate "Pro" two-keyframe
   tool distinct from `last_frame` pinning on the animate endpoints above) is
   now wrapped too, as the `interpolate` revision mode (parent = start
   keyframe, required `lastFrame` = end keyframe), alongside
   `/edit-animation-v2` as `edit-animation` (one text edit across a whole
-  frame set). Both unmeasured, both borrowing the 10/15/25 Pro canvas tiers.
+  frame set). Both ran live in November 2026 and billed 10 each (a 64×64
+  `interpolate` returning 14 frames; an `edit-animation` of a 9-frame 64×64
+  set), on the 10/15/25 Pro canvas tiers; the planner used to read them as 25
+  and is calibrated. Larger canvases are unbilled.
   Real demonstrated demand for Interpolate: "Level Up Your Game: Custom
   Sprite Animation Tutorial" used it
   repeatedly, in Aseprite via PixelLab's own extension, as the fix for an
@@ -284,7 +288,8 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   `/generate-ui-v2` ("Generate UI (Pro)": one element from a description,
   16px and up, with an optional concept image and palette hint), found on a
   later full read of the path list and now wrapped as the `uiElement`
-  generator; see `docs/GENERATORS.md#uielement`. Unmeasured. **Splitting into individual elements and
+  generator; see `docs/GENERATORS.md#uielement`. A 32×32 call billed 10 and
+  returned 64 candidates (November 2026). **Splitting into individual elements and
   nine-slice are not buildable at all**: `GET /ui-assets/{id}` returns one
   flat composited image with no per-piece sub-image or bounding-box data in
   its response schema, regardless of how many `pieces` the request declared.
@@ -303,10 +308,11 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   this one. **Cost confirmed live, and it overturned the borrowed
   formula**: a real 256x192 call against a Tier 2 account billed exactly 20
   generations (balance 4979.8 → 4959.8), the low end of the `create_ui_asset`
-  MCP tool description's "20-40 generations" claim. No dedicated cost branch
+  MCP tool description's then "20-40 generations" claim (10-25 since the
+  October 2026 cut). No dedicated cost branch
   exists, so `uiAsset` still falls through to the same canvas-tier formula
   `1dir`/`tiles` use, which — given this generator's 192px floor — always
-  predicts the 40 ceiling; the measured call billed the floor price at an
+  predicts the 25 ceiling; the measured call billed the floor price at an
   area well past where that formula would bill the ceiling, so it does not
   actually describe `uiAsset`'s pricing. Left unpatched from one data point:
   over-reading stays the safe `--budget` direction, but a real call likely
@@ -542,15 +548,17 @@ missing:
 - **Trimming a loop's repeated frame.** The video deletes the last frame of
   a fireball loop because it repeats the first. `animate_image_pixminimax`
   says `get_image` returns `frame_count + 1` images with index 0 the input
-  unchanged. pixelkiln's frame extraction for this mode is unexercised live,
-  so whether the input frame lands in the set is unknown. There is no
-  manifest way to drop a frame either way.
-- **The cost estimate under-reads long clips.** The MCP tool now prices
-  PixMiniMax by generation time: 64×64 at 4, 8, 16, and 40 frames costs 1, 1,
-  2, and 6 generations. pixelkiln's placeholder,
-  `ceil(width × height × frames / 65536)`, gives 1, 1, 1, and 3 for the same
-  clips. Unlike every other unmeasured estimate here, this one under-reads,
-  so `--budget` can be too low.
+  unchanged. Confirmed live (November 2026): an 8-frame clip came back as 9
+  frames and a 16-frame clip as 17, with pixelkiln's frame extraction reading
+  all of them, so the input frame is in the set. There is no manifest way to
+  drop a frame.
+- **The cost estimate used to under-read long clips (fixed).** The MCP tool
+  prices PixMiniMax by generation time: 64×64 at 4, 8, 16, and 40 frames costs
+  1, 1, 2, and 6 generations. pixelkiln's old placeholder,
+  `ceil(width × height × frames / 65536)`, gave 1, 1, 1, and 3, and a live
+  16-frame clip billed 2 against a plan of 1. The estimate (`pixMiniMaxCost`)
+  now follows the published points and extrapolates above them; the 40-frame
+  point has not been billed.
 - **Joining two clips.** The video joins two orb animations end to end in
   Aseprite. pixelkiln has no frame-set concatenation; `lastFrame` can pin a
   clip's ending to another clip's frame file, but the two sets stay separate.
