@@ -215,16 +215,15 @@ characters (bases, states, portraits, outfits), top-down Pro `terrain`, and
 `interpolate`/`edit-animation` revisions, with `paletteName`/`maxColors`
 accepted on those generators' styles. Standard characters and character
 animations keep their `color_image` swatch, `pixflux` its own, and the
-costs are unmeasured outside `imagePro` (see `docs/GENERATORS.md#target-palette`).
+costs with a palette are measured for `imagePro`, `imageProFlash`, and `tiles`, and unmeasured elsewhere (see `docs/GENERATORS.md#target-palette`).
 PixelLab's `smart` palette
 mapping is not wrapped: it is "single images only", and this endpoint
 returns a grid of candidates below 171px. Reference
 images and a style image (`reference_images`, `style_image` +
 `style_options`, up to 4 subject references plus one style reference) exist
-on this endpoint but are not modeled yet, and the completed job's exact
-response shape has not been exercised against a live account — see
-`pollImagePro` in `src/providers/pixellab.ts` if a real call ever
-contradicts what it assumes.
+on this endpoint but are not modeled yet. The completed job has been read
+live (a 64×64 call billed 10); `pollImagePro` in `src/providers/pixellab.ts`
+still reads it defensively.
 
 `objectPro` wraps `/create-object-pro-flash` — the same base → state →
 animation family `character` uses (`docs/CHARACTERS.md`), for PixelLab's
@@ -529,17 +528,17 @@ written as a set (a character's directions, an animation's frames) goes to
 so every member shares one palette or edit; the other modes refuse a set
 parent. `reduce-colors`/`correct-pixelart` cost is **confirmed live**: a flat
 0.1 generations each (not the schema's dollar-denominated example), at least
-at a 32×32 source — `animate`/`animate-pixminimax`/`animate-skeleton`/
-`interpolate`/`edit-animation` remain schema-only and unexercised.
-`animate-skeleton`'s request field names come from the live
-`animate_with_skeleton_v3` MCP tool schema, a more authoritative source than
-the OpenAPI document the others are taken from, but still not an observed
-call. `estimate-skeleton` (auto-derive a reference image's own keypoints) is
+at a 32×32 source — `animate`/`animate-pixminimax`/`interpolate`/
+`edit-animation` remain schema-only and unexercised.
+`animate-skeleton` has run live (8 frames billed exactly 3); its request
+field names come from the `animate_with_skeleton_v3` MCP tool schema, a more
+authoritative source than the OpenAPI document the others are taken from, and
+the run found `description` is required. `estimate-skeleton` (auto-derive a reference image's own keypoints) is
 wrapped too, but deliberately as a standalone `pixelkiln estimate-skeleton`
 CLI command, never inside `submitRevision` — see
 [pixellab-roadmap.md](./pixellab-roadmap.md)'s now-closed skeleton-driven-
-animation entry for why composing two never-tested-live endpoints in one
-submission was rejected.
+animation entry for why composing two endpoints in one submission was
+rejected.
 
 `animate-pixminimax`'s `direction` + `enhancePrompt` combination has a
 measured-in-practice gotcha, not just a schema quirk: PixelLab's own tutorial
@@ -621,7 +620,11 @@ high-fidelity showcase asset) rather than a default, read
 [pixellab-fidelity.md](./pixellab-fidelity.md) before choosing `size`,
 `detail`, `shading`, or `outline`. For what PixelLab can do that this adapter
 does not yet reach at all, read [pixellab-roadmap.md](./pixellab-roadmap.md)
-before proposing new work.
+before proposing new work. To pick which PixelLab endpoint to spend a live run
+on, read the [validation
+ledger](https://pixelkiln.griffen.codes/docs/endpoints#validation-ledger)
+(`docs/ENDPOINTS.md`): it rates each endpoint by what has been measured and
+what a wrong guess could cost.
 
 For setup and current field constraints, use
 <https://pixelkiln.griffen.codes/docs/pixellab>. When working in the PixelKiln

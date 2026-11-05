@@ -26,6 +26,11 @@ confirmed gap with real demand rather than a guess. Nothing here is a
 commitment to build it — it is what is missing, with the evidence for why it
 might matter, so that decision can be made deliberately.
 
+For which PixelLab endpoints PixelKiln already calls, and how much is measured
+about each (so a live run can be chosen by risk), read the [validation
+ledger](https://pixelkiln.griffen.codes/docs/endpoints#validation-ledger)
+(`docs/ENDPOINTS.md`).
+
 Each open entry names the PixelLab tool, why pixelkiln doesn't have it today,
 and which tutorial(s) demonstrated real (not hypothetical) demand for it.
 
@@ -52,7 +57,8 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   `mode: "skeleton-v3"` poses a template with the skeleton video model
   (2 to 4 generations and 3 to 5 minutes per direction, beta, Tier 1 and
   up). Now a character loop's `mode: "skeleton-v3"`; see
-  `docs/CHARACTERS.md`. Not yet billed live.
+  `docs/CHARACTERS.md`. A template loop on a v3 character billed 3
+  generations live (October 2026).
 
 - **Masked inpainting and whole-image editing** — was the single largest gap
   found (routine in at least 6 of the 26 tutorials). Now the `revision` asset
@@ -118,8 +124,8 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   generating a 384×216 scene background in "How to Make Animated Pixel Art
   Scenes with PixelLab." Closed by the `imagePro` generator; see
   `pixellab.md`. Reference images and a style image
-  (`reference_images`/`style_image`) remain unmodeled, and the completed
-  job's response shape has not itself been exercised live yet.
+  (`reference_images`/`style_image`) remain unmodeled. The completed job's
+  response shape has been read live (a 64×64 call billed 10).
 - **A standalone single isometric tile** (`/create-isometric-tile`, a third,
   separate path to isometric content distinct from both `tiles`'
   `tileType: "isometric"` and `terrain`'s `/create-tileset`, which is
@@ -325,9 +331,8 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   `animate-with-skeleton-v3` against a *different* reference image reusing
   those keypoints — a two-endpoint composition a person can now build by
   hand with the primitives above, not a primitive pixelkiln itself
-  automates. Neither `animate-with-skeleton-v3` nor `estimate-skeleton` has
-  been exercised against a live account; request field names come from the
-  MCP tool schema, not an observed call.
+  automates. Both endpoints have run live (see above); request field names
+  came from the MCP tool schema, and the live run found `description` is required.
 - **Remove background** (`/remove-background`, a transparent cutout of one
   image up to 400x400, `simple` or `complex` task, optional foreground text
   hint) — closed by the `revision` asset shape's `remove-background` mode.
@@ -408,7 +413,7 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   revisions, through one helper (`targetPaletteBody`). `paletteName` and
   `maxColors` are style fields on those generators, hashed only when set; an
   existing style `palette` keeps its hash and is simply sent on regeneration.
-  **Mocked tests only, costs unmeasured** outside `imagePro`. **Not done**:
+  **Measured live** with a Game Boy palette: `imageProFlash` (a 32×32 still, 5, only the four colours) and `tiles` (4 tiles at 16px, 10, every candidate in the palette), matching the plan, as `imagePro` did (10). **The other routes are mocked tests only, costs unmeasured.** **Not done**:
   standard character bases and every character animation (their verified
   `color_image` + `force_colors` swatch stays, and the schema does not say it
   combines), the standard terrain set (the field is "mode='pro' only"), the
@@ -451,7 +456,8 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   - Cost quotes (provisional): `create` 5 at 32 and 64px, 9 at 256px;
     `edit`/`inpaint` 5 at 64px, `inpaint` 6 at 128px; `character` and
     `object` at 64px `image: 5, rotations: 1, total: 6`, matching
-    pixelkiln's measured `proFlashCharacterCost`. None billed live yet.
+    pixelkiln's measured `proFlashCharacterCost`. Only `create` has been billed
+    live (a 32×32 still with a palette, 5); `edit` and `inpaint` have not.
 
   Still unmodeled: `edit`'s `"reference"` method, the
   `use_color_palette_correction` flag (snap the edit back to the source's
