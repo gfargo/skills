@@ -560,7 +560,10 @@ pixels. When presets and parts do not get there and the person would rather
 describe the effect, a `vfx` `description` asks PixelLab's paid VFX artist
 (`POST /vfx`) instead: it cannot be mixed with `preset`/`recipe`/`parts`/`fps`,
 its `sprite` must be a local PNG up to 512px (no `character:` references), and
-every regeneration is a new, re-billed effect. Tell the person the price
+every regeneration is a new, re-billed effect. For an effect that follows an
+animation, make the sprite a horizontal PNG strip and set `spriteFrames` (2 to
+32, strip at most 1,024px wide) and optionally `spriteFps`; the lite quote
+goes up by 1. Tell the person the price
 before running it.
 Generate one instead when the effect is a drawn object or a character's own
 motion, such as a water hammer that bursts into a splash, a sword turning
@@ -609,9 +612,14 @@ VFX workbench, which is free and reached through PixelLab's MCP server. Add
 build around a character, and `--game-pack` for per-piece clips. It writes a
 spritesheet, GIF, atlas JSON, and a `.vfx.json` record whose recipe
 re-renders the same effect with `--recipe`. `pixelkiln vfx --description
-<text> [--artist pro] --out <base>` asks the paid VFX artist instead, prints
+<text> [--artist pro] [--sprite <png|gif> --sprite-frames <n> --sprite-fps <n>]
+--out <base>` asks the paid VFX artist instead (a GIF or a PNG strip makes the
+effect follow the animation), prints
 the quote and its 2× ceiling, and asks first; with `--effect <id>` it changes
-that saved effect in place. `pixelkiln font --description <text> --out <base>` writes a
+that saved effect in place. `pixelkiln talk visemes --from <portrait.png> --out <base>` draws a
+portrait's mouth positions once (3 generations at 64px; asks first; the portrait needs a visible
+mouth), after which `pixelkiln talk gif` and `talk plan --from <base>.talk.json --text <line>`
+lip-sync any line for free. `pixelkiln font --description <text> --out <base>` writes a
 `.ttf` and an 80-glyph atlas for PixelLab's documented 15 generations, and
 asks first. `pixelkiln estimate-skeleton <image> --out <file>` starts an
 `animate-skeleton` keypoints file, and `pixelkiln skeleton-preview <asset>`
