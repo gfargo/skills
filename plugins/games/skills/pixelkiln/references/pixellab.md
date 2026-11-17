@@ -560,6 +560,10 @@ the `direction` value. The same tutorial states outright that PixMiniMax
 "allows up to 40 frames," a second, independent (though still not
 live-billed) confirmation of the ceiling above.
 
+For effects, [vfx.md](./vfx.md) is the full reference: which source to
+pick (this workbench, the paid artist, or the local pixelfx library), every
+control, and how a game plays the result. The notes here are PixelLab's side.
+
 Try `vfx` first for an effect: the workbench is free and re-renders the same
 pixels. When presets and parts do not get there and the person would rather
 describe the effect, a `vfx` `description` asks PixelLab's paid VFX artist
@@ -616,7 +620,10 @@ VFX workbench, which is free and reached through PixelLab's MCP server. Add
 `--part <name>` to layer parts, `--sprite <file|character:<id>:<dir>>` to
 build around a character, and `--game-pack` for per-piece clips. It writes a
 spritesheet, GIF, atlas JSON, and a `.vfx.json` record whose recipe
-re-renders the same effect with `--recipe`. `pixelkiln vfx --description
+re-renders the same effect with `--recipe`. `pixelkiln vfx --lib pixelfx
+--effect <category>/<name> --out <base>` renders one locally from the
+pixelfx library instead, with no PixelLab call (see [vfx.md](./vfx.md)).
+`pixelkiln vfx --description
 <text> [--artist pro] [--sprite <png|gif> --sprite-frames <n> --sprite-fps <n>]
 --out <base>` asks the paid VFX artist instead (a GIF or a PNG strip makes the
 effect follow the animation), prints

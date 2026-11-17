@@ -61,10 +61,13 @@ hashes.
   --from <file> --out <file>` converts it with PixelLab's Image to Pixel Art
   Pro Flash for 6 generations and asks first. The result is opaque on
   near-white, so remove its background before using it as a cut-out.
-- For a spell, hit, explosion, aura, or other effect, use `pixelkiln vfx`
-  (PixelLab's VFX workbench, free): start from a `--preset`, add `--part`s,
-  build around a `--sprite`, and keep the `.vfx.json` it writes, since its
-  recipe re-renders the same effect with `--recipe`.
+- For a spell, hit, explosion, aura, pickup, projectile, or other animated
+  effect, read the VFX reference below before choosing how to make it. Try
+  the free sources first: PixelLab's workbench (`pixelkiln vfx --preset`,
+  built around a `--sprite` when the effect must fit one) or the local
+  pixelfx library (`pixelkiln vfx --lib pixelfx --effect <id>`, placed by its
+  pivot). Keep the `.vfx.json` each run writes: its recipe renders the same
+  effect again with `--recipe`.
 - Treat every ComfyUI output as source material until it passes the native-grid,
   final-palette, prompt-coverage, and human 1× checks in the ComfyUI reference.
   A successful PNG or high-confidence grid result is not quality approval.
@@ -127,6 +130,10 @@ Read only the reference needed for the current decision:
   Before proposing new PixelLab-backed work, check
   [references/pixellab-roadmap.md](references/pixellab-roadmap.md) for
   whether it is a confirmed gap or already covered and undocumented.
+- For any animated effect, a `vfx` block, or the `pixelkiln vfx` command
+  (PixelLab's workbench and paid artist, or the local pixelfx library), read
+  [references/vfx.md](references/vfx.md). It covers which source to pick,
+  every control, the files written, and how a game plays them.
 - For Retro Diffusion styles, USD budgets, environment assets, animation, or
   experimental limits, read
   [references/retro-diffusion.md](references/retro-diffusion.md).
