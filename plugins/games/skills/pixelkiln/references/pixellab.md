@@ -34,6 +34,11 @@ providers, or before any PixelLab account operation.
 | `vfx` | An animated effect (explosion, aura, lightning, status icons) from a `vfx` block: a `preset` or `recipe`, `parts`, an optional `sprite` to build around; cut into an ordered frame set. Or a `description` (+ `artist`: `lite`/`pro`, a local PNG `sprite`) for PixelLab's paid VFX artist | workbench **free** (a renderer, not a model); `description`: lite 1–5, pro 6–28 by sprite size, billed up to 2× the quote, which is what plan counts (a lite effect with no sprite billed its quote of 1, measured once) |
 | `imageProFlash` | A styled still on the Pro Flash model (style image + `styleTraits`), 16–256px in multiples of 4; also the natural source for a Pro Flash character's south sprite | 5–9 generations, PixelLab's provisional quote |
 
+A `pixflux` style's `outline`, `shading`, `detail` and (when stated) `view` are sent to
+PixelLab, and it also takes `isometric: true`, `textGuidanceScale` (1 to 20) and
+`backgroundRemoval: "complex"`; an asset may set `direction`, which only nudges, so state the
+facing in the prompt too. Each new option changes the asset's hash only when set.
+
 `tiles` is not limited to top-down ground: `tileType` selects the projection
 (`isometric` — the API default —, `oblique`, `hex`, `hex_pointy`, `octagon`,
 or `square_topdown`), `tileSize` sets one tile's edge in pixels (16–128 — the

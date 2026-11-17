@@ -138,6 +138,9 @@ Read only the reference needed for the current decision:
   quality contract, read [references/recipes.md](references/recipes.md).
 - When an asset declares `revision`, read
   [references/revisions.md](references/revisions.md).
+- When the person wants swappable outfits, hats, hair or held items on a
+  character, or an asset declares `layer`, read
+  [references/paperdoll.md](references/paperdoll.md).
 - When a manifest style declares `quality`, or packaging is blocked on derived
   approval, read [references/quality.md](references/quality.md).
 - When one game or repository needs more than one provider, read
