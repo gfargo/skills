@@ -89,6 +89,11 @@ hashes.
   person; `pixelkiln tools install editor` prefetches it without opening
   anything. Art changed in PixelLab's own editor comes back with
   `pixelkiln fetch --refresh`, never by regenerating.
+- A `.glb` under a style's `outDir` is a 3D model, not a manifest asset. Its
+  fixes go to an edited copy under `edits/` through `pixelkiln model`; the
+  model as built is never written. Read the models reference below before
+  listing, exporting, importing, or adopting a model's textures, or before
+  starting Blender for the person.
 - Commit the manifest, lockfile, generated outputs, and derived artifact
   companions. Never commit `.env.local` or `.pixelkiln/` cache data.
 
@@ -152,6 +157,9 @@ Read only the reference needed for the current decision:
   approval, read [references/quality.md](references/quality.md).
 - When one game or repository needs more than one provider, read
   [references/mixed-providers.md](references/mixed-providers.md).
+- When the project holds `.glb` models, or the person wants to fix a model's
+  texture, see where a body part sits on its unwrap, or bring paint back from
+  Blender, read [references/models.md](references/models.md).
 
 `FakeProvider` is the deterministic test adapter. Describe Scenario as
 experimental: one BFL Flux 2 Dev profile is live-tested, while other model
