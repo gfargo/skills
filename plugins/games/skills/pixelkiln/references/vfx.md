@@ -18,6 +18,10 @@ choosing, in this order:
 | is easier to describe than to assemble, or must follow a walk or attack animation | PixelLab's paid artist, `--description` | lite 1–5 generations, pro 6–28, billed up to twice the quote |
 | is a drawn object or a character's own motion (a sword turning into lightning, a mage casting) | generation, not `vfx`: an `imagePro` sheet, then an `animate-pixminimax` revision | see [pixellab.md](./pixellab.md) |
 
+A person choosing by eye can browse both free catalogs at
+<https://pixelkiln.griffen.codes/effects/catalog>; for the current lists,
+run `pixelkiln vfx presets` and `pixelkiln vfx effects`.
+
 Try the free sources first. Tell the person the price and get a yes before
 the paid artist or any generation.
 
