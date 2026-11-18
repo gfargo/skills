@@ -14,7 +14,8 @@ choosing, in this order:
 | The effect… | Use | Cost |
 |---|---|---|
 | must fit one sprite's shape (an aura on its outline, a shield around it, a strike that lands on it) | PixelLab workbench with `--sprite` | free on a subscription |
-| stands on its own and is placed by a point (torch, explosion, hit spark, coin, projectile, rain) | pixelfx, `--lib pixelfx`; or a workbench preset without a sprite | free; pixelfx needs no account |
+| stands on its own and is placed by a point (torch, explosion, hit spark, coin, projectile, rain) | pixelfx, `--lib pixelfx`; pixel-vfx-codex, `--lib codex`; or a workbench preset without a sprite | free; the local libraries need no account |
+| should look different from a second camera (side-on or isometric) | pixel-vfx-codex with `--camera 2d` or `25d` | free |
 | is easier to describe than to assemble, or must follow a walk or attack animation | PixelLab's paid artist, `--description` | lite 1–5 generations, pro 6–28, billed up to twice the quote |
 | is a drawn object or a character's own motion (a sword turning into lightning, a mage casting) | generation, not `vfx`: an `imagePro` sheet, then an `animate-pixminimax` revision | see [pixellab.md](./pixellab.md) |
 
@@ -30,26 +31,27 @@ the paid artist or any generation.
 (below). If the person has neither, say so and ask which to set up; do not
 install anything unasked.
 
-## The two free sources, side by side
+## The free sources, side by side
 
-| | PixelLab workbench (default) | pixelfx (`--lib pixelfx`) |
-|---|---|---|
-| Runs | on PixelLab, over its MCP server | on this machine, in process |
-| List | `pixelkiln vfx presets`, `pixelkiln vfx parts` | `pixelkiln vfx effects` (`--json` for every option and default) |
-| Pick | `--preset <name>`, `--part <name>` (repeatable) | `--effect <category>/<name>` |
-| Around a sprite | `--sprite <file \| URL \| character:<id>:<dir> \| object:<id>>` | no: every effect stands alone |
-| Colors | sliders on pixellab.ai, pulled back with `--effect <id> --force` | `--palette "#102,#43a,#8cf,#fff"`, dark to bright |
-| Variation | part sliders | `--seed <n>` |
-| Speed | `--fps <n>`, 1–60 | `--fps <n>`, 1–60 (changes the frame count) |
-| Canvas | set by the preset and sprite | the effect's own; `--margin <px>` pads it |
-| Writes | `.png`, `.gif`, `.json`, `.vfx.json`, `-game.zip` with `--game-pack` | `.png`, `.json`, `.vfx.json` (no GIF) |
-| Saved where | the account's My effects, every run | nowhere but the files |
-| In a manifest | yes, the `vfx` generator | not yet: loose files only |
+| | PixelLab workbench (default) | pixelfx (`--lib pixelfx`) | pixel-vfx-codex (`--lib codex`) |
+|---|---|---|---|
+| Runs | on PixelLab, over its MCP server | on this machine, in process | on this machine, in process |
+| List | `pixelkiln vfx presets`, `pixelkiln vfx parts` | `pixelkiln vfx effects` (`--json` for every option and default) | `pixelkiln vfx effects --lib codex` (`--json` for parameter ranges) |
+| Pick | `--preset <name>`, `--part <name>` (repeatable) | `--effect <category>/<name>` | `--effect <id>`, `--camera 2d\|25d\|3d` |
+| Around a sprite | `--sprite <file \| URL \| character:<id>:<dir> \| object:<id>>` | no: every effect stands alone | no: every effect stands alone |
+| Colors | sliders on pixellab.ai, pulled back with `--effect <id> --force` | `--palette "#102,#43a,#8cf,#fff"`, dark to bright | `--hue <degrees>` |
+| Variation | part sliders | `--seed <n>` | `--param name=value`, `--tune name=value` |
+| Speed | `--fps <n>`, 1–60 | `--fps <n>`, 1–60 (changes the frame count) | `--fps <n>`; each camera steps at its own rate (12, 20, 30) |
+| Canvas | set by the preset and sprite | the effect's own; `--margin <px>` pads it | cropped to the effect and its pivot; `--margin <px>` pads it |
+| Writes | `.png`, `.gif`, `.json`, `.vfx.json`, `-game.zip` with `--game-pack` | `.png`, `.json`, `.vfx.json` (no GIF) | `.png`, `.json`, `.vfx.json` (no GIF) |
+| Saved where | the account's My effects, every run | nowhere but the files | nowhere but the files |
+| In a manifest | yes, the `vfx` generator | not yet: loose files only | not yet: loose files only |
 
-`--out <base>`, `--force`, `--dry-run` and `--json` mean the same for both.
-`--palette`, `--seed` and `--margin` are refused without `--lib pixelfx`;
-`--preset`, `--part`, `--sprite`, `--description` and `--game-pack` are
-refused with it.
+`--out <base>`, `--force`, `--dry-run` and `--json` mean the same for all
+three. `--palette` and `--seed` are refused without `--lib pixelfx`;
+`--camera`, `--hue`, `--param` and `--tune` are refused without `--lib codex`;
+`--margin` works with either local library. `--preset`, `--part`, `--sprite`,
+`--description` and `--game-pack` are refused with a local library.
 
 ## PixelLab workbench
 
@@ -82,6 +84,31 @@ pixelkiln vfx --effect <saved effect id> --out fx/explosion --force
   timing out a render. Nothing is billed; run the same command again.
 - "The pixel tools are busy" means another render is running on the account;
   the command retries on its own.
+
+## pixel-vfx-codex (local)
+
+```bash
+npm i github:888wing/pixel-vfx-codex
+pixelkiln vfx effects --lib codex
+pixelkiln vfx --lib codex --effect fireball --camera 25d --param tailLength=1.6 --hue 40 --out fx/fireball
+```
+
+- 138 effects by 888wing and contributors (MIT), not on the npm registry and
+  not a package with exports. Installing it is the person's call, as with
+  pixelfx; without it the command exits 7 and prints the install line.
+- Each effect is defined once in 3D and rendered through `--camera`: `2d`
+  (default, 12 fps), `25d` (isometric, 20 fps) or `3d` (orbiting, 30 fps). The
+  camera steps the effect at its own rate, so `--fps` above it repeats frames.
+- Recolor with `--hue <degrees>`. There is no palette or seed: `--palette`
+  and `--seed` are refused. An effect's own settings are `--param name=value`
+  (`vfx effects --lib codex --json` lists them with ranges) and the shared
+  knobs `--tune size=1.2,density=0.5`.
+- It is days old (created November 2026, one author), and its package version
+  stays 1.0.0 while its code changes. The record keeps a short hash of the
+  engine; if a re-render says the hash differs, the pixels may too.
+- Frames are cropped to the effect plus the pivot, so sizes vary from effect
+  to effect: read the size from the command's output or the record, do not
+  assume one. Diorama props and figures are not drawn.
 
 ## pixelfx (local)
 

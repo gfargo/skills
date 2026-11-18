@@ -22,8 +22,20 @@ art/characters/edits/models/knight.image-<n>.pxo     layers, when painted in the
 art/characters/edits/models/knight.export.glb        what Blender (or another tool) exported
 ```
 
-A consumer that wants the fixed model takes the edited copy when it exists.
-`pack`, `mount`, and `export` do not read models.
+## Which file a game should load
+
+```bash
+pixelkiln model resolve knight           # one path, e.g. art/characters/edits/models/knight.glb
+pixelkiln model resolve                  # every model: as built -> load (why)
+pixelkiln model resolve --json           # styleId, file, load, from, edit, status, absolute
+```
+
+`resolve` names the edited copy when its status is `edited` or `unrecorded`,
+and the model as built when there is no edit or the edit is `rebuilt-since`
+(a note on stderr says so; tell the person, since their fixes are not in the
+new build). Point a game's loader or build script at its output rather than
+at the `edits/` folder. It reads only. `pack`, `mount`, and `export` do not
+read models.
 
 ## Find what there is
 
@@ -174,5 +186,5 @@ model's drawer. It works only when the person started the gallery with
 Metallic-roughness, occlusion, and emissive images are listed but not offered
 for painting. `normal-map` adds detail to a normal map the model has; it does
 not add one to a material without one. There is no way to
-declare the edited copy in the manifest, and no step builds or regenerates a
+declare the edited copy in the manifest (`resolve` is how a consumer finds it), and no step builds or regenerates a
 model.
