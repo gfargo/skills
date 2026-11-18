@@ -33,8 +33,9 @@ pixelkiln model list --json     # the same, plus the edit's status and record
 ```
 
 Each image is listed by index with its material and role (`base colour`,
-`normal map`). Name a texture by index (`--image 8`) or by material name
-(`--image Helm`, its base colour texture). Name a model by its path, its file
+`normal map`). Name a texture by index (`--image 8`), by material name
+(`--image Helm`, its base colour texture), or `--image Helm:normal` for that
+material's normal map. Name a model by its path, its file
 name (`knight`), or the gallery id (`model:cast/models/knight.glb`).
 
 An edit's `status` is `edited` (based on the model as it is now),
@@ -95,17 +96,83 @@ built) with an export item that writes `knight.export.glb`. It finds Blender
 through `PIXELKILN_BLENDER`, then the usual install location; it never
 installs it. It opens a window, so run it only when the person asks.
 
-`adopt` defaults to `textures`: the base colour textures that changed in the
-export are matched to the model by material name and put into a copy of the
+`adopt` defaults to `textures`: the base colour textures and normal maps that
+changed in the export are matched to the model by material name and put into a copy of the
 model as built. Blender re-encodes meshes and animations on export, so this
 keeps them exactly as built. Use `--mode whole` only when the person changed
 more than paint (geometry, weights, animation). `--from <glb>` adopts a file
 from elsewhere. An export whose material names no longer match is refused;
 `whole` is the way to take it.
 
+## Normal maps
+
+Normal maps are exported, imported, painted in the gallery, and adopted from
+Blender the same way, recorded as `<material> normal map`. They are glTF
+tangent-space maps in the OpenGL convention: `#8080ff` is flat, red leans the
+surface right, green up. Painting one by hand is for repairs (flattening a
+streak, filling a pinhole, softening a seam), judged in the gallery's 3D view
+beside the editor, never for adding relief from scratch. Do not paint one
+yourself.
+
+## Normal map detail from PixelLab (spends generations)
+
+```bash
+pixelkiln model normal-map knight --dry-run                 # what it would send, and the price
+pixelkiln model normal-map knight --yes --budget 0.5        # four views of the figure, 0.4 generation
+pixelkiln model normal-map knight --source texture --image Cuirass --yes --budget 0.2
+pixelkiln model normal-map knight --blend 2                 # again, stronger: answers are cached, free
+```
+
+This is the one model command that costs money. Run it only when the person
+asked for normal map detail, show them the `--dry-run` price first, and pass
+`--budget` at that price with `--yes`. Spending is never implied by "fix the
+model".
+
+It reads the painted light and dark as small bumps (PixelLab's surface
+detail, with outline rounding and part shapes held at 0, since the mesh has
+its shape already) and blends them onto the normal maps the model has, so the
+baked relief stays. It writes the edited copy, recorded per map as
+`pixellab normal-map (<source>)`.
+
+Which source:
+
+- `views` (default): the whole figure drawn from four sides (`--views` for
+  others, up to eight; 0.1 generation each in lite mode), each picture's
+  normals carried back onto every texture through the surface. Consistent
+  across seams, coarser, and parts no view sees stay as they were. Best for a
+  first pass on a character: one price covers every texture.
+- `texture`: each normal map's base colour texture as laid out, in tiles of at
+  most 512 px (a 1024 texture is four calls). Finer and complete, but
+  neighbouring unwrap pieces are read separately and can leave a line along a
+  seam. Use it for one material with fine engraving, by `--image`.
+- `sprites`: the figure's own sprites, from `<model>.sprites/` (one
+  `<direction>.png` each) or `--sprites`. Each is lined up with the model by
+  matching colours, and only matching pixels are used. Run `--dry-run` first
+  and read the per-sprite "lines up in colour" figures and notes, and look at
+  `sprite-<direction>.fit.png`. Below about 50% the detail is patchy; low
+  resolution sprites (80 px) give soft detail. It suits a model built to the
+  sprites' proportions; on a mesh that was filled out differently (a chibi
+  sprite, an adult mesh) prefer `views`, and say why. `--pose <animation>[@s]`
+  poses the model to match sprites drawn in another stance.
+
+What to expect: in testing on a knight, both added relief to gold trim and
+embossing and little to plain cloth or fur; at `--blend 1` the change is
+subtle. `--blend` (0–2) and `--replace` re-run from the cache at no cost, so
+tune with those rather than by asking again. Runs re-tune, they do not stack:
+each blends onto the map from before the first PixelLab run, and `--blend 0`
+takes the detail off. The pictures sent, PixelLab's
+answers, and `image-<n>.detail.png` (the detail alone) are in
+`edits/models/<name>.normal-map/<source>/`; look at the detail picture and the
+gallery's 3D view before calling it done.
+
+In the gallery the same thing is **Normal map detail (PixelLab)** in the
+model's drawer. It works only when the person started the gallery with
+`--edit --budget <n>`; leave starting it that way to them.
+
 ## Not covered
 
-Normal maps and other non-colour images are listed but not offered for
-painting; a hand-painted normal map is rarely right. There is no way to
+Metallic-roughness, occlusion, and emissive images are listed but not offered
+for painting. `normal-map` adds detail to a normal map the model has; it does
+not add one to a material without one. There is no way to
 declare the edited copy in the manifest, and no step builds or regenerates a
 model.
