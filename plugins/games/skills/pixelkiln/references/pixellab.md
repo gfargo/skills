@@ -39,6 +39,16 @@ PixelLab, and it also takes `isometric: true`, `textGuidanceScale` (1 to 20) and
 `backgroundRemoval: "complex"`; an asset may set `direction`, which only nudges, so state the
 facing in the prompt too. Each new option changes the asset's hash only when set.
 
+A `portrait` may pin `seed` (a new seed is a new portrait), and the lock always
+keeps the seed it drew with at `providerMetadata.pixellab.character.seed`;
+PixelLab deletes finished jobs within a day, so that is the only copy. To
+redraw a portrait the same way, copy that seed into the manifest. By default the
+bust is attached to the parent's PixelLab character record; when the person
+uses that character elsewhere, set `attach: false` rather than skipping the
+portrait. To deliver only the bust and keep the parent's rotations out of the
+game's art folder, put the style's `outDir` in a scratch folder and give the
+portrait a `file` that climbs out of it (`"../../art/portraits/x.png"`).
+
 `tiles` is not limited to top-down ground: `tileType` selects the projection
 (`isometric` — the API default —, `oblique`, `hex`, `hex_pointy`, `octagon`,
 or `square_topdown`), `tileSize` sets one tile's edge in pixels (16–128 — the
@@ -48,7 +58,12 @@ camera (`top-down`, `high top-down`, `low top-down`, or `side`). `outlineMode`
 chooses `outline` (a dark border per tile — right for tiles meant to read as
 discrete objects) or `segmentation` (no border, so a ground set tiles
 seamlessly instead of quilting at every cell edge — this alone decided
-whether a measured terrain set was usable). `tileFeature` asks for a
+whether a measured terrain set was usable). Isometric road sets (48 to
+96px) trade off: `low top-down` with `segmentation` is seamless but a flat 3:1
+diamond that reads as top-down; `high top-down` makes a 2:1 diamond, but with
+`segmentation` it left grass fragments outside the slab on 17 of 18 tiles, and
+with `outline` every tile has a border, so a map shows a grid. Paint a map with
+a road set before choosing. `tileFeature` asks for a
 connectable set instead of independent variations: `roads` for an
 18-configuration path set, `tileset` for a 16-tile Wang corner set — describe
 the transition itself in the prompt ("fairway grass to rough meadow"), not
