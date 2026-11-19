@@ -225,14 +225,17 @@ Tell the person when it matters:
 - LDtk: a 16-tile corner set was opened by hand in LDtk 1.5.3. The preview
   drew correctly, LDtk's own rule matching reproduced the stored tiles, and
   painting redrew the right tiles. Edge sets are covered by tests only.
-- Tiled: the `.tsj` follows Tiled's documented layout but nothing loads it in
-  CI, and the isometric `tileoffset` has not been opened in Tiled.
+- Tiled: Tiled 1.12.2 loaded the `.tsj` for two single corner sets, a merged
+  three-terrain coast, an isometric corner set and the isometric road (edge)
+  set, and its own Wang tool painted each with no missing or wrong cells; the
+  isometric `tileoffset` drew correctly. Checked by hand once (November 2026),
+  not in CI.
 - Merged exports: tested through the `export` command. A merged LDtk project
   (two connected sets from real art, three terrains) was opened in LDtk 1.5.3:
   the preview drew every border, LDtk's own rules reproduced all stored tiles,
   and painting redrew correctly. The merged Godot export paints in headless
   Godot. Painting two terrains that have no set between them leaves empty cells
-  in LDtk, as expected. No Tiled load of a merged export yet.
+  in LDtk, as expected. A merged Tiled export painted cleanly in Tiled 1.12.2.
 
 Before the person relies on a format, suggest opening one file in the engine
 and painting a few cells.

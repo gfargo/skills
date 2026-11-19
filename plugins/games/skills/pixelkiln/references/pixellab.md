@@ -39,10 +39,11 @@ PixelLab, and it also takes `isometric: true`, `textGuidanceScale` (1 to 20) and
 `backgroundRemoval: "complex"`; an asset may set `direction`, which only nudges, so state the
 facing in the prompt too. Each new option changes the asset's hash only when set.
 
-A `portrait` may pin `seed` (a new seed is a new portrait), and the lock always
-keeps the seed it drew with at `providerMetadata.pixellab.character.seed`;
-PixelLab deletes finished jobs within a day, so that is the only copy. To
-redraw a portrait the same way, copy that seed into the manifest. By default the
+A `portrait` cannot be pinned to a seed: sent one, PixelLab ignores the
+character and draws a generic face (measured 3 of 3), so `portrait.seed` is
+refused and the style's `seed` is never sent to it. The lock keeps the seed the
+job reports, but it cannot redraw the portrait; to get a bust back, use
+`history` and `restore`, never a regeneration. By default the
 bust is attached to the parent's PixelLab character record; when the person
 uses that character elsewhere, set `attach: false` rather than skipping the
 portrait. To deliver only the bust and keep the parent's rotations out of the
