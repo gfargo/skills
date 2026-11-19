@@ -147,6 +147,32 @@ re-baselines the whole bundle, so read the difference first.
 
 Export never changes source PNGs or the lockfile.
 
+### Building kits
+
+`tileFeature: "building"` returns separate pieces (floor, walls, corners,
+pillars, doorways, stairs, solid blocks) with a `composed` rule family, which no
+engine exporter maps: export `generic` and place the pieces by cell and height.
+`providerRules.parts` names each piece's index; `stack_stride_px` is one level.
+Facts that held for the stone-hall kit, to check on another before relying on them:
+
+- Every piece has its floor diamond in the same place, so a piece for cell
+  (x, y) at level z is drawn with that point at `((x - y) * fw / 2, (x + y) *
+  fh / 2 - z * stride)`, back to front by `x + y`, then z. Take the anchor from
+  the floor piece: `footprint` is the diamond of the tile with the most opaque
+  pixels, which in a kit is a wall.
+- A solid block is two levels high and there is no half block: cut 16 rows from
+  the middle of one.
+- Stairs are pairs that climb a level between them (40 and 41, north), so a
+  two-level rise is two pairs with the upper one on half blocks. The east
+  pieces (42, 43) are a smooth ramp.
+- Do not sink a full block to support stairs: its lower half shows below the
+  floor.
+
+`website/art/pixellab-isometric/compose-hall.py` is a working example (a three-tier
+hall with a side room). Look at the render before calling a layout done: the
+back walls hide anything behind them, so put doorways and ramps on the open
+front, not in a wall that faces away.
+
 ### Merging connected sets
 
 Without a flag each set exports as its own two-terrain tileset. In an engine
