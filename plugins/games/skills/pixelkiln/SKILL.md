@@ -89,6 +89,13 @@ hashes.
   person; `pixelkiln tools install editor` prefetches it without opening
   anything. Art changed in PixelLab's own editor comes back with
   `pixelkiln fetch --refresh`, never by regenerating.
+- For ground, terrain, roads, or any set of tiles that must join, read the
+  tiles reference below before picking a generator or exporting. Never read a
+  tile's adjacency from its file name: the rule is in the lockfile entry, and
+  `export --format generic` keeps all of it. Export to an engine only from
+  generated, `ok` sets. `--merge-connected` is opt-in: offer it when the person
+  wants one brush across sets that share a terrain, and never add it to an
+  existing export command unasked.
 - A `.glb` under a style's `outDir` is a 3D model, not a manifest asset. Its
   fixes go to an edited copy under `edits/` through `pixelkiln model`; the
   model as built is never written. Read the models reference below before
@@ -140,6 +147,11 @@ Read only the reference needed for the current decision:
   (PixelLab's workbench and paid artist, or the local pixelfx library), read
   [references/vfx.md](references/vfx.md). It covers which source to pick,
   every control, the files written, and how a game plays them.
+- For ground, terrain, roads, connected tile sets, or exporting a tileset to
+  Tiled, Godot or LDtk (`pixelkiln export`, including `--merge-connected`),
+  read [references/tiles.md](references/tiles.md). It covers which generator
+  to pick, how sets connect, every export format and what it refuses, and
+  what has and has not been checked in an engine.
 - For Retro Diffusion styles, USD budgets, environment assets, animation, or
   experimental limits, read
   [references/retro-diffusion.md](references/retro-diffusion.md).

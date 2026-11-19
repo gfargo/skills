@@ -142,7 +142,8 @@ compared as written: adding `terrainMode: "standard"` to a style that left
 it out is a change, even though it is the default. A set generated before
 this record existed has none and stays current until it is regenerated.
 
-**Connected sets.** An asset's `connect` makes one of its terrains the very
+**Connected sets.** (How to export one, and `--merge-connected`, are in
+[tiles.md](./tiles.md).) An asset's `connect` makes one of its terrains the very
 terrain of another set in the same style, so ocean, sand, and grass paint on
 one map: `"connect": { "lower": { "of": "coast", "terrain": "upper" } }` is
 "this set's lower terrain is `coast`'s upper". The other set generates
