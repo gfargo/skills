@@ -114,7 +114,7 @@ sets atlas columns.
 |---|---|---|
 | `generic` | `.json` | The lossless contract: atlas, every tile's rectangle, mask or corners, and the provider's raw rules. Use it for any engine without an exporter, and for anything below that is refused. |
 | `tiled` | `.tsj` | An image tileset with a Wang set; ids in Tiled's own order. |
-| `godot` | `.tres` | A `TileSet` with terrain peering bits on every tile. Corner sets use match-corners, edge sets match-sides. |
+| `godot` | `.tres` | A `TileSet` with terrain peering bits on every tile. Corner sets use match-corners, edge sets match-sides. A tile that meets two terrains is written once per terrain (alternatives of one image), which is what lets either terrain's brush draw its own border. |
 | `ldtk` | `.ldtk` | A whole project: tileset, an IntGrid layer plus an auto-rule layer, and a Preview level. Corner sets paint on a grid shifted half a tile. |
 
 What export refuses, and what to do instead:
@@ -123,9 +123,22 @@ What export refuses, and what to do instead:
 |---|---|
 | six-edge hex masks | `generic` only. |
 | `outline` or building images with no rule | `generic`; engine exporters will not invent placement. |
-| Godot edge masks on an isometric or oblique tile | `generic` or `tiled`. |
+| Godot edge masks on an oblique tile | `generic` or `tiled`. Isometric edge sets export. |
 | LDtk for hex, isometric, oblique, non-square tiles | `generic` or `tiled`; LDtk takes square tiles on an orthogonal grid. |
 | tiles of different sizes | Engine formats need one cell size; `generic` does not. |
+
+### Isometric sets
+
+An isometric tile image is taller than its diamond (the sides of a block hang
+below it), so the export finds the diamond from the art's alpha and writes it as
+`footprint` in the generic file. Godot then gets the diamond as `tile_size`, a
+`texture_origin` per tile that puts the image on its cell, and the diamond
+layout; Tiled gets an isometric `grid` and a `tileoffset`. Filled-square tiles
+have no diamond and get none of that. Edge-ruled isometric sets export to Godot
+too: the north, east, south and west bits are the diamond's top-right,
+bottom-right, bottom-left and top-left sides. When someone reports isometric
+tiles sitting too high or spaced wrong, check `footprint` in the generic export
+first. The geometry is described under "Isometric tiles" in `docs/TILES.md`.
 
 A hand-edited set (`pixelkiln edit --only <asset> --style <style> --no-open`)
 is exported tile by tile from its edits, and the record names those paths.
@@ -164,19 +177,30 @@ want one brush for several surfaces.
 
 Tell the person when it matters:
 
+- Godot painting: a headless Godot 4.7.2 in CI paints a square corner set, a
+  square edge set, an isometric corner set, an isometric edge set and the real
+  three-terrain coast set with `set_cells_terrain_connect(..., false)` (the
+  editor's own setting) and compares every corner or side with the strokes. A
+  road network painted from the real isometric road set ran unbroken with
+  correct corners and T-junctions. To paint, fill the ground with the lowest
+  terrain's plain tile first, then paint higher terrains on top; a script must
+  pass `ignore_empty_terrains` as `false`. The outermost cells of a
+  terrain-painted area pick border tiles, so paint past the camera's edge.
+- Godot isometric geometry: a 2x2 block of cells drawn in Godot 4.7.2 filled
+  exactly the diamond lattice the cells predict, for the real 32px ground set.
 - Godot: the `.tres` for a square corner set and an isometric set loads in a
   headless Godot 4.7.2 in CI, and a peering bit reads back.
 - LDtk: a 16-tile corner set was opened by hand in LDtk 1.5.3. The preview
   drew correctly, LDtk's own rule matching reproduced the stored tiles, and
   painting redrew the right tiles. Edge sets are covered by tests only.
 - Tiled: the `.tsj` follows Tiled's documented layout but nothing loads it in
-  CI.
+  CI, and the isometric `tileoffset` has not been opened in Tiled.
 - Merged exports: tested through the `export` command. A merged LDtk project
   (two connected sets from real art, three terrains) was opened in LDtk 1.5.3:
   the preview drew every border, LDtk's own rules reproduced all stored tiles,
-  and painting redrew correctly. Painting two terrains that have no set between
-  them leaves empty cells, as expected. No Godot or Tiled load of a merged
-  export yet.
+  and painting redrew correctly. The merged Godot export paints in headless
+  Godot. Painting two terrains that have no set between them leaves empty cells
+  in LDtk, as expected. No Tiled load of a merged export yet.
 
 Before the person relies on a format, suggest opening one file in the engine
 and painting a few cells.
