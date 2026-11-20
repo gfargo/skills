@@ -39,6 +39,16 @@ PixelLab, and it also takes `isometric: true`, `textGuidanceScale` (1 to 20) and
 `backgroundRemoval: "complex"`; an asset may set `direction`, which only nudges, so state the
 facing in the prompt too. Each new option changes the asset's hash only when set.
 
+For an `animate-skeleton` revision of a character with a staff, sword, cape,
+hat or tail, build a custom rig: `pixelkiln estimate-skeleton <sprite> --custom
+--description "<what it is>" --action "<what it will do>" --out <file>` (1
+generation, about a minute; ask first, it is a direct paid call outside the
+budget). The file keeps the rig and its poses name the rig's joints. Check it
+with `skeleton-preview` (props in yellow) before animating. Set
+`writeMotionFrames` on the revision to have PixelLab write the motion from the
+prompt instead of posing every frame. Keep the rig file once animated from:
+joint names change between estimates.
+
 A `portrait` cannot be pinned to a seed: sent one, PixelLab ignores the
 character and draws a generic face (measured 3 of 3), so `portrait.seed` is
 refused and the style's `seed` is never sent to it. The lock keeps the seed the
