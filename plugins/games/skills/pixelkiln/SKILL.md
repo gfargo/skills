@@ -53,6 +53,11 @@ hashes.
   selects the whole family); before drawing a base from text, ask whether the
   user has a south-facing sprite to `reference` instead (1 generation on
   `pro-flash` at 64px). Mirrors swap handedness.
+- Outside art leaves this machine: `unzoom`, `pixelate`, and any `reference`
+  or `styleImages` file are uploaded to PixelLab. Before the first upload, name
+  the file(s) to the person and get their go-ahead, especially for unreleased
+  or confidential art. Approving the generation budget is not consent to
+  upload the source image, so ask for both.
 - Before an outside or upscaled sprite becomes a `reference` or `styleImages`
   path, run `pixelkiln unzoom --from <file> --out <file>` to bring it back to
   its native pixel grid. Upscaled input degrades every PixelLab endpoint that

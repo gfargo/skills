@@ -278,8 +278,8 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   and named `elements` on a panel canvas) — demonstrated in "Create an RPG UI
   Set" and "Easiest way to create pixel art UI." Investigated directly
   against the live OpenAPI document rather than the tutorials' own framing,
-  which turned out to overstate the surface: a search across "ui-asset",
-  "element", "split", and "template" paths found one panel-creation
+  which turned out to overstate the surface: a look through the OpenAPI path list for "ui-asset",
+  "element", "split", and "template" turned up one panel-creation
   endpoint (`/create-ui-asset`, + `GET`/`DELETE /ui-assets/{id}`) — no
   separate batch-icon endpoint, no states endpoint, no nine-slice endpoint,
   despite the tutorials describing all three. Closed by the `uiAsset`

@@ -58,7 +58,8 @@ bust is attached to the parent's PixelLab character record; when the person
 uses that character elsewhere, set `attach: false` rather than skipping the
 portrait. To deliver only the bust and keep the parent's rotations out of the
 game's art folder, put the style's `outDir` in a scratch folder and give the
-portrait a `file` that climbs out of it (`"../../art/portraits/x.png"`).
+portrait a `file` path that lands in the game's art folder, and confirm that
+location with the person first because it writes outside the style's `outDir`.
 
 `tiles` is not limited to top-down ground: `tileType` selects the projection
 (`isometric` — the API default —, `oblique`, `hex`, `hex_pointy`, `octagon`,
@@ -677,7 +678,7 @@ ledger](https://pixelkiln.griffen.codes/docs/endpoints#validation-ledger)
 what a wrong guess could cost.
 
 For setup and current field constraints, use
-<https://pixelkiln.griffen.codes/docs/pixellab>. When working in the PixelKiln
-repository, `docs/PIXELLAB.md` and `docs/ENDPOINTS.md` are the canonical local
-sources. The provider sources are <https://www.pixellab.ai/> and
-<https://api.pixellab.ai/v2/docs>.
+the PixelKiln docs page `pixelkiln.griffen.codes/docs/pixellab`. When working in
+the PixelKiln repository, `docs/PIXELLAB.md` and `docs/ENDPOINTS.md` are the
+canonical local sources. The provider sources are the PixelLab site
+(`pixellab.ai`) and its API reference (`api.pixellab.ai/v2/docs`).
