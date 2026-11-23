@@ -133,6 +133,12 @@ rather than depending on whatever the ambient environment defaults to —
 a reliable estimate instead of drifting with whatever model happens to be
 configured on the machine that regenerates the catalog.
 
+> A recipe that calls a hosted LLM sends the fixture's content (here, the staged
+> diff) to that provider. Run it only against a fixture repo that holds no real
+> code or secrets, tell the person which provider will receive the data before
+> the first run, and use a throwaway key. For CI or repeat runs, prefer a mock
+> provider.
+
 ## Generating recipes programmatically
 
 Once a catalog needs the same scene repeated across many near-identical

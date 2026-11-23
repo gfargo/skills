@@ -13,6 +13,7 @@ description: >-
   shrunk for the web, or when setting up a repeatable capture pipeline for many
   scenes. Covers install, authoring tapes, determinism, motion-GIF storytelling,
   and the lossless size-optimization that makes GIFs web-viable.
+allowed-tools: Read Write Edit Bash
 ---
 
 # Capturing CLI & TUI apps with VHS
@@ -152,9 +153,13 @@ bite everyone once:
   `Type "export PATH='...:$PATH'"`, the single quotes make bash treat `$PATH` as
   a literal string and the shell loses `git`, `sleep`, and friends. Export with
   the value unquoted so `$PATH` expands: `export PATH=/your/bin:$PATH`.
-- **Forward the env you need.** API keys, tokens, or config the app reads aren't
-  present in the VHS shell. Export them inside the tape (use `Hide`/`Show` so the
-  export lines don't appear on camera) or pass them through your driver.
+- **Forward the env you need, and keep secrets out of tapes.** Config the app
+  reads isn't present in the VHS shell, so export it inside the tape (use
+  `Hide`/`Show` so the export lines don't appear on camera) or pass it through
+  your driver. Never write a literal API key or token into a `.tape` file: tapes
+  get committed and shared. Prefer a mock or fixture so no credential is needed;
+  if a real one is unavoidable, use a throwaway, tightly scoped key that your
+  driver injects at run time, and delete any rendered tape that contains it.
 - **`Screenshot` vs `Output`.** `Output "x.png"` records the *whole session* as a
   frame sequence (a directory) — not a single image. For one still frame use
   `Screenshot x.png` (bare filename). `Output "x.gif"` / `"x.mp4"` is for motion.
