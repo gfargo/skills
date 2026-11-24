@@ -1,8 +1,9 @@
 # Parallax backgrounds
 
 PixelKiln has no parallax command or manifest field yet. This page is what the
-research so far supports. The full note, with pictures and numbers, is at
-https://pixelkiln.griffen.codes/docs/research-parallax.
+research so far supports. The step-by-step guide is at
+https://pixelkiln.griffen.codes/docs/parallax, and the evidence, with pictures
+and numbers, at https://pixelkiln.griffen.codes/docs/research-parallax.
 
 ## The route to try first
 
@@ -24,13 +25,31 @@ this; its numbers are in step 12 of the research note.
 - A bounded level needs no loop: extend each run past both ends by the most
   that layer can drift.
 
+## Generating silhouettes
+
+- Describe one object as a sprite, never as distant scenery: "a lone landform
+  game sprite on a plain empty background, nothing else in the picture: no
+  clouds, no moon, no sun, no hills or ground around it", "about two thirds as
+  wide as the picture". Words like "distant", "hazy" or "fading at its foot"
+  make pixflux paint a whole scene, and the shape runs off the canvas.
+- Leave out a glow at a summit; pixflux draws it as a setting sun.
+- Pixflux at 256×128 with background removal, one forced palette, two or three
+  seeds an asset. Reject any candidate that touches a side of the canvas.
+- Add the distance afterwards: dither the bottom 30% out, then tint each tier
+  toward its own palette colour, the far tier lighter, the near tier darker.
+  One light haze colour for every tier makes depth read backwards.
+
 ## Generating whole layers
 
 - PixelLab pixflux with ONE forced palette (`palette`) on every layer is the
-  cheapest route that gives layers which agree: four layers for four
-  generations. Opaque sky; the other layers with background removal, at most
-  40,000 px each (400×100) to stay transparent. pixflux has no seamless
-  option, so loop each layer afterwards.
+  cheapest route that gives layers which agree. Layers with background
+  removal, at most 40,000 px each (400×100) to stay transparent. pixflux has
+  no seamless option, so loop each layer afterwards.
+- Draw the sky as flat palette bands instead of generating it: a generated sky
+  comes back with mountains in it. A far range comes back as one flat colour;
+  recolour it to a palette colour between the sky bands and extend it down to
+  the foot of the view so nothing floats. A middle layer that is one landmark
+  (a single volcano) goes on screen once, not looped.
 - Retro Diffusion's `rd_plus__environment` draws a whole scene whatever the
   prompt says, so it is not a layer generator. Its `tileX` does wrap the
   drawing, but `removeBg` breaks the seam it made.
