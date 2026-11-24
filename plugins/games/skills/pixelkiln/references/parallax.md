@@ -8,9 +8,9 @@ and numbers, at https://pixelkiln.griffen.codes/docs/research-parallax.
 ## The route to try first
 
 Compose each layer in the engine from separate silhouettes rather than cutting
-layers out of one scene. Generate a few distant landforms per biome, one at a
-time, each "fading to nothing at its foot, no ground plane, no sky, isolated
-landform only, transparent background". In the game, lay them in overlapping
+layers out of one scene. Generate a few landforms per biome, one at a time,
+each prompted as a lone sprite (see "Generating silhouettes" below), and dither
+the foot out afterwards. In the game, lay them in overlapping
 runs (each next one about 72% of the way across the last, random flips, never
 the same twice in a row, a few pixels of jitter), in two tiers tinted toward a
 dusk or haze colour, over a sky the engine draws. Nothing hidden has to be
@@ -56,6 +56,25 @@ this; its numbers are in step 12 of the research note.
 - Pixel-art background removal is all or nothing per pixel: a silhouette asked
   to fade at its foot comes back with a hard base. Plan a dithered fade, a
   ground strip or a treeline in front.
+
+## Scrolling vertically
+
+- A climb needs tall layers or things placed at height: a tall landmark,
+  clouds scattered up the climb, a wall. 400×100 strips run out within a
+  quarter of a climb.
+- Draw every layer the view's height plus climb × its vertical speed tall, and
+  place the layers for the lowest view so a climb never uncovers their feet.
+- Scroll the sky's bands vertically (about 0.3) if it should change with
+  height; at speed 0 it never does.
+- Clouds: prompt puffy cumulus as a lone sprite. Thin streaks and flat banks
+  fail in pixflux.
+- A wall: pixflux draws a cliff as a pillar with a summit. Keep the summit and
+  repeat the body (`parallax.py wall`).
+- An endless vertical loop: Retro Diffusion `tileY` on `rd_plus__default`, no
+  background removal. Keep the rest of the set on that picture's colours.
+- Engines take the y of the same setting: Tiled `parallaxy`, Godot
+  `scroll_scale.y`, Phaser `setScrollFactor(x, y)`, LDtk `parallaxFactorY` as
+  1 − speed.
 
 ## Before generating
 
