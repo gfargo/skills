@@ -1,9 +1,33 @@
 # Parallax backgrounds
 
-PixelKiln has no parallax command or manifest field yet. This page is what the
-research so far supports. The step-by-step guide is at
+A manifest's `parallax` section names a set's layers, far to near, and
+`pixelkiln parallax preview|export` previews it and writes Tiled, Godot and
+LDtk files (offline, free). Generating and finishing the pieces is still the
+work below. The step-by-step guide is at
 https://pixelkiln.griffen.codes/docs/parallax, and the evidence, with pictures
 and numbers, at https://pixelkiln.griffen.codes/docs/research-parallax.
+
+## The command
+
+- A layer is `asset` (from the lockfile; add `style` if the asset has
+  several), `file` (a finished picture, relative to the manifest) or `sky`
+  (flat bands PixelKiln draws; one colour is a flat fill). Set `speed`, and
+  `bottom`/`x` to place it on a canvas whose origin is the view's top-left at
+  the start. `extend: true` carries a far range's bottom row to the view's
+  foot. Layers repeat sideways unless `repeat: false`; `repeatY` loops up.
+- A set has `view` and `travel`; a climbing set adds `climb` and `speedY`.
+- `pixelkiln parallax preview <set>` writes a scrolling HTML page and a strip
+  of frames. Read its warnings: a rough join (loop the layer first), or a
+  backdrop that ends before the camera does, sideways or at the top of a
+  climb. Export adds one for LDtk tiles past the level's edge.
+- `pixelkiln parallax export <set> [--format tiled|godot|ldtk]`. Godot,
+  Tiled and Phaser (`setScrollFactor`) were checked pixel for pixel against
+  the preview, and LDtk by its drawing code. Tell the user to turn on Godot's
+  Rendering > 2D > Snap 2D Transforms to Pixel, and to keep a Tiled map's
+  parallax origin at (0, 0), since Tiled 1.11+ applies a non-zero one backwards.
+- Not in the command: silhouette runs, haze, dithered feet, looping. Finish
+  those with `research/scripts/parallax.py` and name the results as `file`
+  layers.
 
 ## The route to try first
 
@@ -133,4 +157,4 @@ this; its numbers are in step 12 of the research note.
   `setScrollFactor(0.25, 1)`; LDtk `parallaxFactorX: 0.75` with
   `parallaxScaling: false`. LDtk's factor is how much the layer follows the
   camera, and with scaling on it also shrinks the layer off the pixel grid.
-  PixelKiln's LDtk export writes factor 0 today.
+  `pixelkiln parallax export` writes these for you.

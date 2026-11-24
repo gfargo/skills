@@ -158,8 +158,9 @@ Read only the reference needed for the current decision:
   to pick, how sets connect, every export format and what it refuses, and
   what has and has not been checked in an engine.
 - For a scrolling background in layers, looping a background sideways or
-  vertically, a climbing level's background, or parallax settings for Tiled,
-  Godot, Phaser or LDtk, read
+  vertically, a climbing level's background, a manifest `parallax` set,
+  `pixelkiln parallax preview|export`, or parallax settings for Tiled, Godot,
+  Phaser or LDtk, read
   [references/parallax.md](references/parallax.md).
 - For Retro Diffusion styles, USD budgets, environment assets, animation, or
   experimental limits, read
