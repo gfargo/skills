@@ -53,6 +53,23 @@ this; its numbers are in step 12 of the research note.
 - Retro Diffusion's `rd_plus__environment` draws a whole scene whatever the
   prompt says, so it is not a layer generator. Its `tileX` does wrap the
   drawing, but `removeBg` breaks the seam it made.
+- For a Retro Diffusion layer that loops sideways, use `rd_plus__default` with
+  `tileX`, `removeBg: false` and "a plain flat chroma-key green background" in
+  the prompt, then key the background out by script (`parallax.py key`). The
+  seam survives (ratios 0.3 to 1.4, against 3.9 with `removeBg`). It drew a
+  flat background on 2 of 3 tries, so check before keying.
+
+## A second time of day
+
+- Recolour the finished set onto the new time's palette by luminance rank
+  (`parallax.py recolour ... cool`) instead of generating it again. It is free,
+  and every shape stays where it was, so the two times line up.
+- Take the new palette from the same prompt and seed as the first one, with the
+  time of day changed. For night, leave its warm light colours (windows, lamps,
+  the moon) out of the swap, or pink-lit snow turns orange.
+- Generating again on the new palette keeps the layers consistent with each
+  other but moves every peak, and "at night" brought a moon or stars into 7 of
+  9 pictures, two of them despite "no moon, no stars" in the prompt.
 - Pixel-art background removal is all or nothing per pixel: a silhouette asked
   to fade at its foot comes back with a hard base. Plan a dithered fade, a
   ground strip or a treeline in front.
