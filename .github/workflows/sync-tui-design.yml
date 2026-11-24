@@ -44,7 +44,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           latest_tag=$(gh api "repos/${SOURCE_REPO}/releases/latest" --jq '.tag_name')
-          current_tag=$(cat "${DEST_SKILL_PATH}/.source-version" 2>/dev/null || echo "none")
+          current_tag=$(cat "${DEST_SKILL_PATH}/source-version.txt" 2>/dev/null || echo "none")
           echo "latest=$latest_tag" >> "$GITHUB_OUTPUT"
           echo "current=$current_tag" >> "$GITHUB_OUTPUT"
           if [ "$latest_tag" = "$current_tag" ]; then
@@ -64,7 +64,7 @@ jobs:
         if: steps.check.outputs.up_to_date == 'false'
         run: |
           rsync -a --delete "/tmp/source/${SOURCE_SKILL_PATH}/" "${DEST_SKILL_PATH}/"
-          echo "${{ steps.check.outputs.latest }}" > "${DEST_SKILL_PATH}/.source-version"
+          echo "${{ steps.check.outputs.latest }}" > "${DEST_SKILL_PATH}/source-version.txt"
 
       - name: Bump terminal plugin version
         if: steps.check.outputs.up_to_date == 'false'
