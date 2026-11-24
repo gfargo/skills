@@ -45,7 +45,11 @@ jobs:
       - name: Mirror skill content
         if: steps.check.outputs.up_to_date == 'false'
         run: |
-          rsync -a --delete "/tmp/source/${SOURCE_SKILL_PATH}/" "${DEST_SKILL_PATH}/"
+          # strut moved its skill from .kiro/skills/strut to skills/strut so that
+          # registries can discover it. Accept both so older release tags still sync.
+          src="/tmp/source/skills/strut"
+          [ -d "$src" ] || src="/tmp/source/${SOURCE_SKILL_PATH}"
+          rsync -a --delete "${src}/" "${DEST_SKILL_PATH}/"
           echo "${{ steps.check.outputs.latest }}" > "${DEST_SKILL_PATH}/source-version.txt"
 
       - name: Bump devops plugin version
