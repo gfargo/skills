@@ -25,9 +25,12 @@ and numbers, at https://pixelkiln.griffen.codes/docs/research-parallax.
   the preview, and LDtk by its drawing code. Tell the user to turn on Godot's
   Rendering > 2D > Snap 2D Transforms to Pixel, and to keep a Tiled map's
   parallax origin at (0, 0), since Tiled 1.11+ applies a non-zero one backwards.
-- Not in the command: silhouette runs, haze, dithered feet, looping. Finish
+- A `run` layer lays silhouettes (`{ "asset" }` or `{ "file" }` each) in an
+  overlapping row by `seed`, with `step`, `gap` and `jitter`. It loops by
+  default; `"repeat": false` lays it once across what the camera sees.
+- Not in the command: haze, dithered feet, looping a whole picture. Finish
   those with `research/scripts/parallax.py` and name the results as `file`
-  layers.
+  layers or run sprites.
 
 ## The route to try first
 
@@ -37,7 +40,8 @@ each prompted as a lone sprite (see "Generating silhouettes" below), and dither
 the foot out afterwards. In the game, lay them in overlapping
 runs (each next one about 72% of the way across the last, random flips, never
 the same twice in a row, a few pixels of jitter), in two tiers tinted toward a
-dusk or haze colour, over a sky the engine draws. Nothing hidden has to be
+dusk or haze colour, over a sky the engine draws. A `run` layer in the
+manifest does the laying. Nothing hidden has to be
 invented, and a run can be as wide as the level. A game using PixelKiln ships
 this; its numbers are in step 12 of the research note.
 
