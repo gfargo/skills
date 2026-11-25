@@ -494,11 +494,12 @@ connecting different tilesets") are now mostly covered; see the closed
 `terrain` entries above. Checked against `/create-tileset` and
 `/create-tileset-sidescroller`'s REST schemas, what remains:
 
-- **Pro sidescrollers are web-app only.** The video's sidescroller is the
-  Pro form at 16, 32, and 64px with top-layer height up to 100%.
-  `/create-tileset-sidescroller` has no `mode` field, and its tile size is
-  16 or 32. pixelkiln's sidescroller sets use whatever model that endpoint
-  runs.
+- **Pro sidescrollers reached the API at 16 and 32px only.**
+  `/create-tileset-sidescroller` gained `mode: "pro"` (15 generations), and
+  pixelkiln sends it as `terrainMode: "pro"`. The web app's 64px tiles,
+  slopes, and palette are still missing from the endpoint (checked against
+  the OpenAPI schema on 25 November 2026, whose description still says "No
+  slopes").
 - **Wall-continuation twins export as duplicates.** The 25-tile layout has
   21 distinct corner combinations. Four tiles share corners with a twin and
   differ only in `pattern_4x4`, which pixelkiln records but cannot express in
@@ -517,6 +518,23 @@ connecting different tilesets") are now mostly covered; see the closed
 - **Prompting advice** lives in the skill reference: end each terrain on
   the word "texture", keep prompts short, and lead with color, season, and
   outline words.
+
+## Sidescroller world guide: web-app features with no API
+
+"How to Build a Sidescroller World Where Every Asset Matches" (PixelLab,
+24 November 2026) mostly uses tools pixelkiln already drives; the docs'
+"A sidescroller world that matches" section maps it. Three features it shows
+have no API field yet (OpenAPI checked 25 November 2026):
+
+- **Side-scroller rotation type.** A Pro character drawn with only east and
+  west. `/create-character-pro` offers `view` "low top-down", "high
+  top-down", and "side", always with 8 rotations.
+- **Slopes on sidescroller tilesets** (diagonal hill tiles).
+- **Palette on Pro sidescroller tilesets.** The endpoint has `color_image`
+  but no `target_palette`.
+
+Recheck these on each PixelLab release; each is a small adapter change once
+the field exists.
 
 ## Generated effects with PixMiniMax
 

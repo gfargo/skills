@@ -187,10 +187,11 @@ fixes `terrainMode`, so a standard set cannot connect to a Pro one.
 `"1). mossy stone bricks texture 2). green grass texture"`, the platform
 body and the layer on top of it; the other side of every edge is empty air.
 16 or 32px tiles, `terrainTransitionSize` (the top layer's height) 0, 0.25,
-0.5, or 1, and none of the mode, view, or shape controls. It billed 3
-generations for 16 tiles. A sidescroller set connects only its platform
-(`lower`) terrain. PixelLab's Pro sidescroller (64px, taller top layers) is
-web-app only.
+or 0.5, and none of the view or shape controls. It costs 1 generation on
+standard and 15 with `terrainMode: "pro"` (the retired standard model billed
+3). A sidescroller set connects only its platform (`lower`) terrain, and only
+on Pro. The API has no palette, slopes, or 64px tiles for
+sidescroller sets; those are in PixelLab's web app only.
 
 Prompt each terrain as a short material ending on the word "texture" ("deep
 ocean water texture", "plain smooth sand texture"). PixelLab's "Pro
@@ -240,7 +241,9 @@ several candidates to pick from by the same size tiering as `1dir` (up to
 generic background-job endpoint the same way a `revision` is. The style's
 `palette` goes out as the beta `target_palette` (PixelLab 0.4.130): every
 pixel of every candidate lands on those 2–256 colours, at no extra cost.
-`paletteName` (needs `palette`) names it, and `maxColors` (2–64) caps each
+`paletteFile` reads the colours from a Lospec `.hex`, GIMP `.gpl`, or
+Paint.NET `.txt` file instead, relative to the manifest; it hashes the same as
+the inline colours. `paletteName` (needs `palette`) names it, and `maxColors` (2–64) caps each
 candidate's colours, with or without a palette. The same `target_palette`
 now also goes out for `imageProFlash`, `objectPro` (bases, states, `pro`
 animations), `1dir`, `tiles`, `uiAsset`, `uiElement`, Pro and Pro Flash

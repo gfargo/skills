@@ -24,6 +24,14 @@ hashes.
   references below.
 - Run `pixelkiln doctor --dry-run` and `pixelkiln plan` before paid work. Report
   actionable, recoverable, and estimated cost figures with their provider unit.
+- A PixelLab plan figure is only as good as its route's row in the
+  [validation ledger](https://pixelkiln.griffen.codes/docs/endpoints#validation-ledger)
+  (`docs/ENDPOINTS.md`). For a route marked `Mock only`, `Schema only`, or
+  `Unknown`, tell the person the estimate is unmeasured and keep the first
+  paid run to one asset.
+- A provider balance can be shared with the person's other projects. Never
+  read a drop between two `pixelkiln balance` readings as this project's
+  spend. The finished lock entry's `billed` is the bill.
 - Do not regenerate recoverable work. Follow the exact zero-cost action printed
   by `plan`: `poll`, `pick`, `fetch`, or `restore`.
 - Submit paid work only when the user has authorized generation. Always pass an
@@ -53,6 +61,11 @@ hashes.
   selects the whole family); before drawing a base from text, ask whether the
   user has a south-facing sprite to `reference` instead (1 generation on
   `pro-flash` at 64px). Mirrors swap handedness.
+- A `skeleton-v3` loop needs a `v3` base, and `plan` refuses a `standard`
+  one. With no `template`, it animates the asset's `prompt` as one sentence
+  (3 to 15 frames). In an animation's `directions` list the first direction
+  leads and the later ones share its motion. Add new directions at the end:
+  putting one first makes it the leader and regenerates the others.
 - Outside art leaves this machine: `unzoom`, `pixelate`, and any `reference`
   or `styleImages` file are uploaded to PixelLab. Before the first upload, name
   the file(s) to the person and get their go-ahead, especially for unreleased
@@ -185,8 +198,10 @@ Read only the reference needed for the current decision:
   Blender, or add normal map detail with PixelLab, read [references/models.md](references/models.md).
 
 `FakeProvider` is the deterministic test adapter. Describe Scenario as
-experimental: one BFL Flux 2 Dev profile is live-tested, while other model
-schemas and broader batches are not. Do not describe Retro Diffusion as production-ready until representative
+experimental: BFL Flux 2 Dev passed the full live path, and a later
+evaluation ran ten more text-to-image models, six tool models, reference edits,
+and multi-model chains live, but model schemas vary, so any model not in
+`docs/SCENARIO.md` gets a one-asset run first. Do not describe Retro Diffusion as production-ready until representative
 multi-candidate, tileset, GIF, and spritesheet live smoke tests pass.
 
 When working in the PixelKiln repository, consult `docs/GETTING_STARTED.md` for

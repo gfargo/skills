@@ -15,9 +15,11 @@ and numbers, at https://pixelkiln.griffen.codes/docs/research-parallax.
   `bottom`/`x` to place it on a canvas whose origin is the view's top-left at
   the start. `extend: true` carries a far range's bottom row to the view's
   foot. Layers repeat sideways unless `repeat: false`; `repeatY` loops up.
+- Anything standing on the ground (trees, props) scrolls at the ground's
+  speed, usually `1`; on a slower layer it slides across the floor.
 - A set has `view` and `travel`; a climbing set adds `climb` and `speedY`.
 - `pixelkiln parallax preview <set>` writes a scrolling HTML page and a strip
-  of frames. Read its warnings: a rough join (loop the layer first), or a
+  of frames. Read its warnings: a rough join (set `"loop": "cut"`), or a
   backdrop that ends before the camera does, sideways or at the top of a
   climb. Export adds one for LDtk tiles past the level's edge.
 - `pixelkiln parallax export <set> [--format tiled|godot|ldtk]`. Godot,
@@ -33,8 +35,10 @@ and numbers, at https://pixelkiln.griffen.codes/docs/research-parallax.
   it to the set's `palette` (a style id or colours; without one, to the
   picture's own colours). Two runs of the same sprites with different tints
   make two tiers.
-- Not in the command: looping a whole picture. Loop it with
-  `research/scripts/parallax.py loop` and name the result as a `file` layer.
+- `"loop": "cut"` makes a whole picture join smoothly before `foot` and
+  `tint`: it crops to the two columns that best continue into each other.
+  Prefer it to `crossfade` (rougher on most layers) and `mirror` (doubles the
+  width and reads as mirrored). Not on sky, a run or `repeat: false`.
 
 ## The route to try first
 
@@ -76,7 +80,7 @@ this; its numbers are in step 12 of the research note.
 - PixelLab pixflux with ONE forced palette (`palette`) on every layer is the
   cheapest route that gives layers which agree. Layers with background
   removal, at most 40,000 px each (400×100) to stay transparent. pixflux has
-  no seamless option, so loop each layer afterwards.
+  no seamless option, so give each layer `"loop": "cut"`.
 - Draw the sky as flat palette bands instead of generating it: a generated sky
   comes back with mountains in it. A far range comes back as one flat colour;
   recolour it to a palette colour between the sky bands and extend it down to

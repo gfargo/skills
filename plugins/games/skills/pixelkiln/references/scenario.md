@@ -2,8 +2,10 @@
 
 Use Scenario when the project needs a hosted third-party model or a reusable
 project-specific model. BFL Flux 2 Dev is live-tested through authentication,
-CU preflight, paid generation, human review, and durable recovery. Other model
-schemas remain unverified. Require a one-asset smoke before widening a batch.
+CU preflight, paid generation, human review, and durable recovery. A later
+evaluation ran ten more text-to-image models, six tool models, reference-image
+edits, and multi-model chains live (`docs/SCENARIO.md` lists them). Any other
+model's schema is unverified. Require a one-asset smoke before widening a batch.
 
 ## Safety boundary
 
