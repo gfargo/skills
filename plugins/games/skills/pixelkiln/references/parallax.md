@@ -28,9 +28,13 @@ and numbers, at https://pixelkiln.griffen.codes/docs/research-parallax.
 - A `run` layer lays silhouettes (`{ "asset" }` or `{ "file" }` each) in an
   overlapping row by `seed`, with `step`, `gap` and `jitter`. It loops by
   default; `"repeat": false` lays it once across what the camera sees.
-- Not in the command: haze, dithered feet, looping a whole picture. Finish
-  those with `research/scripts/parallax.py` and name the results as `file`
-  layers or run sprites.
+- `"foot": 0.3` trims a picture (each sprite of a run) and dithers its bottom
+  30% out. `"tint": { "color", "amount" }` mixes it toward a colour and snaps
+  it to the set's `palette` (a style id or colours; without one, to the
+  picture's own colours). Two runs of the same sprites with different tints
+  make two tiers.
+- Not in the command: looping a whole picture. Loop it with
+  `research/scripts/parallax.py loop` and name the result as a `file` layer.
 
 ## The route to try first
 
@@ -63,7 +67,7 @@ this; its numbers are in step 12 of the research note.
 - Leave out a glow at a summit; pixflux draws it as a setting sun.
 - Pixflux at 256×128 with background removal, one forced palette, two or three
   seeds an asset. Reject any candidate that touches a side of the canvas.
-- Add the distance afterwards: dither the bottom 30% out, then tint each tier
+- Add the distance afterwards with `foot: 0.3`, then a `tint` per tier
   toward its own palette colour, the far tier lighter, the near tier darker.
   One light haze colour for every tier makes depth read backwards.
 
