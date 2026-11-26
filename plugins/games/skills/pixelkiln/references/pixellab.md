@@ -429,6 +429,19 @@ files, not 6. Account for the `+1` when checking a loop's output count or
 estimating its budget; set it `false` only when the caller will supply its
 own first frame downstream.
 
+`"mode": "pixminimax"` draws a text loop on PixelLab's PixMiniMax engine:
+a multiple of 4 `frames` up to 40, the v3 pose frames and `keepFirstFrame`,
+`subject` (sent as `subject_description`) and `initialPose` (pixminimax
+only). For a character moving around a prop, draw the prop into
+`startFrame` and pin the loop back with the same `endFrame`; measured at
+256px, 16 frames kept a pole straight through a full turn for 2
+generations, where v3 bent it. Priced by PixelLab's upscaled-canvas table
+(1 for any 4- or 8-frame clip, 6 at most); PixelKiln has not sent this
+request itself, so say the plan is unmeasured before the first run. The
+character record cannot tell PixMiniMax from v3, so `adopt` by `remoteId`
+records the manifest's `mode`: declare a PixMiniMax loop made elsewhere as
+`"mode": "pixminimax"`, never as `v3`, or a later `gen` redraws it with v3.
+
 `"mode": "skeleton-v3"` with a `template` poses that template onto the
 character with PixelLab's skeleton video model instead of redrawing each
 frame: the steadiest template loop, 2 to 4 generations and 3 to 5 minutes
@@ -623,10 +636,11 @@ up: `driftThreshold` or a `reduce-colors` revision over the frame set for
 color flicker, `correct-pixelart` or `pixelkiln edit` for stray pixels, and
 check a loop's last frame against its first for a duplicate.
 
-Budget `animate-pixminimax` above what `plan` prints for long clips. The MCP
-tool prices it by generation time (64×64 at 16 frames is 2, at 40 frames is
-6), while pixelkiln's placeholder estimate gives 1 and 3. Tell the person the
-plan may under-read before a long PixMiniMax run.
+`plan` prices `animate-pixminimax` (and a `pixminimax` character loop) on
+PixelLab's published table for the upscaled canvas: at 64, 128 and 256px,
+4–8 frames cost 1, 12–16 cost 2, 20–24 cost 3, 28 costs 4, 32–36 cost 5,
+40 costs 6. Only 8 and 16 frames at 64px have been billed through
+pixelkiln; say so before a long clip.
 
 Parts of Pro Flash image editing are still outside this adapter: `edit`'s
 reference-image method, palette correction, inpaint's output-method choice,
