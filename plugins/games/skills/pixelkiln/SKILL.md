@@ -39,6 +39,10 @@ hashes.
   pass one `--budget provider=amount` ceiling for every paid provider in the plan.
 - Leave visual selection to the local `pixelkiln pick` review page unless the
   user explicitly provides a selection rule. Closing it applies nothing.
+- `--accept-first` on `gen` or `pick` takes every asset's first candidate and
+  opens no page. That is the provider's order, not a judgement. Pass it only
+  when the user asks for a run without review, together with `--yes` (which
+  skips the spend question), and tell them to check the art in `gallery`.
 - To answer "what has this project generated?", use `pixelkiln gallery --json`
   for the offline provenance snapshot, or open `pixelkiln gallery` for the
   person to browse it. Both are read-only and contact no provider. Leave
