@@ -391,7 +391,8 @@ and which tutorial(s) demonstrated real (not hypothetical) demand for it.
   twice the quote. **Measured once**: a lite effect with no sprite billed
   exactly its 1-generation quote, and its sheet (a 3×3 grid with an
   Aseprite-style atlas) cut into 8 correct frames (docs/ENDPOINTS.md). A
-  sprite, the pro artist, and changes are unmeasured. Animated sprites (GIF
+  pro artist billed exactly its quote in November 2026: 6 with no sprite, 8
+  around a 64px still sprite. Changes (`effect_id`) are unmeasured. Animated sprites (GIF
   or strips) are not sent yet.
 - **Normal maps** (`POST /normal-map`, PixelLab 0.4.130) — a sprite's normal
   map for engine lighting, 8 to 512px, up to 32 frames as one strip so the
