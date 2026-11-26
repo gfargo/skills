@@ -97,9 +97,13 @@ this; its numbers are in step 12 of the research note.
 
 ## A second time of day
 
-- Recolour the finished set onto the new time's palette by luminance rank
-  (`parallax.py recolour ... cool`) instead of generating it again. It is free,
-  and every shape stays where it was, so the two times line up.
+- Swap the set's palette instead of generating again: `"times": { "night":
+  { "palette": "<style or colours>", "cool": true } }` on the set, which needs
+  its own `palette` to swap from. It is free, and every shape stays where it
+  was, so the two times line up. The preview writes a strip per time; Godot
+  gets one scene with a shader (`time` 0 as drawn, n the n-th of
+  `metadata/times`, `blend`/`blend_to` to fade); Tiled and LDtk get a map per
+  time. Matches `parallax.py recolour` pixel for pixel.
 - Take the new palette from the same prompt and seed as the first one, with the
   time of day changed. For night, leave its warm light colours (windows, lamps,
   the moon) out of the swap, or pink-lit snow turns orange.
