@@ -79,6 +79,11 @@ the committed workflow placeholder. Treat an unknown binding, duplicate target,
 reserved built-in name, missing file, or type mismatch as a manifest error.
 Changing an input value or image bytes makes only the affected asset stale.
 
+For pose-driven frame sets, prefer the bundled
+`comfyui/pixel-art-pose-frames@1.0.0` recipe (`frames.vary: "pose"`, fixed
+seed). It is `composition-source`: expect identity and prop drift between
+frames, and never approve part of a set.
+
 For `generator: frames`, `providerOptions.comfyui.frames.vary` names one custom
 binding and the matching `providerInputs` value is an ordered 2–64 item array.
 Keep `numImages: 1`. A nonzero `seedStep` also requires `style.seed` and a seed
