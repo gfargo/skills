@@ -87,6 +87,21 @@ hands mid-walk and an inpainted shield was drawn face-on in a side view.
 - `pixelkiln pack --style <style>` puts the character and its layers on one
   sheet; the generic atlas's `layers` section pairs each layer frame with
   the frame it goes over and the offset to draw it at.
+- Before the first paid `gen` of a drawn layer, run `pixelkiln layer preview
+  <layer>`: free and offline, it writes the sheet, keyed sheet, mask and an
+  `overlay.png` of the mask over the frames, plus each frame's own, to
+  `.pixelkiln/layers/<style>/<asset>/preview/`, and prints every frame's neck
+  row and the price. Look at the overlay; a frame it names as overruled
+  is the one to check first.
+- A base that wears underwear (some characters cannot be generated bare;
+  PixelLab refused "no clothes" on an adult-proportioned figure and accepted
+  underwear) needs `"cover": true`: everything inside the mask is keyed, so
+  the outfit goes over the underwear instead of around it. Layers over it are
+  additive only. Do not combine it with `skin`, which keeps clothes.
+- The computed mask finds the head per frame and puts the neck a fixed
+  distance below it, taken from the median of the frames; it includes an arm
+  raised beside the head. Hair over the shoulders or limbs across the head
+  still need a supplied mask.
 - `mask` and `keyed` replace the computed sheet inputs with PNGs the person
   supplies. Every intermediate file is in
   `.pixelkiln/layers/<style>/<asset>/`.
