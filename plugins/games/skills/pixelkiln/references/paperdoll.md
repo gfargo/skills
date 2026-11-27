@@ -15,8 +15,8 @@ PixelLab only. The full guide is `docs/PAPERDOLL.md`.
   match in one layer's `of`. Two layers are two requests and will differ.
 - Each layer is one request: 10, 15 or 25 generations by the sheet's size.
   `plan` prices every layer at 25; the lockfile records what was billed.
-- It is `blocked` until every source is downloaded, and `stale` when a source
-  is regenerated. Regenerating a base or a loop means redrawing every layer
+- It is `blocked` until every source is downloaded, `invalid` when its
+  frames cannot fit one sheet, and `stale` when a source is regenerated. Regenerating a base or a loop means redrawing every layer
   over it: say so, with the cost, before doing it.
 
 ## Choosing how to make an item
@@ -56,9 +56,19 @@ hands mid-walk and an inpainted shield was drawn face-on in a side view.
   to the loop's frame count so each loop is one row of the sheet, and say in
   the prompt which way each row faces. Without this some front-facing frames
   come back drawn from behind.
-- The sheet must fit 512px a side. Six rows of a 64px figure fit with
-  `padding` up to 10, not 12. A layer that does not fit fails before any
-  request and names the sizes.
+- The sheet must fit 512px a side, every frame in a cell the size of the
+  widest pose. Six rows of a 64px figure fit with `padding` up to 10, not
+  12. About 24 frames fit at 128px and 8 at 256px (a moving side view), so
+  at 128px and above make loops for layering with `"keepFirstFrame": false`
+  and a frame count that fills the sheet. `plan` measures the sources on
+  disk: a layer that cannot fit is `invalid`, costs nothing, and says the
+  frame count to regenerate at. Read that line before proposing to
+  regenerate anything.
+- When the loops still do not fit one sheet, split them across two layers
+  and give the second `"anchor": "<first layer>"`. The first layer's dressed
+  south frame goes on the second sheet as a closed guide, so the outfit
+  matches; each guide costs a cell. Same `padding` on both, and leave the
+  stills out of the second's `of`. Two separate requests, so say both costs.
 - After it downloads, look at every frame of every loop. One frame facing the
   wrong way is the usual fault. Regenerate with `gen --force --only <asset>`;
   the previous result stays in `pixelkiln history` and restores for free.
@@ -87,6 +97,14 @@ hands mid-walk and an inpainted shield was drawn face-on in a side view.
 - `pixelkiln pack --style <style>` puts the character and its layers on one
   sheet; the generic atlas's `layers` section pairs each layer frame with
   the frame it goes over and the offset to draw it at.
+- A line of skin beside the clothes on a swaying loop is the provider
+  anchoring the garment, not the body. Fix it for nothing with
+  `"trim": true` on the layer (hides bare runs up to 4px and islands up to
+  45px below the neck), not by regenerating. Changing `trim` never makes the
+  layer stale. The atlas then carries each frame's `cut`; `pack --flatten
+  [--only <layers>]` writes one dressed sheet with the trim applied, and
+  `pixelkiln layer preview <layer> --gif` shows each dressed loop moving.
+  Show the person the GIF before calling a layer done.
 - Before the first paid `gen` of a drawn layer, run `pixelkiln layer preview
   <layer>`: free and offline, it writes the sheet, keyed sheet, mask and an
   `overlay.png` of the mask over the frames, plus each frame's own, to
